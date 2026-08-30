@@ -1,6 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { getCoachVisibleContext } from '../src/coach/analyze';
+import { getProgressiveHint, recommendCall, recommendCharlestonPass, recommendDiscard, recommendDraw } from '../src/coach/recommend';
+import { generateGameReview } from '../src/coach/review';
 import { runBotAction } from '../src/game/bots';
 import { applyGameAction, createGame } from '../src/game/engine';
 import { tileKey, tileLabel } from '../src/game/tiles';
@@ -63,8 +66,10 @@ export function GameExperience() {
   const [notice, setNotice] = useState('');
   const [review, setReview] = useState(false);
   const [manualTurns, setManualTurns] = useState(0);
+  const [hintsRequested, setHintsRequested] = useState(0);
   const human = game.players[0];
-  const candidates = useMemo(() => TrainingCardProvider.analyzeCandidates([...human.rack, ...human.exposures.flatMap((exposure) => exposure.tiles)]).slice(0, 3), [human.rack, human.exposures]);
+  const coachContext = useMemo(() => getCoachVisibleContext(game, 'human')!, [game]);
+  const candidates = coachContext.candidates.slice(0, 3);
   const best = candidates[0];
   const respondingToDiscard = game.phase === 'playing' && game.callWindow !== null;
   const needsDraw = game.phase === 'playing' && !respondingToDiscard && human.rack.length % 3 === 1;
@@ -79,6 +84,14 @@ export function GameExperience() {
         return joker && rackTile ? [{ owner, exposure, joker, rackTile }] : [];
       }))[0]
     : undefined;
+  const coachRecommendation = useMemo(() => {
+    if (game.phase === 'charleston') return recommendCharlestonPass(coachContext);
+    if (respondingToDiscard) return recommendCall(coachContext);
+    if (needsDraw) return recommendDraw();
+    return recommendDiscard(coachContext);
+  }, [coachContext, game.phase, needsDraw, respondingToDiscard]);
+  const coachHint = getProgressiveHint(coachRecommendation, hintLevel, human.rack);
+  const gameReview = useMemo(() => generateGameReview(game, 'human', { hintsRequested, manualTurns }), [game, hintsRequested, manualTurns]);
 
   const toggleTile = (id: string) => {
     setNotice('');
@@ -165,10 +178,15 @@ export function GameExperience() {
     setGame(completed);
     setReview(true);
     try {
-      localStorage.setItem('mahjong-room-progress-v1', JSON.stringify({ gamesCompleted: 1, assistanceLevel: 1, updatedAt: new Date().toISOString() }));
+      localStorage.setItem('mahjong-room-progress-v1', JSON.stringify({ gamesCompleted: 1, assistanceLevel: gameReview.suggestedAssistanceLevel, skills: gameReview.skills, updatedAt: new Date().toISOString() }));
     } catch {
       // Progress persistence is a convenience; gameplay still works when storage is unavailable.
     }
+  };
+
+  const requestHint = () => {
+    setHintLevel((level) => Math.min(2, level + 1));
+    setHintsRequested((count) => count + 1);
   };
 
   if (!started) {
@@ -188,13 +206,12 @@ export function GameExperience() {
     return (
       <main className="review-page">
         <header><span className="brand">The Mahjong Room</span><span>Game review</span></header>
-        <section className="review-hero"><p className="kicker">First game complete</p><h1>You&apos;re reading the table already.</h1><p>You made {manualTurns} independent discard decisions, completed the Charleston, and let the coach play out the remaining turns.</p></section>
+        <section className="review-hero"><p className="kicker">First game complete</p><h1>{gameReview.headline}</h1><p>{gameReview.summary}</p></section>
         <section className="review-grid">
-          <article><span className="review-icon">✓</span><p className="kicker">Strong decision</p><h2>You protected your most useful tile group.</h2><p>Your leading pattern stayed intact through the Charleston, giving you a flexible start.</p></article>
-          <article><span className="review-icon coral">↗</span><p className="kicker">Next game</p><h2>Ask for one fewer hint.</h2><p>You can now move from Full Guidance to Guided mode. The coach will wait for your choice first.</p></article>
-          <article className="skill-card"><p className="kicker">Skills practiced</p>{[['Tile recognition',82],['Charleston',68],['Finding hands',55],['Discard strategy',43]].map(([name,value]) => <div className="skill" key={name}><span>{name}</span><i><b style={{width: `${value}%`}} /></i></div>)}</article>
+          {gameReview.cards.map((card) => <article key={card.id}><span className={`review-icon ${card.tone === 'strong' ? '' : 'coral'}`}>{card.tone === 'strong' ? '✓' : '↗'}</span><p className="kicker">{card.eyebrow}</p><h2>{card.title}</h2><p>{card.body}</p></article>)}
+          <article className="skill-card"><p className="kicker">Skills practiced</p>{gameReview.skills.map(({name,score}) => <div className="skill" key={name}><span>{name}</span><i><b style={{width: `${score}%`}} /></i></div>)}</article>
         </section>
-        <div className="review-actions"><button onClick={() => { setGame(createGame(2027)); setReview(false); setSelected([]); setManualTurns(0); }}>Play game two</button><button className="secondary" onClick={() => setStarted(false)}>Back home</button></div>
+        <div className="review-actions"><button onClick={() => { setGame(createGame(2027)); setReview(false); setSelected([]); setManualTurns(0); setHintsRequested(0); setHintLevel(0); }}>Play game two</button><button className="secondary" onClick={() => setStarted(false)}>Back home</button></div>
       </main>
     );
   }
@@ -205,8 +222,8 @@ export function GameExperience() {
       <section className="table" aria-label="Guided American Mahjong table">
         <div className="opponent opponent-top"><span>June</span><small>{game.players[2].rack.length} tiles</small></div><div className="opponent opponent-left"><span>Mara</span><small>{game.players[1].rack.length} tiles</small></div><div className="opponent opponent-right"><span>Theo</span><small>{game.players[3].rack.length} tiles</small></div>
         <div className="center-mark"><span className="round">East</span><p>{game.phase === 'charleston' ? 'Charleston · First right' : `Turn ${game.turnCount + 1} · ${game.wall.length} in wall`}</p><strong>{game.phase === 'charleston' ? 'Pass 3 tiles' : respondingToDiscard ? 'Call or pass?' : needsDraw ? 'Draw a tile' : 'Choose a discard'}</strong><div className="discard-row">{game.discards.slice(-6).map((tile) => <span key={tile.id}>{shortTile(tile).top}</span>)}</div></div>
-        <aside className="coach-card"><div className="coach-eyebrow"><span>Coach</span><span>{hintLevel + 1} of 3</span></div><h1>{game.phase === 'charleston' ? 'Look for the tiles doing the least work.' : respondingToDiscard ? `${tileLabel(game.callWindow!.discard)} was discarded.` : needsDraw ? 'Draw first, then reassess.' : `${best.name} is still your strongest direction.`}</h1><p>{notice || (game.phase === 'charleston' ? 'Your strongest pattern is marked in the candidate list. Select three tiles that contribute the least.' : respondingToDiscard ? callableTiles.length >= 2 ? 'You can expose a matching set by selecting two tiles for a pung or three for a kong. Passing keeps your rack concealed.' : 'You do not have enough matching tiles to call this discard, so pass and draw normally.' : needsDraw ? 'A complete rack has 13 tiles between turns. Draw one from the wall to begin.' : `You have ${best.matchingTileIds.length} useful tiles toward this original Training Card hand.`)}</p><div className="candidate-list">{candidates.map((candidate, index) => <div key={candidate.handId}><span>{index === 0 ? 'Best match' : 'Alternative'}</span><strong>{candidate.name}</strong><small>{candidate.matchingTileIds.length} / 14 useful tiles</small></div>)}</div><button onClick={() => setHintLevel((level) => Math.min(2, level + 1))}>{hintLevel < 2 ? 'Show me what to notice' : 'Why these tiles?'}</button></aside>
-        <div className="player-area"><div className="exposure-row">{game.players.flatMap((player) => player.exposures.map((exposure) => <div key={exposure.id}><small>{player.id === 'human' ? `your ${exposure.kind}` : `${player.name} · ${exposure.kind}`}</small>{exposure.tiles.map((tile) => <span key={tile.id}>{shortTile(tile).top}</span>)}</div>))}</div><div className="rack" aria-label="Your rack">{human.rack.map((tile) => { const label = shortTile(tile); return <button className={`tile ${selected.includes(tile.id) ? 'selected' : ''} ${hintLevel >= 1 && !best.matchingTileIds.includes(tile.id) ? 'hinted' : ''}`} key={tile.id} aria-label={tileLabel(tile)} aria-pressed={selected.includes(tile.id)} onClick={() => toggleTile(tile.id)}><strong>{label.top}</strong><small>{label.bottom}</small></button>; })}</div><div className="player-controls"><p><strong>Your rack</strong><span>{game.phase === 'charleston' ? `${selected.length} of 3 selected` : respondingToDiscard ? `${selected.length} matching tiles selected` : needsDraw ? 'Ready to draw' : `${selected.length} tile selected`}</span></p><div className="action-group">{exchangeOption ? <button className="finish-button" onClick={exchangeJoker}>Exchange for joker</button> : null}{manualTurns >= 4 ? <button className="finish-button" onClick={finishGame}>Complete game with coach</button> : null}{game.phase === 'charleston' ? <button className="primary" disabled={selected.length !== 3} onClick={passTiles}>Pass selected tiles</button> : respondingToDiscard ? <><button className="finish-button" onClick={passOnDiscard}>Pass</button><button className="primary" disabled={selected.length < 2 || selected.length > 3 || !selected.every((id) => callableTiles.some((tile) => tile.id === id))} onClick={callDiscard}>{selected.length === 3 ? 'Call kong' : 'Call pung'}</button></> : needsDraw ? <button className="primary" onClick={drawTile}>Draw tile</button> : <button className="primary" disabled={selected.length !== 1} onClick={discardTile}>Discard tile</button>}</div></div></div>
+        <aside className="coach-card"><div className="coach-eyebrow"><span>Coach</span><span>{hintLevel + 1} of 3</span></div><h1>{coachRecommendation.headline}</h1><p>{notice || coachHint}</p><div className="candidate-list">{candidates.map((candidate, index) => <div key={candidate.handId}><span>{index === 0 ? 'Best match' : 'Alternative'}</span><strong>{candidate.name}</strong><small>{candidate.matchingTileIds.length} / 14 useful tiles</small></div>)}</div><button onClick={requestHint}>{hintLevel < 2 ? 'Show me what to notice' : 'Why these tiles?'}</button></aside>
+        <div className="player-area"><div className="exposure-row">{game.players.flatMap((player) => player.exposures.map((exposure) => <div key={exposure.id}><small>{player.id === 'human' ? `your ${exposure.kind}` : `${player.name} · ${exposure.kind}`}</small>{exposure.tiles.map((tile) => <span key={tile.id}>{shortTile(tile).top}</span>)}</div>))}</div><div className="rack" aria-label="Your rack">{human.rack.map((tile) => { const label = shortTile(tile); const cannotPassJoker = game.phase === 'charleston' && tile.type.kind === 'joker'; return <button className={`tile ${selected.includes(tile.id) ? 'selected' : ''} ${hintLevel >= 1 && coachRecommendation.tileIds.includes(tile.id) ? 'recommended' : ''} ${hintLevel >= 1 && !best.matchingTileIds.includes(tile.id) ? 'hinted' : ''}`} key={tile.id} aria-label={`${tileLabel(tile)}${cannotPassJoker ? ', cannot be passed' : ''}`} aria-pressed={selected.includes(tile.id)} disabled={cannotPassJoker} onClick={() => toggleTile(tile.id)}><strong>{label.top}</strong><small>{label.bottom}</small></button>; })}</div><div className="player-controls"><p><strong>Your rack</strong><span>{game.phase === 'charleston' ? `${selected.length} of 3 selected` : respondingToDiscard ? `${selected.length} matching tiles selected` : needsDraw ? 'Ready to draw' : `${selected.length} tile selected`}</span></p><div className="action-group">{exchangeOption ? <button className="finish-button" onClick={exchangeJoker}>Exchange for joker</button> : null}{manualTurns >= 4 ? <button className="finish-button" onClick={finishGame}>Complete game with coach</button> : null}{game.phase === 'charleston' ? <button className="primary" disabled={selected.length !== 3} onClick={passTiles}>Pass selected tiles</button> : respondingToDiscard ? <><button className="finish-button" onClick={passOnDiscard}>Pass</button><button className="primary" disabled={selected.length < 2 || selected.length > 3 || !selected.every((id) => callableTiles.some((tile) => tile.id === id))} onClick={callDiscard}>{selected.length === 3 ? 'Call kong' : 'Call pung'}</button></> : needsDraw ? <button className="primary" onClick={drawTile}>Draw tile</button> : <button className="primary" disabled={selected.length !== 1} onClick={discardTile}>Discard tile</button>}</div></div></div>
       </section>
     </main>
   );

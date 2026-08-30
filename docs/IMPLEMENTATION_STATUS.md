@@ -1,6 +1,6 @@
 # Current Milestone
 
-Milestone 2 — Complete table-rule foundation
+Milestone 3 — Structured Coach Mode and event-derived review
 
 ## Complete
 
@@ -16,11 +16,17 @@ Milestone 2 — Complete table-rule foundation
 - Discard call windows, pass responses, public pung/kong exposures, and replacement-draw behavior
 - Joker-backed calls and natural-tile joker exchanges, including guided table controls
 - 13 engine tests and 100-game expanded-rule simulation
+- Player-visible coach context that cannot access opponent racks or future wall order
+- Structured Charleston, discard, call, and draw recommendations with typed reason codes
+- Three progressive hint levels, tracked hint usage, and specific tile highlighting
+- Event-derived review cards, competence scores, and assistance-level recommendation
+- Versioned local progress containing completed games, skills, and assistance level
+- 19 passing unit/integration tests across engine and coach behavior
 
 ## Next
 
 - Simultaneous call priority, Mahjong-on-discard, concealed-hand restrictions, quints, and dead-tile analysis
-- Durable guest progress and event-derived reviews
+- Durable guest-to-account progress migration
 - Server-authoritative Supabase action endpoint, authentication, and reconnection
 - Multiplayer only after the expanded engine simulation is stable
 
@@ -29,6 +35,7 @@ Milestone 2 — Complete table-rule foundation
 - The coach completes the remaining wall after four independent human discard decisions so a first session stays approachable.
 - Call priority is simplified to the next responding player in automated play.
 - The courtesy pass is fully modeled by the engine; first-game coaching currently chooses zero tiles automatically.
+- Skill scores are transparent heuristics rather than a trained mastery model.
 
 ## Architectural Decisions
 

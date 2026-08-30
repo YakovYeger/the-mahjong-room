@@ -56,6 +56,7 @@ export function applyGameAction(state: GameState, playerId: string, action: Game
     if (action.tileIds.length !== 3 || new Set(action.tileIds).size !== 3) return violation('PASS_EXACTLY_THREE', 'Choose exactly three different tiles to pass.');
     if (!action.tileIds.every((id) => player.rack.some((tile) => tile.id === id))) return violation('TILE_NOT_IN_RACK', 'One of those tiles is not in your rack.');
     const outgoing = player.rack.filter((tile) => action.tileIds.includes(tile.id));
+    if (outgoing.some((tile) => tile.type.kind === 'joker')) return violation('CANNOT_PASS_JOKER', 'Jokers cannot be passed during the Charleston.');
     player.rack = player.rack.filter((tile) => !action.tileIds.includes(tile.id));
     next.charlestonPendingPasses[playerId] = outgoing;
     emitted.push(appendEvent(next, { type: 'TILES_PASSED', playerId, tileIds: action.tileIds }));
@@ -88,6 +89,7 @@ export function applyGameAction(state: GameState, playerId: string, action: Game
     if (action.tileIds.length > 3 || new Set(action.tileIds).size !== action.tileIds.length) return violation('INVALID_COURTESY_PASS', 'The courtesy pass may contain zero to three different tiles.');
     if (!action.tileIds.every((id) => player.rack.some((tile) => tile.id === id))) return violation('TILE_NOT_IN_RACK', 'Every courtesy tile must come from your rack.');
     const outgoing = player.rack.filter((tile) => action.tileIds.includes(tile.id));
+    if (outgoing.some((tile) => tile.type.kind === 'joker')) return violation('CANNOT_PASS_JOKER', 'Jokers cannot be passed during the courtesy pass.');
     player.rack = player.rack.filter((tile) => !action.tileIds.includes(tile.id));
     next.charlestonPendingPasses[playerId] = outgoing;
     next.charlestonRound += 1;

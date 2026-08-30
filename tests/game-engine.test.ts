@@ -31,6 +31,15 @@ describe('game engine', () => {
     if (!result.ok) expect(result.violation.code).toBe('PASS_EXACTLY_THREE');
   });
 
+  it('never allows a joker to be passed in the Charleston', () => {
+    const state = createGame();
+    const joker = createWall().find((tile) => tile.type.kind === 'joker')!;
+    state.players[0].rack = [joker, ...state.players[0].rack.slice(1)];
+    const result = applyGameAction(state, 'human', { type: 'PASS_TILES', tileIds: state.players[0].rack.slice(0, 3).map((tile) => tile.id) });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.violation.code).toBe('CANNOT_PASS_JOKER');
+  });
+
   it('keeps concealed racks out of the public projection', () => {
     const state = createGame();
     expect(getPublicGameState(state).players[0]).not.toHaveProperty('rack');
@@ -41,7 +50,7 @@ describe('game engine', () => {
     let state = createGame();
     for (let index = 0; index < 12; index += 1) {
       const player = state.players[index % 4];
-      const result = applyGameAction(state, player.id, { type: 'PASS_TILES', tileIds: player.rack.slice(0, 3).map((tile) => tile.id) });
+      const result = applyGameAction(state, player.id, { type: 'PASS_TILES', tileIds: player.rack.filter((tile) => tile.type.kind !== 'joker').slice(0, 3).map((tile) => tile.id) });
       expect(result.ok).toBe(true);
       if (result.ok) state = result.state;
     }
@@ -62,7 +71,7 @@ describe('game engine', () => {
     let state = createGame();
     for (let index = 0; index < 12; index += 1) {
       const player = state.players[index % 4];
-      const result = applyGameAction(state, player.id, { type: 'PASS_TILES', tileIds: player.rack.slice(0, 3).map((tile) => tile.id) });
+      const result = applyGameAction(state, player.id, { type: 'PASS_TILES', tileIds: player.rack.filter((tile) => tile.type.kind !== 'joker').slice(0, 3).map((tile) => tile.id) });
       expect(result.ok).toBe(true);
       if (result.ok) state = result.state;
     }
@@ -72,7 +81,7 @@ describe('game engine', () => {
     if (decision.ok) state = decision.state;
     for (let index = 0; index < 12; index += 1) {
       const player = state.players[index % 4];
-      const result = applyGameAction(state, player.id, { type: 'PASS_TILES', tileIds: player.rack.slice(0, 3).map((tile) => tile.id) });
+      const result = applyGameAction(state, player.id, { type: 'PASS_TILES', tileIds: player.rack.filter((tile) => tile.type.kind !== 'joker').slice(0, 3).map((tile) => tile.id) });
       expect(result.ok).toBe(true);
       if (result.ok) state = result.state;
     }

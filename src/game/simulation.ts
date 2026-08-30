@@ -29,7 +29,7 @@ export function simulateGame(seed: number): { state: GameState; invalid: boolean
         continue;
       }
       const player = state.players[state.charlestonRound % 4];
-      const ids = player.rack.slice(-3).map((tile) => tile.id);
+      const ids = player.rack.filter((tile) => tile.type.kind !== 'joker').slice(-3).map((tile) => tile.id);
       const result = applyGameAction(state, player.id, { type: 'PASS_TILES', tileIds: ids });
       if (!result.ok) return { state, invalid: true, stalled: false };
       state = result.state;

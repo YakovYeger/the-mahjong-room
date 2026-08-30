@@ -38,6 +38,8 @@ button, a { font: inherit; }
 .tile small { display: block; margin-top: 8px; color: #8a5649; font-size: 8px; font-weight: 800; letter-spacing: .08em; }
 .tile.selected { transform: translateY(-10px); outline: 3px solid #f5b39f; box-shadow: 0 9px 18px rgba(0,0,0,.28); }
 .tile.hinted:not(.selected) { opacity: .58; background: #f2ecdf; }
+.tile.recommended { outline: 3px solid #f5b39f; opacity: 1; }
+.tile:disabled { cursor: not-allowed; opacity: .7; background: #ece7dc; }
 .player-controls { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; color: white; }
 .player-controls p { display: flex; gap: 12px; margin: 0; align-items: baseline; }
 .player-controls span { color: rgba(255,255,255,.62); font-size: 13px; }
