@@ -1,0 +1,88 @@
+@import 'tailwindcss';
+
+:root { --ink: #173630; --cream: #f5f0e5; --paper: #fffdf7; --coral: #db684f; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--cream); color: var(--ink); font-family: Arial, Helvetica, sans-serif; }
+button, a { font: inherit; }
+.shell { min-height: 100vh; background: var(--cream); }
+.topbar { height: 70px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 32px; border-bottom: 1px solid rgba(23,54,48,.12); background: rgba(255,253,247,.92); }
+.brand { color: var(--ink); font-family: Georgia, serif; font-size: 21px; font-weight: 700; text-decoration: none; }
+.brand-button { border: 0; padding: 0; background: transparent; text-align: left; cursor: pointer; }
+.game-label { font-size: 13px; letter-spacing: .02em; color: #5d6f69; }
+.quiet-button { justify-self: end; border: 0; background: transparent; color: #5d6f69; }
+.table { position: relative; min-height: calc(100vh - 70px); overflow: hidden; background: radial-gradient(circle at 50% 42%, #3b7565 0 12%, #2a6556 42%, #1f5146 78%); }
+.table::before { content: ''; position: absolute; inset: 36px; border: 1px solid rgba(255,255,255,.15); border-radius: 44px; box-shadow: inset 0 0 80px rgba(0,0,0,.1); }
+.opponent { position: absolute; display: flex; gap: 7px; align-items: center; color: white; font-size: 13px; }
+.opponent small { opacity: .6; }
+.opponent-top { top: 30px; left: 50%; transform: translateX(-50%); }
+.opponent-left { left: 55px; top: 39%; transform: rotate(90deg); }
+.opponent-right { right: 55px; top: 39%; transform: rotate(-90deg); }
+.center-mark { position: absolute; left: 50%; top: 34%; transform: translate(-50%,-50%); text-align: center; color: white; }
+.center-mark .round { display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.11); border: 1px solid rgba(255,255,255,.3); font-family: Georgia, serif; }
+.center-mark p { margin: 15px 0 4px; color: rgba(255,255,255,.67); font-size: 12px; text-transform: uppercase; letter-spacing: .12em; }
+.center-mark strong { font-family: Georgia, serif; font-size: 24px; font-weight: 500; }
+.coach-card { position: absolute; top: 82px; right: clamp(72px,8vw,130px); width: 310px; padding: 22px; border-radius: 18px; background: var(--paper); box-shadow: 0 18px 45px rgba(7,38,30,.28); }
+.coach-eyebrow { display: flex; justify-content: space-between; color: var(--coral); text-transform: uppercase; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.coach-eyebrow span:last-child { color: #81908b; }
+.coach-card h1 { margin: 13px 0 9px; font: 700 24px/1.08 Georgia, serif; }
+.coach-card p { margin: 0; color: #5d6f69; font-size: 14px; line-height: 1.55; }
+.coach-card button { margin-top: 17px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--coral); background: transparent; color: var(--coral); font-weight: 700; font-size: 13px; }
+.player-area { position: absolute; left: 50%; bottom: 24px; width: min(1060px,calc(100% - 56px)); transform: translateX(-50%); }
+.rack { display: flex; justify-content: center; gap: 5px; padding: 15px 18px; border-radius: 18px 18px 6px 6px; background: rgba(12,41,34,.34); }
+.tile { width: 63px; height: 82px; border: 0; border-bottom: 7px solid #d9d0bc; border-radius: 7px; background: #fffef8; color: var(--ink); box-shadow: 0 3px 4px rgba(0,0,0,.22); cursor: pointer; }
+.tile strong { display: block; font: 700 30px/1 Georgia, serif; }
+.tile small { display: block; margin-top: 8px; color: #8a5649; font-size: 8px; font-weight: 800; letter-spacing: .08em; }
+.tile.selected { transform: translateY(-10px); outline: 3px solid #f5b39f; box-shadow: 0 9px 18px rgba(0,0,0,.28); }
+.tile.hinted:not(.selected) { opacity: .58; background: #f2ecdf; }
+.player-controls { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; color: white; }
+.player-controls p { display: flex; gap: 12px; margin: 0; align-items: baseline; }
+.player-controls span { color: rgba(255,255,255,.62); font-size: 13px; }
+.primary { border: 0; border-radius: 999px; padding: 12px 20px; background: var(--coral); color: white; font-weight: 700; }
+.primary:disabled { opacity: .45; }
+.action-group { display: flex; gap: 10px; }
+.finish-button { border: 1px solid rgba(255,255,255,.45); border-radius: 999px; padding: 11px 18px; background: transparent; color: white; }
+.discard-row { display: flex; justify-content: center; gap: 5px; margin-top: 15px; min-height: 28px; }
+.discard-row span { display: grid; place-items: center; width: 23px; height: 28px; border-radius: 3px; background: rgba(255,253,247,.92); color: var(--ink); font: 700 12px Georgia, serif; }
+.candidate-list { display: grid; gap: 7px; margin-top: 14px; }
+.candidate-list div { display: grid; grid-template-columns: 1fr auto; padding: 9px 10px; border: 1px solid #e7e1d5; border-radius: 9px; }
+.candidate-list span { grid-column: 1 / -1; color: var(--coral); text-transform: uppercase; letter-spacing: .08em; font-size: 8px; font-weight: 800; }
+.candidate-list strong { font: 700 13px Georgia, serif; }
+.candidate-list small { color: #77847f; font-size: 9px; }
+
+.welcome { min-height: 100vh; overflow: hidden; background: var(--cream); }
+.welcome nav { display: flex; justify-content: space-between; align-items: center; height: 86px; padding: 0 clamp(24px,6vw,92px); border-bottom: 1px solid rgba(23,54,48,.12); }
+.tiny-label { color: #6d7d77; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; }
+.welcome-grid { display: grid; grid-template-columns: .85fr 1.15fr; min-height: calc(100vh - 152px); }
+.welcome-copy { align-self: center; padding: 54px clamp(24px,6vw,92px); }
+.kicker { margin: 0 0 16px; color: var(--coral); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .14em; }
+.welcome-copy h1, .review-hero h1 { max-width: 630px; margin: 0; font: 700 clamp(48px,6.2vw,88px)/.93 Georgia, serif; letter-spacing: -.045em; }
+.welcome-copy h1 em { color: var(--coral); font-weight: 500; }
+.lede { max-width: 560px; margin: 27px 0; color: #596b65; font: 18px/1.55 Georgia, serif; }
+.start-button, .review-actions button { display: flex; gap: 28px; align-items: center; border: 0; border-radius: 999px; padding: 15px 22px; background: var(--ink); color: white; font-weight: 700; cursor: pointer; }
+.start-button + small { display: block; margin-top: 14px; color: #73817c; }
+.welcome-rack { position: relative; display: flex; align-items: center; justify-content: center; gap: 9px; overflow: hidden; background: var(--green, #275d50); transform: rotate(-4deg) scale(1.08); box-shadow: inset 18px 0 80px rgba(0,0,0,.14); }
+.hero-tile { flex: 0 0 82px; height: 116px; display: grid; align-content: center; justify-items: center; border-bottom: 10px solid #d7ccb6; border-radius: 8px; background: #fffdf7; box-shadow: 0 8px 12px rgba(0,0,0,.25); }
+.hero-tile strong { font: 700 44px Georgia, serif; }
+.hero-tile small { margin-top: 10px; color: #9c594a; font-size: 9px; font-weight: 800; letter-spacing: .1em; }
+.teacher-note { position: absolute; left: 18%; bottom: 17%; width: 300px; padding: 18px 20px; border-radius: 12px; background: var(--paper); box-shadow: 0 16px 40px rgba(0,0,0,.22); transform: rotate(4deg); }
+.teacher-note span { color: var(--coral); font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .13em; }
+.teacher-note p { margin: 8px 0 0; font: 700 18px/1.25 Georgia, serif; }
+.welcome footer { height: 66px; display: flex; justify-content: center; gap: 8vw; align-items: center; color: #667872; font-size: 11px; text-transform: uppercase; letter-spacing: .09em; }
+
+.review-page { min-height: 100vh; padding-bottom: 70px; background: var(--cream); }
+.review-page header { height: 76px; display: flex; justify-content: space-between; align-items: center; padding: 0 clamp(24px,6vw,92px); border-bottom: 1px solid rgba(23,54,48,.12); color: #667872; font-size: 12px; }
+.review-hero { padding: 70px clamp(24px,8vw,130px) 54px; }
+.review-hero h1 { max-width: 900px; font-size: clamp(46px,6vw,76px); }
+.review-hero > p:last-child { max-width: 590px; color: #62736d; font: 18px/1.5 Georgia, serif; }
+.review-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; padding: 0 clamp(24px,8vw,130px); }
+.review-grid article { position: relative; min-height: 270px; padding: 28px; border: 1px solid #ded7c9; border-radius: 18px; background: var(--paper); }
+.review-grid h2 { font: 700 25px/1.1 Georgia, serif; }
+.review-grid article > p:last-child { color: #687872; line-height: 1.5; }
+.review-icon { position: absolute; right: 22px; top: 20px; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #d8e9df; color: #277054; }
+.review-icon.coral { background: #f4dcd4; color: var(--coral); }
+.skill { display: grid; gap: 7px; margin: 17px 0; color: #5d6f69; font-size: 13px; }
+.skill i { height: 7px; border-radius: 99px; background: #e9e3d7; overflow: hidden; }
+.skill b { display: block; height: 100%; border-radius: inherit; background: var(--coral); }
+.review-actions { display: flex; gap: 12px; padding: 34px clamp(24px,8vw,130px); }
+.review-actions .secondary { border: 1px solid #cfc7b8; background: transparent; color: var(--ink); }
+@media (max-width: 820px) { .topbar { grid-template-columns: 1fr auto; padding: 0 18px; } .game-label { display: none; } .table::before { inset: 16px; } .opponent-left { left: -3px; } .opponent-right { right: -3px; } .coach-card { top: 66px; left: 50%; right: auto; width: min(330px,calc(100% - 52px)); transform: translateX(-50%); padding: 17px; } .coach-card h1 { font-size: 19px; } .coach-card p { font-size: 12px; } .candidate-list { display: none; } .center-mark { top: 49%; } .rack { justify-content: flex-start; overflow-x: auto; } .tile { flex: 0 0 54px; height: 73px; } .tile strong { font-size: 26px; } .player-controls { align-items: flex-end; } .player-controls p { flex-direction: column; gap: 2px; } .action-group { flex-direction: column-reverse; align-items: stretch; } .welcome nav { height: 70px; } .welcome-grid { grid-template-columns: 1fr; min-height: auto; } .welcome-copy { padding-top: 70px; padding-bottom: 54px; } .welcome-copy h1 { font-size: 52px; } .welcome-rack { min-height: 300px; transform: none; justify-content: flex-start; padding-left: 24px; } .hero-tile { flex-basis: 66px; height: 94px; } .teacher-note { bottom: 28px; left: 24px; } .welcome footer { display: none; } .review-grid { grid-template-columns: 1fr; } }
