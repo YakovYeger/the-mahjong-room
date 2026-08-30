@@ -15,6 +15,19 @@ export function simulateGame(seed: number): { state: GameState; invalid: boolean
   while (state.phase !== 'completed' && steps < 300) {
     steps += 1;
     if (state.phase === 'charleston') {
+      if (state.charlestonCourtesy) {
+        const player = state.players[state.charlestonRound % 4];
+        const courtesy = applyGameAction(state, player.id, { type: 'COURTESY_PASS', tileIds: [] });
+        if (!courtesy.ok) return { state, invalid: true, stalled: false };
+        state = courtesy.state;
+        continue;
+      }
+      if (state.charlestonAwaitingDecision) {
+        const decision = applyGameAction(state, 'human', { type: 'CHOOSE_SECOND_CHARLESTON', continue: false });
+        if (!decision.ok) return { state, invalid: true, stalled: false };
+        state = decision.state;
+        continue;
+      }
       const player = state.players[state.charlestonRound % 4];
       const ids = player.rack.slice(-3).map((tile) => tile.id);
       const result = applyGameAction(state, player.id, { type: 'PASS_TILES', tileIds: ids });
@@ -26,8 +39,13 @@ export function simulateGame(seed: number): { state: GameState; invalid: boolean
     if (player.type === 'bot') state = runBotAction(state, player.id);
     else {
       let turnState = state;
+      if (turnState.callWindow) {
+        const pass = applyGameAction(turnState, player.id, { type: 'PASS_ON_DISCARD' });
+        if (!pass.ok) return { state, invalid: true, stalled: false };
+        turnState = pass.state;
+      }
       if (player.rack.length % 3 === 1) {
-        const draw = applyGameAction(state, player.id, { type: 'DRAW_TILE' });
+        const draw = applyGameAction(turnState, player.id, { type: 'DRAW_TILE' });
         if (!draw.ok) return { state, invalid: true, stalled: false };
         turnState = draw.state;
       }

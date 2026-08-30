@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { runBotAction } from '../src/game/bots';
 import { applyGameAction, createGame } from '../src/game/engine';
-import { tileLabel } from '../src/game/tiles';
+import { tileKey, tileLabel } from '../src/game/tiles';
 import { TrainingCardProvider } from '../src/game/training-card';
 import type { GameState, Tile } from '../src/game/types';
 
@@ -35,6 +35,11 @@ function completeWithCoach(state: GameState): GameState {
       next = runBotAction(next, player.id);
       continue;
     }
+    if (next.callWindow) {
+      const pass = applyGameAction(next, player.id, { type: 'PASS_ON_DISCARD' });
+      if (!pass.ok) break;
+      next = pass.state;
+    }
     if (player.rack.length % 3 === 1) {
       const draw = applyGameAction(next, player.id, { type: 'DRAW_TILE' });
       if (!draw.ok) break;
@@ -59,9 +64,21 @@ export function GameExperience() {
   const [review, setReview] = useState(false);
   const [manualTurns, setManualTurns] = useState(0);
   const human = game.players[0];
-  const candidates = useMemo(() => TrainingCardProvider.analyzeCandidates(human.rack).slice(0, 3), [human.rack]);
+  const candidates = useMemo(() => TrainingCardProvider.analyzeCandidates([...human.rack, ...human.exposures.flatMap((exposure) => exposure.tiles)]).slice(0, 3), [human.rack, human.exposures]);
   const best = candidates[0];
-  const needsDraw = game.phase === 'playing' && human.rack.length % 3 === 1;
+  const respondingToDiscard = game.phase === 'playing' && game.callWindow !== null;
+  const needsDraw = game.phase === 'playing' && !respondingToDiscard && human.rack.length % 3 === 1;
+  const callableTiles = respondingToDiscard && game.callWindow
+    ? human.rack.filter((tile) => tile.type.kind === 'joker' || tileKey(tile) === tileKey(game.callWindow!.discard))
+    : [];
+  const exchangeOption = game.phase === 'playing' && !respondingToDiscard && !needsDraw && game.players[game.turnIndex].id === 'human'
+    ? game.players.flatMap((owner) => owner.exposures.flatMap((exposure) => {
+        const joker = exposure.tiles.find((tile) => tile.type.kind === 'joker');
+        const natural = exposure.tiles.find((tile) => tile.type.kind !== 'joker');
+        const rackTile = natural ? human.rack.find((tile) => tile.type.kind !== 'joker' && tileKey(tile) === tileKey(natural)) : undefined;
+        return joker && rackTile ? [{ owner, exposure, joker, rackTile }] : [];
+      }))[0]
+    : undefined;
 
   const toggleTile = (id: string) => {
     setNotice('');
@@ -73,6 +90,19 @@ export function GameExperience() {
     if (!result.ok) return setNotice(result.violation.message);
     let next = result.state;
     while (next.phase === 'charleston') {
+      if (next.charlestonCourtesy) {
+        const courtesyPlayer = next.players[next.charlestonRound % 4];
+        const courtesy = applyGameAction(next, courtesyPlayer.id, { type: 'COURTESY_PASS', tileIds: [] });
+        if (!courtesy.ok) break;
+        next = courtesy.state;
+        continue;
+      }
+      if (next.charlestonAwaitingDecision) {
+        const decision = applyGameAction(next, 'human', { type: 'CHOOSE_SECOND_CHARLESTON', continue: false });
+        if (!decision.ok) break;
+        next = decision.state;
+        continue;
+      }
       const bot = next.players[next.charlestonRound % 4];
       next = runBotAction(next, bot.id);
     }
@@ -86,6 +116,36 @@ export function GameExperience() {
     if (!result.ok) return setNotice(result.violation.message);
     setGame(result.state);
     setNotice(`You drew ${tileLabel(result.state.players[0].rack.at(-1)!)}. Notice whether it strengthens your leading hand.`);
+  };
+
+  const passOnDiscard = () => {
+    const result = applyGameAction(game, 'human', { type: 'PASS_ON_DISCARD' });
+    if (!result.ok) return setNotice(result.violation.message);
+    setGame(result.state);
+    setSelected([]);
+    setNotice('You passed. Draw from the wall to begin your turn.');
+  };
+
+  const callDiscard = () => {
+    const result = applyGameAction(game, 'human', { type: 'CALL_TILE', rackTileIds: selected });
+    if (!result.ok) return setNotice(result.violation.message);
+    setGame(result.state);
+    setSelected([]);
+    setNotice(`You exposed a ${selected.length === 2 ? 'pung' : 'kong'}. ${selected.length === 2 ? 'Now discard without drawing.' : 'Draw a replacement tile before discarding.'}`);
+  };
+
+  const exchangeJoker = () => {
+    if (!exchangeOption) return;
+    const result = applyGameAction(game, 'human', {
+      type: 'EXCHANGE_JOKER',
+      exposureOwnerId: exchangeOption.owner.id,
+      exposureId: exchangeOption.exposure.id,
+      rackTileId: exchangeOption.rackTile.id,
+      jokerTileId: exchangeOption.joker.id,
+    });
+    if (!result.ok) return setNotice(result.violation.message);
+    setGame(result.state);
+    setNotice(`You replaced ${tileLabel(exchangeOption.rackTile)} in ${exchangeOption.owner.name}'s exposure and brought the joker into your rack.`);
   };
 
   const discardTile = () => {
@@ -144,9 +204,9 @@ export function GameExperience() {
       <header className="topbar"><button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button><span className="game-label">Your first game · Full guidance</span><button className="quiet-button" onClick={() => setStarted(false)}>Leave table</button></header>
       <section className="table" aria-label="Guided American Mahjong table">
         <div className="opponent opponent-top"><span>June</span><small>{game.players[2].rack.length} tiles</small></div><div className="opponent opponent-left"><span>Mara</span><small>{game.players[1].rack.length} tiles</small></div><div className="opponent opponent-right"><span>Theo</span><small>{game.players[3].rack.length} tiles</small></div>
-        <div className="center-mark"><span className="round">East</span><p>{game.phase === 'charleston' ? 'Charleston · First right' : `Turn ${game.turnCount + 1} · ${game.wall.length} in wall`}</p><strong>{game.phase === 'charleston' ? 'Pass 3 tiles' : needsDraw ? 'Draw a tile' : 'Choose a discard'}</strong><div className="discard-row">{game.discards.slice(-6).map((tile) => <span key={tile.id}>{shortTile(tile).top}</span>)}</div></div>
-        <aside className="coach-card"><div className="coach-eyebrow"><span>Coach</span><span>{hintLevel + 1} of 3</span></div><h1>{game.phase === 'charleston' ? 'Look for the tiles doing the least work.' : needsDraw ? 'Draw first, then reassess.' : `${best.name} is still your strongest direction.`}</h1><p>{notice || (game.phase === 'charleston' ? 'Your strongest pattern is marked in the candidate list. Select three tiles that contribute the least.' : needsDraw ? 'A complete rack has 13 tiles between turns. Draw one from the wall to begin.' : `You have ${best.matchingTileIds.length} useful tiles toward this original Training Card hand.`)}</p><div className="candidate-list">{candidates.map((candidate, index) => <div key={candidate.handId}><span>{index === 0 ? 'Best match' : 'Alternative'}</span><strong>{candidate.name}</strong><small>{candidate.matchingTileIds.length} / 14 useful tiles</small></div>)}</div><button onClick={() => setHintLevel((level) => Math.min(2, level + 1))}>{hintLevel < 2 ? 'Show me what to notice' : 'Why these tiles?'}</button></aside>
-        <div className="player-area"><div className="rack" aria-label="Your rack">{human.rack.map((tile) => { const label = shortTile(tile); return <button className={`tile ${selected.includes(tile.id) ? 'selected' : ''} ${hintLevel >= 1 && !best.matchingTileIds.includes(tile.id) ? 'hinted' : ''}`} key={tile.id} aria-label={tileLabel(tile)} aria-pressed={selected.includes(tile.id)} onClick={() => toggleTile(tile.id)}><strong>{label.top}</strong><small>{label.bottom}</small></button>; })}</div><div className="player-controls"><p><strong>Your rack</strong><span>{game.phase === 'charleston' ? `${selected.length} of 3 selected` : needsDraw ? 'Ready to draw' : `${selected.length} tile selected`}</span></p><div className="action-group">{manualTurns >= 4 ? <button className="finish-button" onClick={finishGame}>Complete game with coach</button> : null}{game.phase === 'charleston' ? <button className="primary" disabled={selected.length !== 3} onClick={passTiles}>Pass selected tiles</button> : needsDraw ? <button className="primary" onClick={drawTile}>Draw tile</button> : <button className="primary" disabled={selected.length !== 1} onClick={discardTile}>Discard tile</button>}</div></div></div>
+        <div className="center-mark"><span className="round">East</span><p>{game.phase === 'charleston' ? 'Charleston · First right' : `Turn ${game.turnCount + 1} · ${game.wall.length} in wall`}</p><strong>{game.phase === 'charleston' ? 'Pass 3 tiles' : respondingToDiscard ? 'Call or pass?' : needsDraw ? 'Draw a tile' : 'Choose a discard'}</strong><div className="discard-row">{game.discards.slice(-6).map((tile) => <span key={tile.id}>{shortTile(tile).top}</span>)}</div></div>
+        <aside className="coach-card"><div className="coach-eyebrow"><span>Coach</span><span>{hintLevel + 1} of 3</span></div><h1>{game.phase === 'charleston' ? 'Look for the tiles doing the least work.' : respondingToDiscard ? `${tileLabel(game.callWindow!.discard)} was discarded.` : needsDraw ? 'Draw first, then reassess.' : `${best.name} is still your strongest direction.`}</h1><p>{notice || (game.phase === 'charleston' ? 'Your strongest pattern is marked in the candidate list. Select three tiles that contribute the least.' : respondingToDiscard ? callableTiles.length >= 2 ? 'You can expose a matching set by selecting two tiles for a pung or three for a kong. Passing keeps your rack concealed.' : 'You do not have enough matching tiles to call this discard, so pass and draw normally.' : needsDraw ? 'A complete rack has 13 tiles between turns. Draw one from the wall to begin.' : `You have ${best.matchingTileIds.length} useful tiles toward this original Training Card hand.`)}</p><div className="candidate-list">{candidates.map((candidate, index) => <div key={candidate.handId}><span>{index === 0 ? 'Best match' : 'Alternative'}</span><strong>{candidate.name}</strong><small>{candidate.matchingTileIds.length} / 14 useful tiles</small></div>)}</div><button onClick={() => setHintLevel((level) => Math.min(2, level + 1))}>{hintLevel < 2 ? 'Show me what to notice' : 'Why these tiles?'}</button></aside>
+        <div className="player-area"><div className="exposure-row">{game.players.flatMap((player) => player.exposures.map((exposure) => <div key={exposure.id}><small>{player.id === 'human' ? `your ${exposure.kind}` : `${player.name} · ${exposure.kind}`}</small>{exposure.tiles.map((tile) => <span key={tile.id}>{shortTile(tile).top}</span>)}</div>))}</div><div className="rack" aria-label="Your rack">{human.rack.map((tile) => { const label = shortTile(tile); return <button className={`tile ${selected.includes(tile.id) ? 'selected' : ''} ${hintLevel >= 1 && !best.matchingTileIds.includes(tile.id) ? 'hinted' : ''}`} key={tile.id} aria-label={tileLabel(tile)} aria-pressed={selected.includes(tile.id)} onClick={() => toggleTile(tile.id)}><strong>{label.top}</strong><small>{label.bottom}</small></button>; })}</div><div className="player-controls"><p><strong>Your rack</strong><span>{game.phase === 'charleston' ? `${selected.length} of 3 selected` : respondingToDiscard ? `${selected.length} matching tiles selected` : needsDraw ? 'Ready to draw' : `${selected.length} tile selected`}</span></p><div className="action-group">{exchangeOption ? <button className="finish-button" onClick={exchangeJoker}>Exchange for joker</button> : null}{manualTurns >= 4 ? <button className="finish-button" onClick={finishGame}>Complete game with coach</button> : null}{game.phase === 'charleston' ? <button className="primary" disabled={selected.length !== 3} onClick={passTiles}>Pass selected tiles</button> : respondingToDiscard ? <><button className="finish-button" onClick={passOnDiscard}>Pass</button><button className="primary" disabled={selected.length < 2 || selected.length > 3 || !selected.every((id) => callableTiles.some((tile) => tile.id === id))} onClick={callDiscard}>{selected.length === 3 ? 'Call kong' : 'Call pung'}</button></> : needsDraw ? <button className="primary" onClick={drawTile}>Draw tile</button> : <button className="primary" disabled={selected.length !== 1} onClick={discardTile}>Discard tile</button>}</div></div></div>
       </section>
     </main>
   );

@@ -28,6 +28,10 @@ button, a { font: inherit; }
 .coach-card p { margin: 0; color: #5d6f69; font-size: 14px; line-height: 1.55; }
 .coach-card button { margin-top: 17px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--coral); background: transparent; color: var(--coral); font-weight: 700; font-size: 13px; }
 .player-area { position: absolute; left: 50%; bottom: 24px; width: min(1060px,calc(100% - 56px)); transform: translateX(-50%); }
+.exposure-row { display: flex; min-height: 31px; justify-content: flex-end; gap: 8px; padding: 0 12px 7px; }
+.exposure-row > div { display: flex; align-items: center; gap: 3px; }
+.exposure-row small { margin-right: 3px; color: rgba(255,255,255,.68); font-size: 8px; text-transform: uppercase; letter-spacing: .1em; }
+.exposure-row span { display: grid; place-items: center; width: 24px; height: 30px; border-radius: 3px; background: #fffef8; color: var(--ink); font: 700 12px Georgia, serif; box-shadow: 0 2px 3px rgba(0,0,0,.2); }
 .rack { display: flex; justify-content: center; gap: 5px; padding: 15px 18px; border-radius: 18px 18px 6px 6px; background: rgba(12,41,34,.34); }
 .tile { width: 63px; height: 82px; border: 0; border-bottom: 7px solid #d9d0bc; border-radius: 7px; background: #fffef8; color: var(--ink); box-shadow: 0 3px 4px rgba(0,0,0,.22); cursor: pointer; }
 .tile strong { display: block; font: 700 30px/1 Georgia, serif; }

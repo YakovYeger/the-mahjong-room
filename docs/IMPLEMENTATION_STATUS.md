@@ -1,6 +1,6 @@
 # Current Milestone
 
-MVP — Guided first game
+Milestone 2 — Complete table-rule foundation
 
 ## Complete
 
@@ -12,10 +12,14 @@ MVP — Guided first game
 - 100-game simulation target and unit tests
 - Guest-first responsive game table, progressive hints, candidate hands, completed-game review, and versioned local progress
 - Hidden-information projections and Sites-ready build
+- Correct first/optional-second Charleston directions and matched courtesy passes
+- Discard call windows, pass responses, public pung/kong exposures, and replacement-draw behavior
+- Joker-backed calls and natural-tile joker exchanges, including guided table controls
+- 13 engine tests and 100-game expanded-rule simulation
 
 ## Next
 
-- Full calls, exposures, joker exchange, and optional Charleston rules
+- Simultaneous call priority, Mahjong-on-discard, concealed-hand restrictions, quints, and dead-tile analysis
 - Durable guest progress and event-derived reviews
 - Server-authoritative Supabase action endpoint, authentication, and reconnection
 - Multiplayer only after the expanded engine simulation is stable
@@ -23,7 +27,8 @@ MVP — Guided first game
 ## Known Issues
 
 - The coach completes the remaining wall after four independent human discard decisions so a first session stays approachable.
-- Calls and exposures are not yet part of the interactive slice.
+- Call priority is simplified to the next responding player in automated play.
+- The courtesy pass is fully modeled by the engine; first-game coaching currently chooses zero tiles automatically.
 
 ## Architectural Decisions
 

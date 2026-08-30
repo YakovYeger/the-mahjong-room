@@ -13,6 +13,20 @@ export interface Tile { id: string; type: TileKind }
 export type Seat = 'east' | 'south' | 'west' | 'north';
 export type AssistanceLevel = 0 | 1 | 2 | 3 | 4;
 export type GamePhase = 'charleston' | 'playing' | 'completed';
+export type ExposureKind = 'pung' | 'kong';
+export type CharlestonDirection = 'right' | 'across' | 'left';
+
+export interface Exposure {
+  id: string;
+  kind: ExposureKind;
+  tiles: Tile[];
+  calledFromPlayerId: string;
+}
+
+export interface CallWindow {
+  discard: Tile;
+  discardedByPlayerId: string;
+}
 
 export interface Player {
   id: string;
@@ -20,22 +34,35 @@ export interface Player {
   seat: Seat;
   type: 'human' | 'bot';
   rack: Tile[];
+  exposures: Exposure[];
   assistanceLevel: AssistanceLevel;
 }
 
 export type GameAction =
   | { type: 'PASS_TILES'; tileIds: string[] }
+  | { type: 'CHOOSE_SECOND_CHARLESTON'; continue: boolean }
+  | { type: 'COURTESY_PASS'; tileIds: string[] }
   | { type: 'DRAW_TILE' }
   | { type: 'DISCARD_TILE'; tileId: string }
+  | { type: 'CALL_TILE'; rackTileIds: string[] }
+  | { type: 'PASS_ON_DISCARD' }
+  | { type: 'EXCHANGE_JOKER'; exposureOwnerId: string; exposureId: string; rackTileId: string; jokerTileId: string }
   | { type: 'DECLARE_MAHJONG' };
 
 export type GameEvent =
   | { type: 'GAME_CREATED'; sequence: number }
   | { type: 'TILES_DEALT'; sequence: number }
   | { type: 'TILES_PASSED'; sequence: number; playerId: string; tileIds: string[] }
+  | { type: 'CHARLESTON_PASS_COMPLETED'; sequence: number; direction: CharlestonDirection }
+  | { type: 'SECOND_CHARLESTON_CHOSEN'; sequence: number; continue: boolean }
+  | { type: 'COURTESY_PASS_COMPLETED'; sequence: number }
   | { type: 'CHARLESTON_COMPLETED'; sequence: number }
   | { type: 'TILE_DRAWN'; sequence: number; playerId: string; tileId: string }
   | { type: 'TILE_DISCARDED'; sequence: number; playerId: string; tileId: string }
+  | { type: 'DISCARD_CALLED'; sequence: number; playerId: string; tileId: string }
+  | { type: 'EXPOSURE_CREATED'; sequence: number; playerId: string; exposureId: string; kind: ExposureKind }
+  | { type: 'CALL_WINDOW_CLOSED'; sequence: number; playerId: string }
+  | { type: 'JOKER_EXCHANGED'; sequence: number; playerId: string; exposureOwnerId: string; exposureId: string; jokerTileId: string }
   | { type: 'MAHJONG_DECLARED'; sequence: number; playerId: string }
   | { type: 'GAME_COMPLETED'; sequence: number; winnerId: string | null };
 
@@ -48,9 +75,14 @@ export interface GameState {
   turnIndex: number;
   turnCount: number;
   charlestonRound: number;
+  charlestonPassIndex: number;
+  charlestonPendingPasses: Record<string, Tile[]>;
+  charlestonAwaitingDecision: boolean;
+  charlestonCourtesy: boolean;
   players: Player[];
   wall: Tile[];
   discards: Tile[];
+  callWindow: CallWindow | null;
   events: GameEvent[];
   winnerId: string | null;
 }
