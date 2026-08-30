@@ -5,7 +5,7 @@
 body { margin: 0; background: var(--cream); color: var(--ink); font-family: Arial, Helvetica, sans-serif; }
 button, a { font: inherit; }
 .shell { min-height: 100vh; background: var(--cream); }
-.topbar { height: 70px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 32px; border-bottom: 1px solid rgba(23,54,48,.12); background: rgba(255,253,247,.92); }
+.topbar { height: 70px; display: grid; grid-template-columns: 1fr auto 1fr; column-gap: 24px; align-items: center; padding: 0 32px; border-bottom: 1px solid rgba(23,54,48,.12); background: rgba(255,253,247,.92); }
 .brand { color: var(--ink); font-family: Georgia, serif; font-size: 21px; font-weight: 700; text-decoration: none; }
 .brand-button { border: 0; padding: 0; background: transparent; text-align: left; cursor: pointer; }
 .game-label { font-size: 13px; letter-spacing: .02em; color: #5d6f69; }
@@ -54,11 +54,24 @@ button, a { font: inherit; }
 .candidate-list span { grid-column: 1 / -1; color: var(--coral); text-transform: uppercase; letter-spacing: .08em; font-size: 8px; font-weight: 800; }
 .candidate-list strong { font: 700 13px Georgia, serif; }
 .candidate-list small { color: #77847f; font-size: 9px; }
+.training-card-panel { position: absolute; z-index: 3; top: 82px; bottom: 200px; left: clamp(50px,6vw,92px); width: min(390px,calc(100% - 100px)); overflow: auto; padding: 22px; border-radius: 18px; background: var(--paper); box-shadow: 0 18px 45px rgba(7,38,30,.28); }
+.training-card-heading { display: flex; align-items: flex-start; justify-content: space-between; }
+.training-card-heading .kicker { margin-bottom: 5px; }
+.training-card-heading h2 { margin: 0; font: 700 24px/1.1 Georgia, serif; }
+.training-card-heading button { width: 30px; height: 30px; border: 0; border-radius: 50%; background: #eee8dd; color: var(--ink); font-size: 20px; cursor: pointer; }
+.training-hand-list { display: grid; gap: 11px; margin-top: 17px; }
+.training-hand-list article { padding: 12px; border: 1px solid #e7e1d5; border-radius: 10px; }
+.training-hand-list article > span { color: var(--coral); font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+.training-hand-list h3 { margin: 3px 0 4px; font: 700 15px Georgia, serif; }
+.training-hand-list p { margin: 0 0 9px; color: #697872; font-size: 10px; line-height: 1.4; }
+.training-hand-list article > div { display: flex; flex-wrap: wrap; gap: 3px; }
+.training-hand-list small { padding: 3px 5px; border-radius: 4px; background: #f0ebe1; color: #496058; font-size: 7px; font-weight: 700; }
 
 .welcome { min-height: 100vh; overflow: hidden; background: var(--cream); }
 .welcome nav { display: flex; justify-content: space-between; align-items: center; height: 86px; padding: 0 clamp(24px,6vw,92px); border-bottom: 1px solid rgba(23,54,48,.12); }
 .tiny-label { color: #6d7d77; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; }
 .welcome-nav-actions, .table-links { display: flex; align-items: center; gap: 22px; }
+.table-links { justify-self: end; }
 .welcome-nav-actions a, .table-links a, .account-page header a:last-child { color: var(--ink); font-size: 12px; font-weight: 700; text-decoration: none; }
 .welcome-grid { display: grid; grid-template-columns: .85fr 1.15fr; min-height: calc(100vh - 152px); }
 .welcome-copy { align-self: center; padding: 54px clamp(24px,6vw,92px); }
@@ -113,4 +126,4 @@ button, a { font: inherit; }
 .account-primary:disabled { opacity: .55; }
 .form-note { font-size: 11px; text-align: center; }
 .account-message { padding: 10px 12px; border-radius: 9px; background: #edf4ef; color: #31594d !important; font-size: 12px; }
-@media (max-width: 820px) { .topbar { grid-template-columns: 1fr auto; padding: 0 18px; } .game-label, .tiny-label, .table-links a { display: none; } .game-table::before { inset: 16px; } .opponent-left { left: -3px; } .opponent-right { right: -3px; } .coach-card { top: 66px; left: 50%; right: auto; width: min(330px,calc(100% - 52px)); transform: translateX(-50%); padding: 17px; } .coach-card h1 { font-size: 19px; } .coach-card p { font-size: 12px; } .candidate-list { display: none; } .center-mark { top: 49%; } .rack { justify-content: flex-start; overflow-x: auto; } .tile { flex: 0 0 54px; height: 73px; } .tile strong { font-size: 26px; } .player-controls { align-items: flex-end; } .player-controls p { flex-direction: column; gap: 2px; } .action-group { flex-direction: column-reverse; align-items: stretch; } .welcome nav { height: 70px; } .welcome-grid { grid-template-columns: 1fr; min-height: auto; } .welcome-copy { padding-top: 70px; padding-bottom: 54px; } .welcome-copy h1 { font-size: 52px; } .welcome-rack { min-height: 300px; transform: none; justify-content: flex-start; padding-left: 24px; } .hero-tile { flex-basis: 66px; height: 94px; } .teacher-note { bottom: 28px; left: 24px; } .welcome footer { display: none; } .review-grid, .account-shell { grid-template-columns: 1fr; } .account-page { background: var(--cream); } .account-shell { padding-top: 48px; } }
+@media (max-width: 820px) { .topbar { grid-template-columns: 1fr auto; padding: 0 18px; } .game-label, .tiny-label, .table-links a { display: none; } .table-links { gap: 10px; } .game-table::before { inset: 16px; } .opponent-left { left: -3px; } .opponent-right { right: -3px; } .coach-card { top: 66px; left: 50%; right: auto; width: min(330px,calc(100% - 52px)); transform: translateX(-50%); padding: 17px; } .coach-card h1 { font-size: 19px; } .coach-card p { font-size: 12px; } .candidate-list { display: none; } .training-card-panel { position: fixed; inset: 82px 18px auto; width: auto; max-height: calc(100vh - 165px); } .center-mark { top: 49%; } .rack { justify-content: flex-start; overflow-x: auto; } .tile { flex: 0 0 54px; height: 73px; } .tile strong { font-size: 26px; } .player-controls { align-items: flex-end; } .player-controls p { flex-direction: column; gap: 2px; } .action-group { flex-direction: column-reverse; align-items: stretch; } .welcome nav { height: 70px; } .welcome-grid { grid-template-columns: 1fr; min-height: auto; } .welcome-copy { padding-top: 70px; padding-bottom: 54px; } .welcome-copy h1 { font-size: 52px; } .welcome-rack { min-height: 300px; transform: none; justify-content: flex-start; padding-left: 24px; } .hero-tile { flex-basis: 66px; height: 94px; } .teacher-note { bottom: 28px; left: 24px; } .welcome footer { display: none; } .review-grid, .account-shell { grid-template-columns: 1fr; } .account-page { background: var(--cream); } .account-shell { padding-top: 48px; } }

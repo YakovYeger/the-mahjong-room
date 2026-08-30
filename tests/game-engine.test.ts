@@ -3,6 +3,7 @@ import { applyGameAction, createGame, getPlayerPrivateState, getPublicGameState 
 import { simulateGames } from '../src/game/simulation';
 import { createWall, deterministicShuffle, tileKey } from '../src/game/tiles';
 import { TrainingCardProvider } from '../src/game/training-card';
+import { runBotAction } from '../src/game/bots';
 
 describe('tile model', () => {
   it('creates the complete 152-tile American Mahjong wall', () => {
@@ -38,6 +39,23 @@ describe('game engine', () => {
     const result = applyGameAction(state, 'human', { type: 'PASS_TILES', tileIds: state.players[0].rack.slice(0, 3).map((tile) => tile.id) });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.violation.code).toBe('CANNOT_PASS_JOKER');
+  });
+
+  it('keeps bot Charleston passes moving when a bot holds jokers', () => {
+    let state = createGame(2026);
+    const humanTiles = state.players[0].rack.filter((tile) => tile.type.kind !== 'joker').slice(0, 3).map((tile) => tile.id);
+    const firstPass = applyGameAction(state, 'human', { type: 'PASS_TILES', tileIds: humanTiles });
+    expect(firstPass.ok).toBe(true);
+    if (!firstPass.ok) return;
+    state = firstPass.state;
+
+    const bot = state.players[state.charlestonRound % 4];
+    state = runBotAction(state, bot.id);
+    const jokerBot = state.players[state.charlestonRound % 4];
+    expect(jokerBot.rack.some((tile) => tile.type.kind === 'joker')).toBe(true);
+    const advanced = runBotAction(state, jokerBot.id);
+    expect(advanced.stateVersion).toBe(state.stateVersion + 1);
+    expect(advanced.charlestonRound).toBe(state.charlestonRound + 1);
   });
 
   it('keeps concealed racks out of the public projection', () => {

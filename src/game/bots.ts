@@ -3,10 +3,14 @@ import { tileKey } from './tiles';
 import { TrainingCardProvider } from './training-card';
 import type { GameState, Player } from './types';
 
-function leastUsefulTileIds(player: Player, count: number): string[] {
+function leastUsefulTileIds(player: Player, count: number, excludeJokers = false): string[] {
   const best = TrainingCardProvider.analyzeCandidates([...player.rack, ...player.exposures.flatMap((exposure) => exposure.tiles)])[0];
   const useful = new Set(best?.matchingTileIds ?? []);
-  return [...player.rack].sort((a, b) => Number(useful.has(a.id)) - Number(useful.has(b.id))).slice(0, count).map((tile) => tile.id);
+  return player.rack
+    .filter((tile) => !excludeJokers || tile.type.kind !== 'joker')
+    .sort((a, b) => Number(useful.has(a.id)) - Number(useful.has(b.id)))
+    .slice(0, count)
+    .map((tile) => tile.id);
 }
 
 export function runBotAction(state: GameState, playerId: string): GameState {
@@ -17,7 +21,7 @@ export function runBotAction(state: GameState, playerId: string): GameState {
       const result = applyGameAction(state, playerId, { type: 'COURTESY_PASS', tileIds: [] });
       return result.ok ? result.state : state;
     }
-    const result = applyGameAction(state, playerId, { type: 'PASS_TILES', tileIds: leastUsefulTileIds(player, 3) });
+    const result = applyGameAction(state, playerId, { type: 'PASS_TILES', tileIds: leastUsefulTileIds(player, 3, true) });
     return result.ok ? result.state : state;
   }
   let current = state;
