@@ -13,7 +13,8 @@ export interface Tile { id: string; type: TileKind }
 export type Seat = 'east' | 'south' | 'west' | 'north';
 export type AssistanceLevel = 0 | 1 | 2 | 3 | 4;
 export type GamePhase = 'charleston' | 'playing' | 'completed';
-export type ExposureKind = 'pung' | 'kong';
+export type ExposureKind = 'pung' | 'kong' | 'quint' | 'sextet';
+export type HandGroupKind = 'single' | 'pair' | ExposureKind;
 export type CharlestonDirection = 'right' | 'across' | 'left';
 
 export interface Exposure {
@@ -26,6 +27,17 @@ export interface Exposure {
 export interface CallWindow {
   discard: Tile;
   discardedByPlayerId: string;
+  responses: Record<string, CallResponse>;
+}
+
+export type CallResponse =
+  | { type: 'pass' }
+  | { type: 'exposure'; rackTileIds: string[]; kind: ExposureKind }
+  | { type: 'mahjong'; handId: string };
+
+export interface CharlestonPassSelection {
+  tiles: Tile[];
+  blindCount: number;
 }
 
 export interface Player {
@@ -39,7 +51,7 @@ export interface Player {
 }
 
 export type GameAction =
-  | { type: 'PASS_TILES'; tileIds: string[] }
+  | { type: 'PASS_TILES'; tileIds: string[]; blindCount?: number }
   | { type: 'CHOOSE_SECOND_CHARLESTON'; continue: boolean }
   | { type: 'COURTESY_PASS'; tileIds: string[] }
   | { type: 'DRAW_TILE' }
@@ -47,7 +59,7 @@ export type GameAction =
   | { type: 'CALL_TILE'; rackTileIds: string[] }
   | { type: 'PASS_ON_DISCARD' }
   | { type: 'EXCHANGE_JOKER'; exposureOwnerId: string; exposureId: string; rackTileId: string; jokerTileId: string }
-  | { type: 'DECLARE_MAHJONG' };
+  | { type: 'DECLARE_MAHJONG'; useDiscard?: boolean };
 
 export type GameEvent =
   | { type: 'GAME_CREATED'; sequence: number }
@@ -60,6 +72,7 @@ export type GameEvent =
   | { type: 'TILE_DRAWN'; sequence: number; playerId: string; tileId: string }
   | { type: 'TILE_DISCARDED'; sequence: number; playerId: string; tileId: string }
   | { type: 'DISCARD_CALLED'; sequence: number; playerId: string; tileId: string }
+  | { type: 'CALL_RESPONSE_RECORDED'; sequence: number; playerId: string; response: CallResponse['type'] }
   | { type: 'EXPOSURE_CREATED'; sequence: number; playerId: string; exposureId: string; kind: ExposureKind }
   | { type: 'CALL_WINDOW_CLOSED'; sequence: number; playerId: string }
   | { type: 'JOKER_EXCHANGED'; sequence: number; playerId: string; exposureOwnerId: string; exposureId: string; jokerTileId: string }
@@ -76,7 +89,7 @@ export interface GameState {
   turnCount: number;
   charlestonRound: number;
   charlestonPassIndex: number;
-  charlestonPendingPasses: Record<string, Tile[]>;
+  charlestonPendingPasses: Record<string, CharlestonPassSelection>;
   charlestonAwaitingDecision: boolean;
   charlestonCourtesy: boolean;
   players: Player[];
@@ -92,7 +105,17 @@ export interface HandDefinition {
   section: string;
   name: string;
   description: string;
-  tiles: string[];
+  exposure: 'exposed' | 'concealed';
+  groups: HandGroup[];
+  teachingPoint: string;
+}
+
+export interface HandGroup {
+  id: string;
+  tileKey: string;
+  kind: HandGroupKind;
+  count: number;
+  jokerAllowed: boolean;
 }
 
 export interface HandCandidate {
@@ -102,6 +125,7 @@ export interface HandCandidate {
   matchingTileIds: string[];
   recommendationScore: number;
   reasonCodes: string[];
+  viable: boolean;
 }
 
 export interface ValidationResult { valid: boolean; handId?: string; message: string }
@@ -112,8 +136,8 @@ export interface HandDefinitionProvider {
   version: string;
   getSections(): string[];
   getHands(): HandDefinition[];
-  validateMahjong(tiles: Tile[]): ValidationResult;
-  analyzeCandidates(tiles: Tile[]): HandCandidate[];
+  validateMahjong(tiles: Tile[], exposures?: Exposure[]): ValidationResult;
+  analyzeCandidates(tiles: Tile[], exposures?: Exposure[]): HandCandidate[];
 }
 
 export interface GameRuleViolation { code: string; message: string }

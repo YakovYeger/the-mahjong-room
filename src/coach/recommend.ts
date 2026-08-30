@@ -1,4 +1,5 @@
-import { tileKey, tileLabel } from '../game/tiles';
+import { tileLabel } from '../game/tiles';
+import { getLegalCallOptions } from '../game/training-card';
 import type { Tile } from '../game/types';
 import { countRackPairs } from './analyze';
 import type { CoachRecommendation, CoachVisibleContext } from './types';
@@ -50,18 +51,19 @@ export function recommendDraw(): CoachRecommendation {
 
 export function recommendCall(context: CoachVisibleContext): CoachRecommendation {
   const discard = context.callWindow?.discard;
-  if (!discard || discard.type.kind === 'joker' || discard.type.kind === 'flower') {
+  if (!discard || discard.type.kind === 'joker') {
     return { kind: 'call', tileIds: [], reasonCodes: ['CALL_REDUCES_FLEXIBILITY'], headline: 'Let this one go.', explanation: 'There is no legal set to expose from this discard.', confidence: 'high' };
   }
-  const matches = context.rack.filter((tile) => tile.type.kind === 'joker' || tileKey(tile) === tileKey(discard)).slice(0, 3);
-  const supportsTop = context.candidates[0]?.matchingTileIds.some((id) => matches.some((tile) => tile.id === id)) ?? false;
-  const canCall = matches.length >= 2;
+  const option = getLegalCallOptions(context.rack, context.ownExposures, discard)[0];
+  const matches = option ? context.rack.filter((tile) => option.rackTileIds.includes(tile.id)) : [];
+  const supportsTop = option?.handId === context.candidates[0]?.handId;
+  const canCall = Boolean(option);
   return {
     kind: 'call',
-    tileIds: canCall && supportsTop ? matches.slice(0, 2).map((tile) => tile.id) : [],
+    tileIds: canCall && supportsTop ? matches.map((tile) => tile.id) : [],
     reasonCodes: [canCall && supportsTop ? 'CALL_SUPPORTS_TOP_HAND' : 'CALL_REDUCES_FLEXIBILITY'],
     headline: canCall && supportsTop ? 'This call supports your leading hand.' : 'Passing keeps your options open.',
-    explanation: canCall && supportsTop ? `Calling ${tileLabel(discard)} creates a useful pung, but it also commits part of your rack.` : 'An exposure would not strengthen your best current direction enough to justify losing flexibility.',
+    explanation: canCall && supportsTop ? `Calling ${tileLabel(discard)} creates a legal ${option!.kind} for your leading hand, but it also commits part of your rack.` : 'An exposure would not strengthen your best current direction enough to justify losing flexibility.',
     confidence: supportsTop ? 'medium' : 'high',
   };
 }

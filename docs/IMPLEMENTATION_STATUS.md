@@ -1,54 +1,46 @@
 # Current Milestone
 
-Milestone 4 — Guest persistence and account foundation
+Milestone 6 — Rules fidelity and Training Card UX
 
 ## Complete
 
-- Project skeleton and product documentation
-- Strong domain types and replaceable card-provider boundary
-- Complete tile wall, deterministic shuffle, deal, Charleston, draw/discard loop, typed actions, and events
-- Four-hand original Training Card and deterministic candidate ranking
-- Three bots using the same hand-analysis utilities as the coach
-- 100-game simulation target and unit tests
-- Guest-first responsive game table, progressive hints, candidate hands, completed-game review, and versioned local progress
-- Hidden-information projections and Sites-ready build
-- Correct first/optional-second Charleston directions and matched courtesy passes
-- Discard call windows, pass responses, public pung/kong exposures, and replacement-draw behavior
-- Joker-backed calls and natural-tile joker exchanges, including guided table controls
-- 13 engine tests and 100-game expanded-rule simulation
-- Player-visible coach context that cannot access opponent racks or future wall order
-- Structured Charleston, discard, call, and draw recommendations with typed reason codes
-- Three progressive hint levels, tracked hint usage, and specific tile highlighting
-- Event-derived review cards, competence scores, and assistance-level recommendation
-- Versioned local progress containing completed games, skills, and assistance level
-- 23 passing unit/integration tests across engine, coach, and persistence behavior
-- Versioned guest progress with merge-safe account migration
-- Passwordless account screen and server-side magic-link confirmation endpoint
-- Authenticated progress API that derives ownership from the verified session
-- Supabase schema for games, canonical state, actions, events, reviews, and learning progress
-- Row-level security, explicit grants, ownership policies, and pgTAP schema checks
+- Standard tile wall, deterministic shuffle, four-seat deal, private racks, and event/version tracking
+- Fully interactive first Charleston and optional second Charleston in the correct directions
+- Final-pass blind spaces and negotiated zero-to-three-tile courtesy passes
+- Rule-aware original Training Card with explicit groups, concealed/exposed status, and Joker eligibility
+- Exact 14-tile Mahjong validation with legal Joker substitution
+- Mahjong from self-draw or the latest natural discard, including a final single or pair
+- All-player discard responses, Mahjong priority, and deterministic closest-in-turn exposure priority
+- Card-compatible Pungs, Kongs, Quints, Sextets, and Flower calls
+- Correct post-call discard flow with no replacement draw after a Kong
+- Natural-tile Joker exchanges, including interchangeable Flowers
+- Wall-game completion without an artificial turn cutoff
+- Bots that use the shared rules service for Charleston, calls, discards, and Mahjong
+- Refined, show/hide Training Card rail with visual group spacing, C/X labels, Joker markers, candidate progress, and teaching notes
+- Progressive coach, game review, guest progress, optional account foundation, and persistence schema
+- Engine, coach, persistence, and deterministic simulation coverage
 
 ## Next
 
-- Simultaneous call priority, Mahjong-on-discard, concealed-hand restrictions, quints, and dead-tile analysis
 - Connect a dedicated Supabase project, apply the migration, and run database/advisor checks
 - Server-authoritative game action endpoint with idempotency and optimistic version checks
 - Reconnection and resume from canonical server state
-- Multiplayer only after the expanded engine simulation is stable
+- Add browser automation for the complete first-game route to continuous integration
+- Multiplayer only after server-authoritative action handling is stable
 
-## Known Issues
+## Explicit MVP boundaries
 
-- The coach completes the remaining wall after four independent human discard decisions so a first session stays approachable.
-- Call priority is simplified to the next responding player in automated play.
-- The courtesy pass is fully modeled by the engine; first-game coaching currently chooses zero tiles automatically.
-- Skill scores are transparent heuristics rather than a trained mastery model.
-- The repository has no Supabase project credentials; the deployed preview therefore remains guest-first and the account page clearly reports that connection is pending.
-- Database tests are committed but require a linked or local Supabase Postgres instance to execute.
+- Guided mode prevents illegal actions instead of simulating dead-hand penalties.
+- Physical wall breaking, misnamed tiles, touch/rack timing, payments, and seat rotation are not part of the single-game learning MVP.
+- The rare all-player fully blind Charleston procedure is not automated.
+- Skill scores are transparent learning heuristics rather than a trained mastery model.
+- The deployed preview remains guest-first until a Supabase project is connected.
 
-## Architectural Decisions
+## Architectural decisions
 
 - The rules engine stays pure TypeScript and UI-agnostic.
-- Only the original Training Card ships; commercial annual card data is excluded.
+- The Training Card, engine, bots, coach, and UI consume the same structured hand definitions.
+- Only original Training Card content ships; commercial annual card data is excluded.
 - The coach may use only player-visible information.
 - Guest play remains the default; accounts are optional and migrate local progress only after a successful server save.
 - Canonical game state and action history are server-only tables; browser roles receive no grants.

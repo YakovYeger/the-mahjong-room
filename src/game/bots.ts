@@ -1,55 +1,76 @@
-import { applyGameAction } from './engine';
-import { tileKey } from './tiles';
-import { TrainingCardProvider } from './training-card';
+import { applyGameAction, totalPlayerTiles } from './engine';
+import { getLegalCallOptions, TrainingCardProvider } from './training-card';
 import type { GameState, Player } from './types';
 
 function leastUsefulTileIds(player: Player, count: number, excludeJokers = false): string[] {
-  const best = TrainingCardProvider.analyzeCandidates([...player.rack, ...player.exposures.flatMap((exposure) => exposure.tiles)])[0];
+  const allTiles = [...player.rack, ...player.exposures.flatMap((exposure) => exposure.tiles)];
+  const best = TrainingCardProvider.analyzeCandidates(allTiles, player.exposures)[0];
   const useful = new Set(best?.matchingTileIds ?? []);
-  return player.rack
-    .filter((tile) => !excludeJokers || tile.type.kind !== 'joker')
-    .sort((a, b) => Number(useful.has(a.id)) - Number(useful.has(b.id)))
+  const eligible = player.rack.filter((tile) => !excludeJokers || tile.type.kind !== 'joker');
+  const nonJokers = eligible.filter((tile) => tile.type.kind !== 'joker');
+  const pool = nonJokers.length >= count ? nonJokers : eligible;
+  return pool
+    .sort((left, right) => Number(useful.has(left.id)) - Number(useful.has(right.id)) || left.id.localeCompare(right.id))
     .slice(0, count)
     .map((tile) => tile.id);
+}
+
+function botCourtesyCount(state: GameState, player: Player): number {
+  const playerIndex = state.players.indexOf(player);
+  const opposite = state.players[(playerIndex + 2) % 4];
+  return state.charlestonPendingPasses[opposite.id]?.tiles.length ?? 0;
 }
 
 export function runBotAction(state: GameState, playerId: string): GameState {
   const player = state.players.find((item) => item.id === playerId);
   if (!player) return state;
+
   if (state.phase === 'charleston') {
+    if (state.charlestonAwaitingDecision) return state;
+    if (state.players[state.charlestonRound % 4].id !== playerId) return state;
     if (state.charlestonCourtesy) {
-      const result = applyGameAction(state, playerId, { type: 'COURTESY_PASS', tileIds: [] });
+      const count = botCourtesyCount(state, player);
+      const result = applyGameAction(state, playerId, { type: 'COURTESY_PASS', tileIds: leastUsefulTileIds(player, count, true) });
       return result.ok ? result.state : state;
     }
     const result = applyGameAction(state, playerId, { type: 'PASS_TILES', tileIds: leastUsefulTileIds(player, 3, true) });
     return result.ok ? result.state : state;
   }
-  let current = state;
-  if (current.callWindow) {
-    const naturalMatches = player.rack.filter((tile) => tile.type.kind !== 'joker' && tileKey(tile) === tileKey(current.callWindow!.discard));
-    const jokers = player.rack.filter((tile) => tile.type.kind === 'joker');
-    const callTiles = [...naturalMatches, ...jokers].slice(0, 2);
-    if (callTiles.length === 2 && current.callWindow.discardedByPlayerId !== playerId) {
-      const call = applyGameAction(current, playerId, { type: 'CALL_TILE', rackTileIds: callTiles.map((tile) => tile.id) });
-      if (call.ok) current = call.state;
-      else if (current.players[current.turnIndex].id === playerId) {
-        const pass = applyGameAction(current, playerId, { type: 'PASS_ON_DISCARD' });
-        if (pass.ok) current = pass.state;
-      }
-    } else if (current.players[current.turnIndex].id === playerId) {
-      const pass = applyGameAction(current, playerId, { type: 'PASS_ON_DISCARD' });
-      if (pass.ok) current = pass.state;
-    } else {
-      return current;
+
+  if (state.phase !== 'playing') return state;
+
+  if (state.callWindow) {
+    if (state.callWindow.discardedByPlayerId === playerId || state.callWindow.responses[playerId]) return state;
+    const mahjongTiles = [...player.rack, ...player.exposures.flatMap((exposure) => exposure.tiles), state.callWindow.discard];
+    if (TrainingCardProvider.validateMahjong(mahjongTiles, player.exposures).valid) {
+      const result = applyGameAction(state, playerId, { type: 'DECLARE_MAHJONG', useDiscard: true });
+      return result.ok ? result.state : state;
     }
+    const option = getLegalCallOptions(player.rack, player.exposures, state.callWindow.discard)[0];
+    const result = option
+      ? applyGameAction(state, playerId, { type: 'CALL_TILE', rackTileIds: option.rackTileIds })
+      : applyGameAction(state, playerId, { type: 'PASS_ON_DISCARD' });
+    return result.ok ? result.state : state;
   }
-  const activePlayer = current.players.find((item) => item.id === playerId)!;
-  if (activePlayer.rack.length % 3 === 1) {
+
+  if (state.players[state.turnIndex].id !== playerId) return state;
+  let current = state;
+  let active = current.players.find((item) => item.id === playerId)!;
+  if (totalPlayerTiles(active) === 13) {
     const draw = applyGameAction(current, playerId, { type: 'DRAW_TILE' });
     if (!draw.ok) return current;
     current = draw.state;
+    if (current.phase === 'completed') return current;
+    active = current.players.find((item) => item.id === playerId)!;
   }
-  const updated = current.players.find((item) => item.id === playerId)!;
-  const discard = applyGameAction(current, playerId, { type: 'DISCARD_TILE', tileId: leastUsefulTileIds(updated, 1)[0] });
+
+  const tiles = [...active.rack, ...active.exposures.flatMap((exposure) => exposure.tiles)];
+  if (TrainingCardProvider.validateMahjong(tiles, active.exposures).valid) {
+    const mahjong = applyGameAction(current, playerId, { type: 'DECLARE_MAHJONG' });
+    if (mahjong.ok) return mahjong.state;
+  }
+
+  const discardId = leastUsefulTileIds(active, 1)[0];
+  const discard = applyGameAction(current, playerId, { type: 'DISCARD_TILE', tileId: discardId });
   return discard.ok ? discard.state : current;
 }

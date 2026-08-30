@@ -1,20 +1,42 @@
 # Rules Specification
 
-## Implemented in MVP
+## Rules baseline
 
-- A complete 152-tile American Mahjong wall: numbered suits, winds, dragons, flowers, and jokers
-- Deterministic seeded Fisher-Yates shuffle
-- Four seats with East receiving 14 tiles and other players 13
-- Deterministic, four-seat three-tile pass collection and distribution
-- First Charleston pass order (right, across, left), optional second Charleston (left, across, right), and matched-count courtesy passes
-- Draw/discard turn enforcement and turn advancement
-- Discard call windows, pass responses, exposed pungs and kongs, and replacement draws after kongs
-- Joker use inside callable sets and matching natural-tile exchanges from visible exposures
-- Original Training Card provider with four teaching hands
-- Valid/invalid Mahjong declaration boundary
-- Event sequence and state version increments
-- Public and player-private projections
+The game teaches NMJL-style American Mah Jongg mechanics with an original, non-proprietary Training Card. The annual commercial card remains behind the replaceable hand-provider boundary and is not reproduced by this project.
 
-## Deliberately simplified
+## Implemented in the guided MVP
 
-The engine does not yet resolve simultaneous call priority, concealed-hand restrictions, quints, dead-tile analysis, or every edge case from full annual-card play. These must remain engine rules rather than UI-only behavior. Full annual-card complexity stays behind a licensed provider.
+- Standard 152-tile wall: three numbered suits, Winds, Dragons, eight interchangeable Flowers, and eight Jokers
+- East receives 14 tiles; South, West, and North receive 13
+- First Charleston right/across/left and unanimous optional second Charleston left/across/right
+- One- or two-tile blind-pass spaces on each Charleston's final pass
+- Optional matched-count courtesy pass across from zero to three tiles
+- Jokers cannot be passed in any Charleston phase
+- Every turn keeps 13 total tiles between turns and 14 after a draw or claimed discard
+- A called Pung, Kong, Quint, or Sextet is followed by a discard; Kongs do not receive replacement draws
+- Every non-discarding player responds to the latest discard before play continues
+- Mahjong claims take priority; competing exposure claims resolve to the closest player in turn order
+- Calls must create an exact exposed group required by at least one still-viable Training Card hand
+- Natural Flowers may be called as an eligible Flower group and may redeem a Joker from a Flower exposure
+- Discarded Jokers are dead and cannot be called
+- Jokers may fill Pungs, Kongs, Quints, and Sextets but never singles or pairs
+- Concealed Training Card hands cannot make ordinary exposures
+- Mahjong requires exactly 14 physical tiles and an exact Training Card match
+- A natural discard may complete any final group, including a single or pair, for Mahjong
+- Games end through a valid Mahjong declaration or wall exhaustion
+- Bots use the same legality, candidate, calling, Joker, and Mahjong services as the human player
+- Public and player-private state projections keep concealed racks hidden
+
+## Beginner-mode policy
+
+The guided game prevents illegal actions before they occur rather than allowing the action and applying a dead-hand penalty. This preserves the underlying rule while making the first game teachable.
+
+## Deliberately outside this MVP
+
+- Physical-table procedures such as dice, wall breaking, tile naming, touching/racking commitment, and misnamed-discard penalties
+- Editing the size of a newly made exposure before the caller's discard
+- Formal payments, scoring, seat rotation, and multi-game table sessions
+- Tournament-specific timing and penalty variations
+- The rare all-four-players fully blind Charleston procedure; the guided interface supports one or two blind spaces while requiring at least one chosen tile
+
+These boundaries must remain explicit. They may not be silently approximated in the UI.

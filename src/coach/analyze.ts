@@ -14,7 +14,7 @@ export function getCoachVisibleContext(state: GameState, playerId: string): Coac
     discards: state.discards,
     callWindow: state.callWindow,
     wallCount: state.wall.length,
-    candidates: TrainingCardProvider.analyzeCandidates(tiles),
+    candidates: TrainingCardProvider.analyzeCandidates(tiles, player.exposures),
   };
 }
 
