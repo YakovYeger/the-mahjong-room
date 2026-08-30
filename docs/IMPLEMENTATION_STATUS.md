@@ -10,7 +10,7 @@ MVP — Guided first game
 - Four-hand original Training Card and deterministic candidate ranking
 - Three bots using the same hand-analysis utilities as the coach
 - 100-game simulation target and unit tests
-- Guest-first responsive game table, progressive hints, candidate hands, and educational review
+- Guest-first responsive game table, progressive hints, candidate hands, completed-game review, and versioned local progress
 - Hidden-information projections and Sites-ready build
 
 ## Next
@@ -22,7 +22,7 @@ MVP — Guided first game
 
 ## Known Issues
 
-- The guided demo offers a review after four human discard decisions rather than requiring a full wall exhaustion.
+- The coach completes the remaining wall after four independent human discard decisions so a first session stays approachable.
 - Calls and exposures are not yet part of the interactive slice.
 
 ## Architectural Decisions
