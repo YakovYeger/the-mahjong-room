@@ -1,6 +1,6 @@
 # Current Milestone
 
-Milestone 3 — Structured Coach Mode and event-derived review
+Milestone 4 — Guest persistence and account foundation
 
 ## Complete
 
@@ -21,13 +21,19 @@ Milestone 3 — Structured Coach Mode and event-derived review
 - Three progressive hint levels, tracked hint usage, and specific tile highlighting
 - Event-derived review cards, competence scores, and assistance-level recommendation
 - Versioned local progress containing completed games, skills, and assistance level
-- 19 passing unit/integration tests across engine and coach behavior
+- 23 passing unit/integration tests across engine, coach, and persistence behavior
+- Versioned guest progress with merge-safe account migration
+- Passwordless account screen and server-side magic-link confirmation endpoint
+- Authenticated progress API that derives ownership from the verified session
+- Supabase schema for games, canonical state, actions, events, reviews, and learning progress
+- Row-level security, explicit grants, ownership policies, and pgTAP schema checks
 
 ## Next
 
 - Simultaneous call priority, Mahjong-on-discard, concealed-hand restrictions, quints, and dead-tile analysis
-- Durable guest-to-account progress migration
-- Server-authoritative Supabase action endpoint, authentication, and reconnection
+- Connect a dedicated Supabase project, apply the migration, and run database/advisor checks
+- Server-authoritative game action endpoint with idempotency and optimistic version checks
+- Reconnection and resume from canonical server state
 - Multiplayer only after the expanded engine simulation is stable
 
 ## Known Issues
@@ -36,10 +42,13 @@ Milestone 3 — Structured Coach Mode and event-derived review
 - Call priority is simplified to the next responding player in automated play.
 - The courtesy pass is fully modeled by the engine; first-game coaching currently chooses zero tiles automatically.
 - Skill scores are transparent heuristics rather than a trained mastery model.
+- The repository has no Supabase project credentials; the deployed preview therefore remains guest-first and the account page clearly reports that connection is pending.
+- Database tests are committed but require a linked or local Supabase Postgres instance to execute.
 
 ## Architectural Decisions
 
 - The rules engine stays pure TypeScript and UI-agnostic.
 - Only the original Training Card ships; commercial annual card data is excluded.
 - The coach may use only player-visible information.
-- Accounts and Supabase are deferred until they solve persistence and multiplayer needs.
+- Guest play remains the default; accounts are optional and migrate local progress only after a successful server save.
+- Canonical game state and action history are server-only tables; browser roles receive no grants.

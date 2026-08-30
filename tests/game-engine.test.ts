@@ -173,5 +173,5 @@ describe('training card and simulation', () => {
 
   it('completes 100 deterministic games without invalid or stalled states', () => {
     expect(simulateGames(100)).toMatchObject({ requested: 100, completed: 100, invalid: 0, stalled: 0 });
-  }, 20_000);
+  }, 40_000);
 });

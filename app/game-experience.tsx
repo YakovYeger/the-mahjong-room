@@ -1,9 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { getCoachVisibleContext } from '../src/coach/analyze';
 import { getProgressiveHint, recommendCall, recommendCharlestonPass, recommendDiscard, recommendDraw } from '../src/coach/recommend';
 import { generateGameReview } from '../src/coach/review';
+import { loadGuestProgress, saveGuestProgress } from '../src/persistence/guest-progress';
 import { runBotAction } from '../src/game/bots';
 import { applyGameAction, createGame } from '../src/game/engine';
 import { tileKey, tileLabel } from '../src/game/tiles';
@@ -178,7 +180,15 @@ export function GameExperience() {
     setGame(completed);
     setReview(true);
     try {
-      localStorage.setItem('mahjong-room-progress-v1', JSON.stringify({ gamesCompleted: 1, assistanceLevel: gameReview.suggestedAssistanceLevel, skills: gameReview.skills, updatedAt: new Date().toISOString() }));
+      const previous = loadGuestProgress(localStorage);
+      const skillScores = new Map(previous?.skills.map((skill) => [skill.name, skill.score]) ?? []);
+      gameReview.skills.forEach((skill) => skillScores.set(skill.name, Math.max(skill.score, skillScores.get(skill.name) ?? 0)));
+      saveGuestProgress(localStorage, {
+        gamesCompleted: (previous?.gamesCompleted ?? 0) + 1,
+        assistanceLevel: gameReview.suggestedAssistanceLevel,
+        skills: [...skillScores].map(([name, score]) => ({ name, score })),
+        experiencePoints: (previous?.experiencePoints ?? 0) + 100,
+      });
     } catch {
       // Progress persistence is a convenience; gameplay still works when storage is unavailable.
     }
@@ -192,7 +202,7 @@ export function GameExperience() {
   if (!started) {
     return (
       <main className="welcome">
-        <nav><span className="brand">The Mahjong Room</span><span className="tiny-label">A calmer way to learn</span></nav>
+        <nav><span className="brand">The Mahjong Room</span><span className="welcome-nav-actions"><span className="tiny-label">A calmer way to learn</span><Link href="/account">Save progress</Link></span></nav>
         <section className="welcome-grid">
           <div className="welcome-copy"><p className="kicker">Your first game starts here</p><h1>Learn American Mahjong by <em>actually playing.</em></h1><p className="lede">A patient coach sits beside you through the tiles, the Charleston, and every decision—then quietly steps away as you get better.</p><button className="start-button" onClick={() => setStarted(true)}>Play your first hand <span>→</span></button><small>No account. No timer. We&apos;ll explain as we go.</small></div>
           <div className="welcome-rack" aria-hidden="true">{human.rack.slice(0, 8).map((tile) => { const label = shortTile(tile); return <span className="hero-tile" key={tile.id}><strong>{label.top}</strong><small>{label.bottom}</small></span>; })}<div className="teacher-note"><span>Coach</span><p>You already have a few tiles that work beautifully together.</p></div></div>
@@ -218,7 +228,7 @@ export function GameExperience() {
 
   return (
     <main className="shell">
-      <header className="topbar"><button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button><span className="game-label">Your first game · Full guidance</span><button className="quiet-button" onClick={() => setStarted(false)}>Leave table</button></header>
+      <header className="topbar"><button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button><span className="game-label">Your first game · Full guidance</span><span className="table-links"><Link href="/account">Save progress</Link><button className="quiet-button" onClick={() => setStarted(false)}>Leave table</button></span></header>
       <section className="table" aria-label="Guided American Mahjong table">
         <div className="opponent opponent-top"><span>June</span><small>{game.players[2].rack.length} tiles</small></div><div className="opponent opponent-left"><span>Mara</span><small>{game.players[1].rack.length} tiles</small></div><div className="opponent opponent-right"><span>Theo</span><small>{game.players[3].rack.length} tiles</small></div>
         <div className="center-mark"><span className="round">East</span><p>{game.phase === 'charleston' ? 'Charleston · First right' : `Turn ${game.turnCount + 1} · ${game.wall.length} in wall`}</p><strong>{game.phase === 'charleston' ? 'Pass 3 tiles' : respondingToDiscard ? 'Call or pass?' : needsDraw ? 'Draw a tile' : 'Choose a discard'}</strong><div className="discard-row">{game.discards.slice(-6).map((tile) => <span key={tile.id}>{shortTile(tile).top}</span>)}</div></div>
