@@ -68,6 +68,13 @@ export interface LegalCallOption {
   rackTileIds: string[];
 }
 
+export interface DiscardDeadHandAnalysis {
+  dead: boolean;
+  compatibleHandIds: string[];
+  possibleHandIds: string[];
+  message: string;
+}
+
 export function cardTileKey(tile: Tile): string {
   return tile.type.kind === 'flower' ? 'flower-any' : tileKey(tile);
 }
@@ -90,6 +97,68 @@ function matchExposureGroups(exposures: Exposure[], hand: HandDefinition): numbe
     available.splice(availableIndex, 1);
   }
   return used;
+}
+
+function physicalCopies(tileKey: string): number {
+  if (tileKey === 'flower-any' || tileKey === 'joker') return 8;
+  return 4;
+}
+
+function handPossibleFromDiscards(hand: HandDefinition, usedGroups: number[], exposures: Exposure[], discards: Tile[]): boolean {
+  const discarded = new Map<string, number>();
+  for (const tile of discards) {
+    const key = cardTileKey(tile);
+    discarded.set(key, (discarded.get(key) ?? 0) + 1);
+  }
+
+  const lockedNaturals = new Map<string, number>();
+  let lockedJokers = 0;
+  for (const exposure of exposures) {
+    for (const tile of exposure.tiles) {
+      if (tile.type.kind === 'joker') lockedJokers += 1;
+      else {
+        const key = cardTileKey(tile);
+        lockedNaturals.set(key, (lockedNaturals.get(key) ?? 0) + 1);
+      }
+    }
+  }
+
+  const fixedNaturals = new Map<string, number>();
+  const flexibleNaturals = new Map<string, number>();
+  for (const [index, required] of hand.groups.entries()) {
+    if (usedGroups.includes(index)) continue;
+    const bucket = required.jokerAllowed ? flexibleNaturals : fixedNaturals;
+    bucket.set(required.tileKey, (bucket.get(required.tileKey) ?? 0) + required.count);
+  }
+
+  let requiredJokers = 0;
+  const requiredKeys = new Set([...fixedNaturals.keys(), ...flexibleNaturals.keys()]);
+  for (const key of requiredKeys) {
+    const naturalCapacity = Math.max(0, physicalCopies(key) - (discarded.get(key) ?? 0) - (lockedNaturals.get(key) ?? 0));
+    const fixed = fixedNaturals.get(key) ?? 0;
+    if (naturalCapacity < fixed) return false;
+    requiredJokers += Math.max(0, (flexibleNaturals.get(key) ?? 0) - (naturalCapacity - fixed));
+  }
+
+  const jokerCapacity = Math.max(0, physicalCopies('joker') - (discarded.get('joker') ?? 0) - lockedJokers);
+  return requiredJokers <= jokerCapacity;
+}
+
+export function analyzeDiscardDeadHand(exposures: Exposure[], discards: Tile[]): DiscardDeadHandAnalysis {
+  const compatible = hands.flatMap((hand) => {
+    const usedGroups = matchExposureGroups(exposures, hand);
+    return usedGroups ? [{ hand, usedGroups }] : [];
+  });
+  const possible = compatible.filter(({ hand, usedGroups }) => handPossibleFromDiscards(hand, usedGroups, exposures, discards));
+  const dead = compatible.length > 0 && possible.length === 0;
+  return {
+    dead,
+    compatibleHandIds: compatible.map(({ hand }) => hand.id),
+    possibleHandIds: possible.map(({ hand }) => hand.id),
+    message: dead
+      ? 'The visible discard pool proves that every compatible Training Card line is now unavailable.'
+      : 'At least one compatible Training Card line remains possible from the visible discard pool.',
+  };
 }
 
 function scoreHand(tiles: Tile[], exposures: Exposure[], hand: HandDefinition): HandCandidate {

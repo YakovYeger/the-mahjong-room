@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { applyGameAction, createGame, getPlayerPrivateState, getPublicGameState, totalPlayerTiles } from '../src/game/engine';
 import { simulateGames } from '../src/game/simulation';
-import { createWall, deterministicShuffle } from '../src/game/tiles';
-import { cardTileKey, getLegalCallOptions, TrainingCardProvider } from '../src/game/training-card';
+import { createWall, deterministicShuffle, moveTileId, normalizeTileOrder, reorderTileIds } from '../src/game/tiles';
+import { analyzeDiscardDeadHand, cardTileKey, getLegalCallOptions, TrainingCardProvider } from '../src/game/training-card';
 import type { GameState } from '../src/game/types';
 
 const wall = createWall();
@@ -51,6 +51,14 @@ describe('tile model and deal', () => {
     expect(new Set(createWall().map((tile) => tile.id)).size).toBe(152);
     expect(deterministicShuffle(wall, 42).map((tile) => tile.id)).toEqual(deterministicShuffle(wall, 42).map((tile) => tile.id));
     expect(deterministicShuffle(wall, 42).map((tile) => tile.id)).not.toEqual(deterministicShuffle(wall, 43).map((tile) => tile.id));
+  });
+
+  it('preserves, drags, and keyboard-reorders the human rack without changing tiles', () => {
+    const rack = createGame().players[0].rack.slice(0, 4);
+    const initial = rack.map((tile) => tile.id);
+    expect(reorderTileIds(initial, initial[0], initial[2])).toEqual([initial[1], initial[2], initial[0], initial[3]]);
+    expect(moveTileId(initial, initial[2], -1)).toEqual([initial[0], initial[2], initial[1], initial[3]]);
+    expect(normalizeTileOrder(initial.slice(0, 2), rack)).toEqual(initial);
   });
 
   it('deals 14 tiles to East and 13 to the other seats without exposing concealed racks', () => {
@@ -152,6 +160,27 @@ describe('Training Card legality', () => {
     const exposure = { id: 'exposure', kind: 'pung' as const, tiles: exposureTiles, calledFromPlayerId: 'bot-1' };
     const candidates = TrainingCardProvider.analyzeCandidates([...fillers([], 11), ...exposureTiles], [exposure]);
     expect(candidates.find((candidate) => candidate.handId === 'garden-path')?.viable).toBe(false);
+  });
+
+  it('marks a hand dead only when the discard pool blocks every compatible line', () => {
+    const stillPossible = analyzeDiscardDeadHand([], [
+      ...tiles('bamboo-1', 3),
+    ]);
+    expect(stillPossible.dead).toBe(false);
+    expect(stillPossible.possibleHandIds.length).toBeGreaterThan(0);
+
+    const discarded = [
+      ...tiles('bamboo-1', 3),
+      ...tiles('wind-east', 3),
+      ...tiles('dragon-red', 3),
+      ...tiles('dragon-green', 3),
+      ...tiles('bamboo-5', 4),
+      ...tiles('characters-5', 4),
+    ];
+    const dead = analyzeDiscardDeadHand([], discarded);
+    expect(dead.dead).toBe(true);
+    expect(dead.possibleHandIds).toEqual([]);
+    expect(dead.compatibleHandIds).toHaveLength(5);
   });
 });
 

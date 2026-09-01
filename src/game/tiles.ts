@@ -18,6 +18,32 @@ export function tileLabel(tile: Tile): string {
   return 'Joker';
 }
 
+export function normalizeTileOrder(order: string[], tiles: Tile[]): string[] {
+  const tileIds = new Set(tiles.map((tile) => tile.id));
+  const retained = order.filter((id) => tileIds.has(id));
+  const retainedIds = new Set(retained);
+  return [...retained, ...tiles.map((tile) => tile.id).filter((id) => !retainedIds.has(id))];
+}
+
+export function reorderTileIds(order: string[], movingId: string, targetId: string): string[] {
+  const movingIndex = order.indexOf(movingId);
+  const targetIndex = order.indexOf(targetId);
+  if (movingIndex === -1 || targetIndex === -1 || movingIndex === targetIndex) return [...order];
+  const reordered = order.filter((id) => id !== movingId);
+  const currentTargetIndex = reordered.indexOf(targetId);
+  reordered.splice(movingIndex < targetIndex ? currentTargetIndex + 1 : currentTargetIndex, 0, movingId);
+  return reordered;
+}
+
+export function moveTileId(order: string[], tileId: string, offset: -1 | 1): string[] {
+  const from = order.indexOf(tileId);
+  const to = from + offset;
+  if (from === -1 || to < 0 || to >= order.length) return [...order];
+  const reordered = [...order];
+  [reordered[from], reordered[to]] = [reordered[to], reordered[from]];
+  return reordered;
+}
+
 export function createWall(): Tile[] {
   const tiles: Tile[] = [];
   let serial = 0;

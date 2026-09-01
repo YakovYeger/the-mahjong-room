@@ -1,6 +1,6 @@
 # Current Milestone
 
-Milestone 6 — Rules fidelity and Training Card UX
+Milestone 7 — Playing-table polish and visible information
 
 ## Complete
 
@@ -17,6 +17,11 @@ Milestone 6 — Rules fidelity and Training Card UX
 - Wall-game completion without an artificial turn cutoff
 - Bots that use the shared rules service for Charleston, calls, discards, and Mahjong
 - Refined, show/hide Training Card rail with visual group spacing, C/X labels, Joker markers, candidate progress, and teaching notes
+- Drag-and-drop and keyboard tile reordering that stays independent from game legality
+- Custom, accessible suit marks with written labels on rack, discard, and exposed tiles
+- Complete chronological discard pool rather than a latest-discard-only view
+- Conservative dead-hand indicator proven solely from visible discards, never concealed or exposed opponent holdings
+- Clear hover, focus, pressed, disabled, and responsive states across table actions
 - Progressive coach, game review, guest progress, optional account foundation, and persistence schema
 - Engine, coach, persistence, and deterministic simulation coverage
 
@@ -30,7 +35,7 @@ Milestone 6 — Rules fidelity and Training Card UX
 
 ## Explicit MVP boundaries
 
-- Guided mode prevents illegal actions instead of simulating dead-hand penalties.
+- Guided mode prevents illegal actions instead of simulating formal dead-hand penalties; its dead-hand symbol is informational and appears only when the discard pool alone proves the hand unavailable.
 - Physical wall breaking, misnamed tiles, touch/rack timing, payments, and seat rotation are not part of the single-game learning MVP.
 - The rare all-player fully blind Charleston procedure is not automated.
 - Skill scores are transparent learning heuristics rather than a trained mastery model.

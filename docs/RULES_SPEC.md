@@ -19,6 +19,8 @@ The game teaches NMJL-style American Mah Jongg mechanics with an original, non-p
 - Calls must create an exact exposed group required by at least one still-viable Training Card hand
 - Natural Flowers may be called as an eligible Flower group and may redeem a Joker from a Flower exposure
 - Discarded Jokers are dead and cannot be called
+- The learning table keeps the entire chronological discard pool visible
+- A dead-hand notice appears only when discard counts alone make every exposure-compatible Training Card line impossible; opponent racks and opponent exposures are deliberately excluded from that calculation
 - Jokers may fill Pungs, Kongs, Quints, and Sextets but never singles or pairs
 - Concealed Training Card hands cannot make ordinary exposures
 - Mahjong requires exactly 14 physical tiles and an exact Training Card match
