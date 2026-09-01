@@ -1,4 +1,4 @@
-import { applyGameAction, totalPlayerTiles } from './engine';
+import { applyGameAction, getLegalJokerExchangeOptions, totalPlayerTiles } from './engine';
 import { getLegalCallOptions, TrainingCardProvider } from './training-card';
 import type { GameState, Player } from './types';
 
@@ -62,6 +62,23 @@ export function runBotAction(state: GameState, playerId: string): GameState {
     current = draw.state;
     if (current.phase === 'completed') return current;
     active = current.players.find((item) => item.id === playerId)!;
+  }
+
+  let exchangeGuard = 0;
+  while (exchangeGuard < 8) {
+    const exchange = getLegalJokerExchangeOptions(current, playerId)[0];
+    if (!exchange) break;
+    const result = applyGameAction(current, playerId, {
+      type: 'EXCHANGE_JOKER',
+      exposureOwnerId: exchange.owner.id,
+      exposureId: exchange.exposure.id,
+      rackTileId: exchange.rackTile.id,
+      jokerTileId: exchange.joker.id,
+    });
+    if (!result.ok) break;
+    current = result.state;
+    active = current.players.find((item) => item.id === playerId)!;
+    exchangeGuard += 1;
   }
 
   const tiles = [...active.rack, ...active.exposures.flatMap((exposure) => exposure.tiles)];

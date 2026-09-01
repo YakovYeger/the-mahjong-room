@@ -35,6 +35,16 @@ export function reorderTileIds(order: string[], movingId: string, targetId: stri
   return reordered;
 }
 
+export function placeTileId(order: string[], movingId: string, targetId: string, placement: 'before' | 'after'): string[] {
+  const movingIndex = order.indexOf(movingId);
+  const targetIndex = order.indexOf(targetId);
+  if (movingIndex === -1 || targetIndex === -1 || movingIndex === targetIndex) return [...order];
+  const reordered = order.filter((id) => id !== movingId);
+  const currentTargetIndex = reordered.indexOf(targetId);
+  reordered.splice(currentTargetIndex + (placement === 'after' ? 1 : 0), 0, movingId);
+  return reordered;
+}
+
 export function moveTileId(order: string[], tileId: string, offset: -1 | 1): string[] {
   const from = order.indexOf(tileId);
   const to = from + offset;

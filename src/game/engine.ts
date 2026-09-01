@@ -1,6 +1,6 @@
 import { createWall, deterministicShuffle } from './tiles';
 import { cardTileKey, getLegalCallOptions, TrainingCardProvider } from './training-card';
-import type { CallResponse, GameAction, GameActionResult, GameEvent, GameState, Player, Seat, Tile } from './types';
+import type { CallResponse, Exposure, GameAction, GameActionResult, GameEvent, GameState, Player, Seat, Tile } from './types';
 
 const seats: Seat[] = ['east', 'south', 'west', 'north'];
 const names = ['You', 'Mara', 'June', 'Theo'];
@@ -16,6 +16,26 @@ function appendEvent(state: GameState, event: GameEventInput): GameEvent {
 
 export function totalPlayerTiles(player: Player): number {
   return player.rack.length + player.exposures.reduce((total, exposure) => total + exposure.tiles.length, 0);
+}
+
+export interface JokerExchangeOption {
+  owner: Player;
+  exposure: Exposure;
+  joker: Tile;
+  rackTile: Tile;
+}
+
+export function getLegalJokerExchangeOptions(state: GameState, playerId: string): JokerExchangeOption[] {
+  if (state.phase !== 'playing' || state.callWindow || state.players[state.turnIndex]?.id !== playerId) return [];
+  const player = state.players.find((item) => item.id === playerId);
+  if (!player || totalPlayerTiles(player) !== 14) return [];
+  return state.players.flatMap((owner) => owner.exposures.flatMap((exposure) => {
+    const natural = exposure.tiles.find((tile) => tile.type.kind !== 'joker');
+    if (!natural) return [];
+    const matchingRackTiles = player.rack.filter((tile) => tile.type.kind !== 'joker' && cardTileKey(tile) === cardTileKey(natural));
+    const jokers = exposure.tiles.filter((tile) => tile.type.kind === 'joker');
+    return jokers.flatMap((joker) => matchingRackTiles.map((rackTile) => ({ owner, exposure, joker, rackTile })));
+  }));
 }
 
 export function createGame(seed = 2026): GameState {

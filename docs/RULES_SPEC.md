@@ -18,6 +18,7 @@ The game teaches NMJL-style American Mah Jongg mechanics with an original, non-p
 - Mahjong claims take priority; competing exposure claims resolve to the closest player in turn order
 - Calls must create an exact exposed group required by at least one still-viable Training Card hand
 - Natural Flowers may be called as an eligible Flower group and may redeem a Joker from a Flower exposure
+- On their active turn after drawing or calling, bots and the human may redeem matching natural tiles for Jokers in any exposed hand before discarding
 - Discarded Jokers are dead and cannot be called
 - The learning table keeps the entire chronological discard pool visible
 - A dead-hand notice appears only when discard counts alone make every exposure-compatible Training Card line impossible; opponent racks and opponent exposures are deliberately excluded from that calculation

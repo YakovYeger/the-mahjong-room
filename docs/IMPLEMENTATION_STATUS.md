@@ -1,6 +1,6 @@
 # Current Milestone
 
-Milestone 7 — Playing-table polish and visible information
+Milestone 8 — Motion, stronger bots, and resumable games
 
 ## Complete
 
@@ -22,14 +22,22 @@ Milestone 7 — Playing-table polish and visible information
 - Complete chronological discard pool rather than a latest-discard-only view
 - Conservative dead-hand indicator proven solely from visible discards, never concealed or exposed opponent holdings
 - Clear hover, focus, pressed, disabled, and responsive states across table actions
+- Motion-powered rack layout transitions with an explicit before/after drop marker
+- Shared Joker redemption discovery used by both the human controls and bot turns
+- Versioned, device-local game checkpoints with rack order, table state, coach state, and game number
+- Dynamic landing, table, and review copy for game two and beyond
+- Full-screen landing composition that keeps its green feature panel inside the content frame
 - Progressive coach, game review, guest progress, optional account foundation, and persistence schema
 - Engine, coach, persistence, and deterministic simulation coverage
 
 ## Next
 
 - Connect a dedicated Supabase project, apply the migration, and run database/advisor checks
-- Server-authoritative game action endpoint with idempotency and optimistic version checks
-- Reconnection and resume from canonical server state
+- Add a signed-in `game_sessions` record containing the latest canonical snapshot plus `stateVersion`
+- Sync the device checkpoint after each accepted action, with idempotency and optimistic version checks
+- On sign-in, merge learning progress but select the newest valid game checkpoint rather than merging game states
+- Reconnect and resume across devices from the server snapshot; keep local storage as an offline/device fallback
+- Move canonical action execution server-side before enabling multiplayer
 - Add browser automation for the complete first-game route to continuous integration
 - Multiplayer only after server-authoritative action handling is stable
 

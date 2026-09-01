@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { applyGameAction, createGame, getPlayerPrivateState, getPublicGameState, totalPlayerTiles } from '../src/game/engine';
+import { applyGameAction, createGame, getLegalJokerExchangeOptions, getPlayerPrivateState, getPublicGameState, totalPlayerTiles } from '../src/game/engine';
+import { runBotAction } from '../src/game/bots';
 import { simulateGames } from '../src/game/simulation';
-import { createWall, deterministicShuffle, moveTileId, normalizeTileOrder, reorderTileIds } from '../src/game/tiles';
+import { createWall, deterministicShuffle, moveTileId, normalizeTileOrder, placeTileId, reorderTileIds } from '../src/game/tiles';
 import { analyzeDiscardDeadHand, cardTileKey, getLegalCallOptions, TrainingCardProvider } from '../src/game/training-card';
 import type { GameState } from '../src/game/types';
 
@@ -57,6 +58,8 @@ describe('tile model and deal', () => {
     const rack = createGame().players[0].rack.slice(0, 4);
     const initial = rack.map((tile) => tile.id);
     expect(reorderTileIds(initial, initial[0], initial[2])).toEqual([initial[1], initial[2], initial[0], initial[3]]);
+    expect(placeTileId(initial, initial[0], initial[2], 'before')).toEqual([initial[1], initial[0], initial[2], initial[3]]);
+    expect(placeTileId(initial, initial[0], initial[2], 'after')).toEqual([initial[1], initial[2], initial[0], initial[3]]);
     expect(moveTileId(initial, initial[2], -1)).toEqual([initial[0], initial[2], initial[1], initial[3]]);
     expect(normalizeTileOrder(initial.slice(0, 2), rack)).toEqual(initial);
   });
@@ -260,6 +263,21 @@ describe('turns, calls and exposures', () => {
     const result = applyGameAction(state, 'human', { type: 'EXCHANGE_JOKER', exposureOwnerId: 'bot-1', exposureId: 'flowers', rackTileId: flowers[0].id, jokerTileId: joker.id });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.state.players[0].rack.some((tile) => tile.id === joker.id)).toBe(true);
+  });
+
+  it('finds shared Joker exchanges and bots redeem them before discarding', () => {
+    const state = playingState();
+    state.turnIndex = 1;
+    const sixes = tiles('dots-6', 4);
+    const joker = wall.find((tile) => tile.type.kind === 'joker')!;
+    state.players[1].rack = [sixes[3], ...fillers(['dots-6'], 13)];
+    state.players[2].exposures = [{ id: 'open-sixes', kind: 'kong', tiles: [sixes[0], sixes[1], sixes[2], joker], calledFromPlayerId: 'human' }];
+    expect(getLegalJokerExchangeOptions(state, 'bot-1')).toHaveLength(1);
+
+    const result = runBotAction(state, 'bot-1');
+    expect(result.events.some((event) => event.type === 'JOKER_EXCHANGED' && event.playerId === 'bot-1')).toBe(true);
+    expect(result.players[1].rack.some((tile) => tile.id === joker.id)).toBe(true);
+    expect(result.players[2].exposures[0].tiles.some((tile) => tile.id === sixes[3].id)).toBe(true);
   });
 });
 

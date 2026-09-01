@@ -1,14 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { AnimatePresence, MotionConfig, motion } from 'motion/react';
+import { useEffect, useMemo, useState } from 'react';
 import { getCoachVisibleContext } from '../src/coach/analyze';
 import { getProgressiveHint, recommendCall, recommendCharlestonPass, recommendDiscard, recommendDraw } from '../src/coach/recommend';
 import { generateGameReview } from '../src/coach/review';
 import { loadGuestProgress, saveGuestProgress } from '../src/persistence/guest-progress';
+import { loadGuestGameSession, saveGuestGameSession } from '../src/persistence/guest-session';
 import { runBotAction } from '../src/game/bots';
-import { applyGameAction, createGame, totalPlayerTiles } from '../src/game/engine';
-import { moveTileId, normalizeTileOrder, reorderTileIds, tileLabel } from '../src/game/tiles';
+import { applyGameAction, createGame, getLegalJokerExchangeOptions, totalPlayerTiles } from '../src/game/engine';
+import { moveTileId, normalizeTileOrder, placeTileId, tileLabel } from '../src/game/tiles';
 import { analyzeDiscardDeadHand, cardTileKey, getLegalCallOptions, TrainingCardProvider } from '../src/game/training-card';
 import type { GameState, HandGroup, Player, Suit, Tile } from '../src/game/types';
 
@@ -172,6 +174,10 @@ export function GameExperience() {
   const [cardOpen, setCardOpen] = useState(true);
   const [rackOrder, setRackOrder] = useState(() => game.players[0].rack.map((tile) => tile.id));
   const [draggingTileId, setDraggingTileId] = useState<string | null>(null);
+  const [dropIntent, setDropIntent] = useState<{ targetId: string; placement: 'before' | 'after' } | null>(null);
+  const [gameNumber, setGameNumber] = useState(1);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [hasSavedSession, setHasSavedSession] = useState(false);
   const human = game.players[0];
   const orderedRack = useMemo(() => {
     const order = normalizeTileOrder(rackOrder, human.rack);
@@ -198,14 +204,7 @@ export function GameExperience() {
   const deadHand = useMemo(() => analyzeDiscardDeadHand(human.exposures, game.discards), [game.discards, human.exposures]);
   const blindAvailable = game.phase === 'charleston' && !game.charlestonCourtesy && [2, 5].includes(game.charlestonPassIndex);
   const expectedPassTiles = game.charlestonCourtesy ? undefined : 3 - blindCount;
-  const exchangeOption = game.phase === 'playing' && !game.callWindow && canDiscard
-    ? game.players.flatMap((owner) => owner.exposures.flatMap((exposure) => {
-        const joker = exposure.tiles.find((tile) => tile.type.kind === 'joker');
-        const natural = exposure.tiles.find((tile) => tile.type.kind !== 'joker');
-        const rackTile = natural ? human.rack.find((tile) => tile.type.kind !== 'joker' && cardTileKey(tile) === cardTileKey(natural)) : undefined;
-        return joker && rackTile ? [{ owner, exposure, joker, rackTile }] : [];
-      }))[0]
-    : undefined;
+  const exchangeOption = getLegalJokerExchangeOptions(game, 'human')[0];
   const coachRecommendation = useMemo(() => {
     if (game.phase === 'charleston') return recommendCharlestonPass(coachContext);
     if (respondingToDiscard) return recommendCall(coachContext);
@@ -214,6 +213,52 @@ export function GameExperience() {
   }, [coachContext, game.phase, needsDraw, respondingToDiscard]);
   const coachHint = getProgressiveHint(coachRecommendation, hintLevel, human.rack);
   const gameReview = useMemo(() => generateGameReview(game, 'human', { hintsRequested, manualTurns }), [game, hintsRequested, manualTurns]);
+
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const saved = loadGuestGameSession(localStorage);
+      if (saved) {
+        setGame(saved.game);
+        setRackOrder(normalizeTileOrder(saved.rackOrder, saved.game.players[0].rack));
+        setManualTurns(saved.manualTurns);
+        setHintsRequested(saved.hintsRequested);
+        setHintLevel(saved.hintLevel);
+        setReview(saved.review);
+        setGameNumber(saved.gameNumber);
+        setHasSavedSession(true);
+      } else {
+        const progress = loadGuestProgress(localStorage);
+        if (progress?.gamesCompleted) {
+          const nextNumber = progress.gamesCompleted + 1;
+          const next = createGame(2025 + nextNumber);
+          setGame(next);
+          setRackOrder(next.players[0].rack.map((tile) => tile.id));
+          setGameNumber(nextNumber);
+        }
+      }
+      setSessionReady(true);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!sessionReady || (!started && !hasSavedSession)) return;
+    try {
+      saveGuestGameSession(localStorage, {
+        gameNumber,
+        game,
+        rackOrder: normalizeTileOrder(rackOrder, game.players[0].rack),
+        manualTurns,
+        hintsRequested,
+        hintLevel,
+        review,
+      });
+    } catch {
+      // A device-local checkpoint is helpful but never required for play.
+    }
+  }, [game, gameNumber, hasSavedSession, hintLevel, hintsRequested, manualTurns, rackOrder, review, sessionReady, started]);
 
   const resetSelection = () => {
     setSelected([]);
@@ -225,9 +270,10 @@ export function GameExperience() {
     setSelected((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length < 5 ? [...current, id] : current);
   };
 
-  const dropTile = (movingId: string, targetId: string) => {
-    setRackOrder((current) => reorderTileIds(normalizeTileOrder(current, human.rack), movingId, targetId));
+  const dropTile = (movingId: string, targetId: string, placement: 'before' | 'after') => {
+    setRackOrder((current) => placeTileId(normalizeTileOrder(current, human.rack), movingId, targetId, placement));
     setDraggingTileId(null);
+    setDropIntent(null);
     setNotice('Rack order updated. Tile order does not affect the rules.');
   };
 
@@ -348,15 +394,33 @@ export function GameExperience() {
     setHintsRequested((count) => count + 1);
   };
 
+  const startNextGame = () => {
+    const nextNumber = gameNumber + 1;
+    const next = createGame(2025 + nextNumber);
+    setGame(next);
+    setGameNumber(nextNumber);
+    setRackOrder(next.players[0].rack.map((tile) => tile.id));
+    setReview(false);
+    resetSelection();
+    setManualTurns(0);
+    setHintsRequested(0);
+    setHintLevel(0);
+    setNotice('');
+  };
+
   if (!started) {
+    const returning = gameNumber > 1 || hasSavedSession;
+    const startLabel = review && game.phase === 'completed'
+      ? `View game ${gameNumber} review`
+      : hasSavedSession ? `Resume game ${gameNumber}` : gameNumber === 1 ? 'Play your first hand' : `Play game ${gameNumber}`;
     return (
       <main className="welcome">
         <nav><span className="brand">The Mahjong Room</span><span className="welcome-nav-actions"><span className="tiny-label">A calmer way to learn</span><Link href="/account">Save progress</Link></span></nav>
         <section className="welcome-grid">
-          <div className="welcome-copy"><p className="kicker">Your first game starts here</p><h1>Learn American Mahjong by <em>actually playing.</em></h1><p className="lede">A patient coach sits beside you through the tiles, the Charleston, and every decision—then quietly steps away as you get better.</p><button className="start-button" onClick={() => setStarted(true)}>Play your first hand <span>→</span></button><small>No account. No timer. We&apos;ll explain as we go.</small></div>
+          <div className="welcome-copy"><p className="kicker">{returning ? `Game ${gameNumber} is ready` : 'Your first game starts here'}</p><h1>{returning ? <>Build your Mahjong instincts <em>one hand at a time.</em></> : <>Learn American Mahjong by <em>actually playing.</em></>}</h1><p className="lede">{returning ? 'Pick up exactly where you left off. Your rack order, table state, coaching level, and game number are saved on this device.' : 'A patient coach sits beside you through the tiles, the Charleston, and every decision—then quietly steps away as you get better.'}</p><button className="start-button" onClick={() => { setHasSavedSession(true); setStarted(true); }}>{startLabel} <span>→</span></button><small>{hasSavedSession ? 'Saved automatically on this device.' : 'No account. No timer. We’ll explain as we go.'}</small></div>
           <div className="welcome-rack" aria-hidden="true">{human.rack.slice(0, 8).map((tile) => { const label = shortTile(tile); return <span className="hero-tile" key={tile.id}><strong>{label.top}</strong><small>{label.bottom}</small></span>; })}<div className="teacher-note"><span>Coach</span><p>You already have a few tiles that work beautifully together.</p></div></div>
         </section>
-        <footer><span>Original Training Card</span><span>One human · three patient bots</span><span>Built for complete beginners</span></footer>
+        <footer><span>Original Training Card</span><span>Game {gameNumber} · device checkpoint ready</span><span>One human · three sharper bots</span></footer>
       </main>
     );
   }
@@ -365,12 +429,12 @@ export function GameExperience() {
     return (
       <main className="review-page">
         <header><span className="brand">The Mahjong Room</span><span>Game review</span></header>
-        <section className="review-hero"><p className="kicker">First game complete</p><h1>{game.winnerId === 'human' ? 'Mahjong—beautifully played.' : game.winnerId ? `${game.players.find((player) => player.id === game.winnerId)?.name} called Mahjong.` : 'The wall is complete.'}</h1><p>{gameReview.summary}</p></section>
+        <section className="review-hero"><p className="kicker">Game {gameNumber} complete</p><h1>{game.winnerId === 'human' ? 'Mahjong—beautifully played.' : game.winnerId ? `${game.players.find((player) => player.id === game.winnerId)?.name} called Mahjong.` : 'The wall is complete.'}</h1><p>{gameReview.summary}</p></section>
         <section className="review-grid">
           {gameReview.cards.map((card) => <article key={card.id}><span className={`review-icon ${card.tone === 'strong' ? '' : 'coral'}`}>{card.tone === 'strong' ? '✓' : '↗'}</span><p className="kicker">{card.eyebrow}</p><h2>{card.title}</h2><p>{card.body}</p></article>)}
           <article className="skill-card"><p className="kicker">Skills practiced</p>{gameReview.skills.map(({ name, score }) => <div className="skill" key={name}><span>{name}</span><i><b style={{ width: `${score}%` }} /></i></div>)}</article>
         </section>
-        <div className="review-actions"><button onClick={() => { const next = createGame(2027); setGame(next); setRackOrder(next.players[0].rack.map((tile) => tile.id)); setReview(false); resetSelection(); setManualTurns(0); setHintsRequested(0); setHintLevel(0); }}>Play game two</button><button className="secondary" onClick={() => setStarted(false)}>Back home</button></div>
+        <div className="review-actions"><button onClick={startNextGame}>Play game {gameNumber + 1}</button><button className="secondary" onClick={() => setStarted(false)}>Back home</button></div>
       </main>
     );
   }
@@ -382,7 +446,7 @@ export function GameExperience() {
 
   return (
     <main className="shell">
-      <header className="topbar"><button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button><span className="game-label">Your first game · Full guidance</span><span className="table-links"><button className="toolbar-action" aria-label={cardOpen ? 'Hide Training Card' : 'Show Training Card'} aria-expanded={cardOpen} aria-controls="training-card" onClick={() => setCardOpen((open) => !open)}><span aria-hidden="true">▤</span><b>{cardOpen ? 'Hide card' : 'Show card'}</b></button><Link className="toolbar-action" aria-label="Save progress" href="/account"><span aria-hidden="true">↗</span><b>Save progress</b></Link><button className="toolbar-action leave-action" aria-label="Leave table" onClick={() => setStarted(false)}><span aria-hidden="true">×</span><b>Leave table</b></button></span></header>
+      <header className="topbar"><button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button><span className="game-label">Game {gameNumber} · Full guidance · Saved locally</span><span className="table-links"><button className="toolbar-action" aria-label={cardOpen ? 'Hide Training Card' : 'Show Training Card'} aria-expanded={cardOpen} aria-controls="training-card" onClick={() => setCardOpen((open) => !open)}><span aria-hidden="true">▤</span><b>{cardOpen ? 'Hide card' : 'Show card'}</b></button><Link className="toolbar-action" aria-label="Save progress" href="/account"><span aria-hidden="true">↗</span><b>Save progress</b></Link><button className="toolbar-action leave-action" aria-label="Leave table" onClick={() => setStarted(false)}><span aria-hidden="true">×</span><b>Leave table</b></button></span></header>
       <section className="game-table" aria-label="Guided American Mahjong table">
         <div className="opponent opponent-top"><span>June</span><small>{totalPlayerTiles(game.players[2])} tiles</small></div><div className="opponent opponent-left"><span>Mara</span><small>{totalPlayerTiles(game.players[1])} tiles</small></div><div className="opponent opponent-right"><span>Theo</span><small>{totalPlayerTiles(game.players[3])} tiles</small></div>
         <div className="table-center">
@@ -410,7 +474,18 @@ export function GameExperience() {
         <aside className="coach-card"><div className="coach-eyebrow"><span>Coach</span><span>{hintLevel + 1} of 3</span></div><h1>{coachRecommendation.headline}</h1><p>{notice || coachHint}</p><div className="candidate-list">{candidates.map((candidate, index) => <div key={candidate.handId}><span>{index === 0 ? 'Best match' : 'Alternative'}</span><strong>{candidate.name}</strong><small>{candidate.matchingTileIds.length} / 14 useful</small></div>)}</div><button onClick={requestHint}>{hintLevel < 2 ? 'Show me what to notice' : 'Why these tiles?'}</button></aside>
         <div className="player-area">
           <div className="exposure-row">{game.players.flatMap((player) => player.exposures.map((exposure) => <div key={exposure.id}><small>{player.id === 'human' ? `your ${exposure.kind}` : `${player.name} · ${exposure.kind}`}</small>{exposure.tiles.map((tile) => <span className="exposure-tile" title={tileLabel(tile)} key={tile.id}><TileFace tile={tile} compact /></span>)}</div>))}</div>
-          <div className="rack" aria-label="Your rack">{orderedRack.map((tile) => { const cannotPassJoker = game.phase === 'charleston' && tile.type.kind === 'joker'; return <button className={`tile ${selected.includes(tile.id) ? 'selected' : ''} ${draggingTileId === tile.id ? 'dragging' : ''} ${cannotPassJoker ? 'cannot-pass' : ''} ${hintLevel >= 1 && coachRecommendation.tileIds.includes(tile.id) ? 'recommended' : ''} ${hintLevel >= 1 && best && !best.matchingTileIds.includes(tile.id) ? 'hinted' : ''}`} key={tile.id} aria-label={`${tileLabel(tile)}${cannotPassJoker ? ', cannot be passed' : ''}. Drag to reorder or use Alt and arrow keys.`} aria-pressed={selected.includes(tile.id)} aria-disabled={cannotPassJoker} draggable onDragStart={(event) => { setDraggingTileId(tile.id); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', tile.id); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; }} onDrop={(event) => { event.preventDefault(); dropTile(event.dataTransfer.getData('text/plain') || draggingTileId || '', tile.id); }} onDragEnd={() => setDraggingTileId(null)} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); nudgeTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); nudgeTile(tile.id, 1); } }} onClick={() => cannotPassJoker ? setNotice('Jokers may be rearranged, but they cannot be passed during the Charleston.') : toggleTile(tile.id)}><span className="drag-grip" aria-hidden="true">••</span><TileFace tile={tile} /></button>; })}</div>
+          <MotionConfig reducedMotion="user" transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.7 }}>
+            <div className={`rack ${draggingTileId ? 'is-reordering' : ''}`} aria-label="Your rack">
+              <AnimatePresence>{draggingTileId ? <motion.div className="rack-drop-message" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}>Release beside the coral marker</motion.div> : null}</AnimatePresence>
+              {orderedRack.map((tile) => {
+                const cannotPassJoker = game.phase === 'charleston' && tile.type.kind === 'joker';
+                const intent = dropIntent?.targetId === tile.id ? dropIntent.placement : null;
+                return <motion.div className={`tile-slot ${intent ? `drop-${intent}` : ''}`} layout key={tile.id}>
+                  <button className={`tile ${selected.includes(tile.id) ? 'selected' : ''} ${draggingTileId === tile.id ? 'dragging' : ''} ${cannotPassJoker ? 'cannot-pass' : ''} ${hintLevel >= 1 && coachRecommendation.tileIds.includes(tile.id) ? 'recommended' : ''} ${hintLevel >= 1 && best && !best.matchingTileIds.includes(tile.id) ? 'hinted' : ''}`} aria-label={`${tileLabel(tile)}${cannotPassJoker ? ', cannot be passed' : ''}. Drag to reorder or use Alt and arrow keys.`} aria-pressed={selected.includes(tile.id)} aria-disabled={cannotPassJoker} draggable onDragStart={(event) => { setDraggingTileId(tile.id); setDropIntent(null); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', tile.id); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; if (draggingTileId && draggingTileId !== tile.id) { const bounds = event.currentTarget.getBoundingClientRect(); const placement = event.clientX < bounds.left + bounds.width / 2 ? 'before' : 'after'; setDropIntent((current) => current?.targetId === tile.id && current.placement === placement ? current : { targetId: tile.id, placement }); } }} onDrop={(event) => { event.preventDefault(); const movingId = event.dataTransfer.getData('text/plain') || draggingTileId || ''; const placement = dropIntent?.targetId === tile.id ? dropIntent.placement : 'before'; dropTile(movingId, tile.id, placement); }} onDragEnd={() => { setDraggingTileId(null); setDropIntent(null); }} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); nudgeTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); nudgeTile(tile.id, 1); } }} onClick={() => cannotPassJoker ? setNotice('Jokers may be rearranged, but they cannot be passed during the Charleston.') : toggleTile(tile.id)}><span className="drag-grip" aria-hidden="true">••</span><TileFace tile={tile} /></button>
+                </motion.div>;
+              })}
+            </div>
+          </MotionConfig>
           <div className="player-controls"><p><strong>Your rack</strong><span>{game.phase === 'charleston' ? game.charlestonCourtesy ? `${selected.length} selected · optional` : `${selected.length} of ${expectedPassTiles} selected${blindCount ? ` · ${blindCount} blind` : ''}` : respondingToDiscard ? `${selected.length} selected for a call` : needsDraw ? '13 tiles · ready to draw' : `${totalPlayerTiles(human)} tiles · ${selected.length} selected`}</span></p>
             <small className="reorder-hint" id="rack-reorder-hint"><span aria-hidden="true">↔</span> Drag tiles to arrange · Alt + arrow keys</small>
             <div className="action-group">

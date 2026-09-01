@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { GUEST_PROGRESS_KEY, loadGuestProgress, mergeProgress, parseGuestProgress, saveGuestProgress } from '../src/persistence/guest-progress';
+import { GUEST_GAME_SESSION_KEY, loadGuestGameSession, parseGuestGameSession, saveGuestGameSession } from '../src/persistence/guest-session';
 import { syncGuestProgress } from '../src/persistence/progress-sync';
+import { createGame } from '../src/game/engine';
 
 function memoryStorage() {
   const values = new Map<string, string>();
@@ -23,6 +25,25 @@ describe('guest progress', () => {
     const guest = parseGuestProgress({ version: 1, gamesCompleted: 2, assistanceLevel: 2, skills: [{ name: 'Charleston', score: 65 }], experiencePoints: 150, updatedAt: new Date().toISOString() })!;
     const merged = mergeProgress({ user_id: 'user-1', games_completed: 5, current_assistance_level: 1, skills_json: { Charleston: 80 }, experience_points: 400, updated_at: new Date().toISOString() }, guest);
     expect(merged).toMatchObject({ user_id: 'user-1', games_completed: 5, current_assistance_level: 2, skills_json: { Charleston: 80 }, experience_points: 400 });
+  });
+});
+
+describe('guest game session', () => {
+  it('round-trips a versioned in-progress game and rejects malformed state', () => {
+    const storage = memoryStorage();
+    const game = createGame(2027);
+    saveGuestGameSession(storage, {
+      gameNumber: 2,
+      game,
+      rackOrder: game.players[0].rack.map((tile) => tile.id),
+      manualTurns: 1,
+      hintsRequested: 2,
+      hintLevel: 1,
+      review: false,
+    });
+    expect(loadGuestGameSession(storage)).toMatchObject({ version: 1, gameNumber: 2, game: { id: game.id } });
+    expect(storage.getItem(GUEST_GAME_SESSION_KEY)).not.toBeNull();
+    expect(parseGuestGameSession({ version: 1, gameNumber: 2, game: null })).toBeNull();
   });
 });
 

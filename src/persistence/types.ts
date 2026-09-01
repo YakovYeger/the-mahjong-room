@@ -26,3 +26,16 @@ export interface ProgressSyncResult {
   progress?: PlayerProgressRow;
   message: string;
 }
+
+export interface GuestGameSession {
+  version: 1;
+  gameNumber: number;
+  game: GameState;
+  rackOrder: string[];
+  manualTurns: number;
+  hintsRequested: number;
+  hintLevel: number;
+  review: boolean;
+  savedAt: string;
+}
+import type { GameState } from '../game/types';
