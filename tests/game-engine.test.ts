@@ -136,10 +136,12 @@ describe('Charleston state machine', () => {
 describe('Training Card legality', () => {
   it('stores explicit groups, exposure status and joker eligibility', () => {
     const hands = TrainingCardProvider.getHands();
-    expect(hands).toHaveLength(5);
+    expect(hands).toHaveLength(10);
     expect(hands.find((hand) => hand.id === 'garden-path')).toMatchObject({ exposure: 'concealed' });
     expect(hands.flatMap((hand) => hand.groups).some((group) => group.kind === 'quint')).toBe(true);
+    expect(hands.flatMap((hand) => hand.groups).some((group) => group.kind === 'sextet')).toBe(true);
     expect(hands.flatMap((hand) => hand.groups).filter((group) => ['single', 'pair'].includes(group.kind)).every((group) => !group.jokerAllowed)).toBe(true);
+    expect(hands.every((hand) => hand.groups.reduce((total, group) => total + group.count, 0) === 14)).toBe(true);
   });
 
   it('uses jokers only in eligible groups and requires exactly 14 tiles', () => {
@@ -156,6 +158,22 @@ describe('Training Card legality', () => {
     ];
     expect(TrainingCardProvider.validateMahjong(invalidPairJoker).valid).toBe(false);
     expect(TrainingCardProvider.validateMahjong([...valid, tiles('wind-north', 1)[0]]).valid).toBe(false);
+  });
+
+  it('recognizes every new Training Card line as an exact Mahjong', () => {
+    const jokers = wall.filter((tile) => tile.type.kind === 'joker').slice(0, 4);
+    const flowers = wall.filter((tile) => tile.type.kind === 'flower').slice(0, 5);
+    const examples = [
+      { id: 'crak-ladder', hand: [...tiles('characters-1', 3), ...tiles('characters-2', 3), ...tiles('characters-3', 3), ...tiles('characters-4', 3), ...tiles('dragon-white', 2)] },
+      { id: 'twin-runs', hand: [...tiles('dots-3', 2), ...tiles('dots-4', 2), ...tiles('dots-5', 2), ...tiles('dots-6', 2), ...tiles('dots-7', 2), ...tiles('wind-north', 1), ...tiles('wind-east', 1), ...tiles('wind-south', 1), ...tiles('wind-west', 1)] },
+      { id: 'dragon-garden', hand: [...tiles('dragon-red', 3), ...tiles('dragon-green', 3), ...tiles('dragon-white', 3), ...flowers] },
+      { id: 'seven-stars', hand: [...tiles('bamboo-7', 4), jokers[0], jokers[1], ...tiles('dots-7', 4), jokers[2], jokers[3], ...tiles('wind-west', 2)] },
+      { id: 'season-line', hand: [...wall.filter((tile) => tile.type.kind === 'flower').slice(0, 4), ...tiles('characters-3', 3), ...tiles('characters-6', 3), ...tiles('characters-9', 3), ...tiles('dragon-red', 1)] },
+    ];
+    for (const example of examples) {
+      expect(example.hand).toHaveLength(14);
+      expect(TrainingCardProvider.validateMahjong(example.hand)).toMatchObject({ valid: true, handId: example.id });
+    }
   });
 
   it('marks concealed hands and incompatible exposures as unavailable', () => {
@@ -175,15 +193,19 @@ describe('Training Card legality', () => {
     const discarded = [
       ...tiles('bamboo-1', 3),
       ...tiles('wind-east', 3),
-      ...tiles('dragon-red', 3),
+      ...tiles('dragon-red', 4),
       ...tiles('dragon-green', 3),
+      ...tiles('dragon-white', 3),
       ...tiles('bamboo-5', 4),
       ...tiles('characters-5', 4),
+      ...tiles('dots-3', 3),
+      ...tiles('wind-west', 3),
+      ...wall.filter((tile) => tile.type.kind === 'flower'),
     ];
     const dead = analyzeDiscardDeadHand([], discarded);
     expect(dead.dead).toBe(true);
     expect(dead.possibleHandIds).toEqual([]);
-    expect(dead.compatibleHandIds).toHaveLength(5);
+    expect(dead.compatibleHandIds).toHaveLength(10);
   });
 });
 

@@ -59,6 +59,56 @@ const hands: HandDefinition[] = [
       group('flowers', 'flower-any', 'kong', 4),
     ],
   },
+  {
+    id: 'crak-ladder', section: 'Consecutive Runs', name: 'Crak Ladder',
+    description: 'Pungs of 1–4 Craks with a pair of White Dragons.', exposure: 'exposed',
+    teachingPoint: 'Build a clean consecutive run with callable Pungs while protecting the natural Dragon pair.',
+    groups: [
+      group('c1', 'characters-1', 'pung', 3), group('c2', 'characters-2', 'pung', 3),
+      group('c3', 'characters-3', 'pung', 3), group('c4', 'characters-4', 'pung', 3),
+      group('white', 'dragon-white', 'pair', 2, false),
+    ],
+  },
+  {
+    id: 'twin-runs', section: 'Consecutive Runs', name: 'Twin Runs',
+    description: 'Pairs of 3–7 Dots with one of each Wind.', exposure: 'concealed',
+    teachingPoint: 'Every group is a single or pair, so the hand must stay concealed and use no Jokers.',
+    groups: [
+      group('d3', 'dots-3', 'pair', 2, false), group('d4', 'dots-4', 'pair', 2, false),
+      group('d5', 'dots-5', 'pair', 2, false), group('d6', 'dots-6', 'pair', 2, false),
+      group('d7', 'dots-7', 'pair', 2, false), group('north', 'wind-north', 'single', 1, false),
+      group('east', 'wind-east', 'single', 1, false), group('south', 'wind-south', 'single', 1, false),
+      group('west', 'wind-west', 'single', 1, false),
+    ],
+  },
+  {
+    id: 'dragon-garden', section: 'Winds & Dragons', name: 'Dragon Garden',
+    description: 'Pungs of all three Dragons with five Flowers.', exposure: 'exposed',
+    teachingPoint: 'All eight Flowers match as a family, so this five-tile group may be built naturally or with Jokers.',
+    groups: [
+      group('red', 'dragon-red', 'pung', 3), group('green', 'dragon-green', 'pung', 3),
+      group('white', 'dragon-white', 'pung', 3), group('flowers', 'flower-any', 'quint', 5),
+    ],
+  },
+  {
+    id: 'seven-stars', section: 'Jokers & Quints', name: 'Seven Stars',
+    description: 'Six 7 Bams, six 7 Dots and a pair of West Winds.', exposure: 'exposed',
+    teachingPoint: 'Each six-tile group needs at least two Jokers; the Wind pair must remain natural.',
+    groups: [
+      group('b7', 'bamboo-7', 'sextet', 6), group('d7', 'dots-7', 'sextet', 6),
+      group('west', 'wind-west', 'pair', 2, false),
+    ],
+  },
+  {
+    id: 'season-line', section: '3 · 6 · 9', name: 'Season Line',
+    description: 'A Kong of Flowers, Pungs of 3, 6 and 9 Craks, and one Red Dragon.', exposure: 'exposed',
+    teachingPoint: 'Calls can complete the Pungs and Flower Kong, but the final single must be natural.',
+    groups: [
+      group('flowers', 'flower-any', 'kong', 4), group('c3', 'characters-3', 'pung', 3),
+      group('c6', 'characters-6', 'pung', 3), group('c9', 'characters-9', 'pung', 3),
+      group('red', 'dragon-red', 'single', 1, false),
+    ],
+  },
 ];
 
 export interface LegalCallOption {
@@ -225,7 +275,7 @@ export function getLegalCallOptions(rack: Tile[], exposures: Exposure[], discard
 }
 
 export const TrainingCardProvider: HandDefinitionProvider = {
-  id: 'training-card', name: 'The Mahjong Room Training Card', version: '2.0.0',
+  id: 'training-card', name: 'The Mahjong Room Training Card', version: '3.0.0',
   getSections: () => [...new Set(hands.map((hand) => hand.section))],
   getHands: () => hands,
   validateMahjong(tiles, exposures = []) {

@@ -161,8 +161,44 @@ function charlestonLabel(game: GameState) {
   return `${set} · ${charlestonDirections[game.charlestonPassIndex]} · ${(game.charlestonPassIndex % 3) + 1} of 3`;
 }
 
+const dealTargets = [
+  { x: -132, y: 98, rotate: -5 },
+  { x: -150, y: -14, rotate: 84 },
+  { x: -54, y: -116, rotate: 3 },
+  { x: 145, y: -14, rotate: -84 },
+];
+
+function DealingScreen({ gameNumber, resuming }: { gameNumber: number; resuming: boolean }) {
+  return (
+    <MotionConfig reducedMotion="user">
+      <main className="dealing-screen" role="status" aria-live="polite" aria-label={`${resuming ? 'Restoring' : 'Dealing'} game ${gameNumber}`}>
+        <header><span className="brand">The Mahjong Room</span><span>Game {gameNumber}</span></header>
+        <section className="deal-stage" aria-hidden="true">
+          <motion.div className="wall-stack" animate={{ scale: [1, 1.035, 1] }} transition={{ duration: .8, repeat: 2 }}>
+            {Array.from({ length: 8 }, (_, index) => <i key={index} style={{ transform: `translate(${index * 3}px, ${index * -2}px)` }} />)}
+          </motion.div>
+          <div className="deal-orbit">
+            {Array.from({ length: 20 }, (_, index) => {
+              const target = dealTargets[index % dealTargets.length];
+              const offset = Math.floor(index / dealTargets.length) * 13;
+              return <motion.span className="deal-tile" key={index} initial={{ x: 0, y: 0, rotate: 0, scale: .72, opacity: 0 }} animate={{ x: target.x + (index % 2 ? offset : -offset), y: target.y, rotate: target.rotate, scale: 1, opacity: 1 }} transition={{ delay: .12 + index * .065, duration: .52, ease: [0.22, 1, 0.36, 1] }}><i /></motion.span>;
+            })}
+          </div>
+        </section>
+        <div className="deal-copy">
+          <p className="kicker">{resuming ? 'Returning to your seat' : 'The table is almost ready'}</p>
+          <h1>{resuming ? 'Restoring your game…' : 'Dealing the opening racks…'}</h1>
+          <p>Setting the wall, seats, and opening hands.</p>
+          <span className="deal-progress"><motion.i initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 2.15, ease: 'easeInOut' }} /></span>
+        </div>
+      </main>
+    </MotionConfig>
+  );
+}
+
 export function GameExperience() {
   const [started, setStarted] = useState(false);
+  const [dealing, setDealing] = useState(false);
   const [game, setGame] = useState(() => createGame(2026));
   const [selected, setSelected] = useState<string[]>([]);
   const [blindCount, setBlindCount] = useState(0);
@@ -259,6 +295,12 @@ export function GameExperience() {
       // A device-local checkpoint is helpful but never required for play.
     }
   }, [game, gameNumber, hasSavedSession, hintLevel, hintsRequested, manualTurns, rackOrder, review, sessionReady, started]);
+
+  useEffect(() => {
+    if (!dealing) return;
+    const timer = window.setTimeout(() => setDealing(false), 2300);
+    return () => window.clearTimeout(timer);
+  }, [dealing]);
 
   const resetSelection = () => {
     setSelected([]);
@@ -406,6 +448,13 @@ export function GameExperience() {
     setHintsRequested(0);
     setHintLevel(0);
     setNotice('');
+    setDealing(true);
+  };
+
+  const enterGame = () => {
+    setHasSavedSession(true);
+    setStarted(true);
+    if (!(review && game.phase === 'completed')) setDealing(true);
   };
 
   if (!started) {
@@ -417,13 +466,15 @@ export function GameExperience() {
       <main className="welcome">
         <nav><span className="brand">The Mahjong Room</span><span className="welcome-nav-actions"><span className="tiny-label">A calmer way to learn</span><Link href="/account">Save progress</Link></span></nav>
         <section className="welcome-grid">
-          <div className="welcome-copy"><p className="kicker">{returning ? `Game ${gameNumber} is ready` : 'Your first game starts here'}</p><h1>{returning ? <>Build your Mahjong instincts <em>one hand at a time.</em></> : <>Learn American Mahjong by <em>actually playing.</em></>}</h1><p className="lede">{returning ? 'Pick up exactly where you left off. Your rack order, table state, coaching level, and game number are saved on this device.' : 'A patient coach sits beside you through the tiles, the Charleston, and every decision—then quietly steps away as you get better.'}</p><button className="start-button" onClick={() => { setHasSavedSession(true); setStarted(true); }}>{startLabel} <span>→</span></button><small>{hasSavedSession ? 'Saved automatically on this device.' : 'No account. No timer. We’ll explain as we go.'}</small></div>
+          <div className="welcome-copy"><p className="kicker">{returning ? `Game ${gameNumber} is ready` : 'Your first game starts here'}</p><h1>{returning ? <>Build your Mahjong instincts <em>one hand at a time.</em></> : <>Learn American Mahjong by <em>actually playing.</em></>}</h1><p className="lede">{returning ? 'Pick up exactly where you left off. Your rack order, table state, coaching level, and game number are saved on this device.' : 'A patient coach sits beside you through the tiles, the Charleston, and every decision—then quietly steps away as you get better.'}</p><button className="start-button" onClick={enterGame}>{startLabel} <span>→</span></button><small>{hasSavedSession ? 'Saved automatically on this device.' : 'No account. No timer. We’ll explain as we go.'}</small></div>
           <div className="welcome-rack" aria-hidden="true">{human.rack.slice(0, 8).map((tile) => { const label = shortTile(tile); return <span className="hero-tile" key={tile.id}><strong>{label.top}</strong><small>{label.bottom}</small></span>; })}<div className="teacher-note"><span>Coach</span><p>You already have a few tiles that work beautifully together.</p></div></div>
         </section>
         <footer><span>Original Training Card</span><span>Game {gameNumber} · device checkpoint ready</span><span>One human · three sharper bots</span></footer>
       </main>
     );
   }
+
+  if (dealing) return <DealingScreen gameNumber={gameNumber} resuming={hasSavedSession && (game.turnCount > 0 || game.charlestonRound > 0)} />;
 
   if (review) {
     return (
@@ -457,7 +508,7 @@ export function GameExperience() {
           </section>
         </div>
         {cardOpen ? <aside className="training-card-panel" id="training-card" aria-label="Training Card">
-          <div className="training-card-heading"><div><p className="kicker">Original · Rules-aware</p><h2>Training Card</h2><small>Five hands designed to teach the building blocks.</small></div><button aria-label="Hide Training Card" onClick={() => setCardOpen(false)}>×</button></div>
+          <div className="training-card-heading"><div><p className="kicker">Original · Rules-aware</p><h2>Training Card</h2><small>Ten hands designed to teach the building blocks.</small></div><button aria-label="Hide Training Card" onClick={() => setCardOpen(false)}>×</button></div>
           <div className="training-hand-list">{trainingHands.map((hand) => {
             const candidate = coachContext.candidates.find((item) => item.handId === hand.id);
             const rank = coachContext.candidates.filter((item) => item.viable).findIndex((item) => item.handId === hand.id);
