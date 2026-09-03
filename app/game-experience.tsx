@@ -162,10 +162,10 @@ function charlestonLabel(game: GameState) {
 }
 
 const dealTargets = [
-  { x: -132, y: 98, rotate: -5 },
-  { x: -150, y: -14, rotate: 84 },
-  { x: -54, y: -116, rotate: 3 },
-  { x: 145, y: -14, rotate: -84 },
+  { x: -104, y: 112, rotate: 0, dx: 28, dy: 0 },
+  { x: -170, y: -80, rotate: 90, dx: 0, dy: 28 },
+  { x: -104, y: -145, rotate: 180, dx: 28, dy: 0 },
+  { x: 170, y: -80, rotate: -90, dx: 0, dy: 28 },
 ];
 
 function DealingScreen({ gameNumber, resuming }: { gameNumber: number; resuming: boolean }) {
@@ -180,8 +180,8 @@ function DealingScreen({ gameNumber, resuming }: { gameNumber: number; resuming:
           <div className="deal-orbit">
             {Array.from({ length: 20 }, (_, index) => {
               const target = dealTargets[index % dealTargets.length];
-              const offset = Math.floor(index / dealTargets.length) * 13;
-              return <motion.span className="deal-tile" key={index} initial={{ x: 0, y: 0, rotate: 0, scale: .72, opacity: 0 }} animate={{ x: target.x + (index % 2 ? offset : -offset), y: target.y, rotate: target.rotate, scale: 1, opacity: 1 }} transition={{ delay: .12 + index * .065, duration: .52, ease: [0.22, 1, 0.36, 1] }}><i /></motion.span>;
+              const slot = Math.floor(index / dealTargets.length);
+              return <motion.span className="deal-tile" key={index} initial={{ x: 0, y: 0, rotate: 0, scale: .72, opacity: 0 }} animate={{ x: target.x + target.dx * slot, y: target.y + target.dy * slot, rotate: target.rotate, scale: 1, opacity: 1 }} transition={{ delay: .12 + index * .065, duration: .52, ease: [0.22, 1, 0.36, 1] }}><i /></motion.span>;
             })}
           </div>
         </section>

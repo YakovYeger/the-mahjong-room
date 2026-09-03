@@ -158,10 +158,11 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 .deal-stage { position: relative; align-self: center; justify-self: center; width: min(560px,90vw); height: min(420px,50vh); }
 .deal-stage::before { content: ''; position: absolute; inset: 14% 11%; border: 1px solid rgba(255,255,255,.12); border-radius: 45%; box-shadow: inset 0 0 70px rgba(4,28,23,.24); }
 .deal-orbit { position: absolute; inset: 50% auto auto 50%; width: 0; height: 0; }
-.wall-stack { position: absolute; z-index: 2; left: calc(50% - 31px); top: calc(50% - 42px); width: 62px; height: 84px; }
-.wall-stack i { position: absolute; inset: 0; border: 2px solid #dfd5c3; border-bottom-width: 7px; border-radius: 7px; background: repeating-linear-gradient(45deg,#d36b55 0 4px,#f2b59f 4px 8px); box-shadow: 0 7px 14px rgba(4,27,22,.22); }
-.deal-tile { position: absolute; z-index: 3; left: -22px; top: -30px; display: block; width: 44px; height: 60px; padding: 4px; border: 1px solid #e2dacb; border-bottom: 6px solid #d5cab6; border-radius: 6px; background: #fffdf7; box-shadow: 0 9px 18px rgba(3,24,19,.3); }
-.deal-tile i { display: block; width: 100%; height: 100%; border-radius: 3px; background: repeating-linear-gradient(45deg,#d46652 0 3px,#f1aa94 3px 6px); }
+.wall-stack { position: absolute; z-index: 2; left: calc(50% - 34px); top: calc(50% - 26px); width: 68px; height: 52px; }
+.wall-stack i { position: absolute; inset: 0; border: 2px solid #ded5c4; border-bottom: 9px solid #c9bda8; border-radius: 8px; background: radial-gradient(circle at center,#dcebe2 0 20%,transparent 21%),linear-gradient(135deg,#fdfbf3,#ebe4d6); box-shadow: inset 0 0 0 4px #f8f4e8, inset 0 0 0 6px #397464, 0 8px 14px rgba(4,27,22,.22); }
+.deal-tile { position: absolute; z-index: 3; left: -26px; top: -23px; display: block; width: 52px; height: 46px; padding: 5px; border: 2px solid #ded5c4; border-bottom: 9px solid #c9bda8; border-radius: 8px; background: linear-gradient(135deg,#fffef9,#e9e1d2); box-shadow: inset 0 1px 1px white,0 9px 16px rgba(3,24,19,.3); }
+.deal-tile i { position: relative; display: grid; place-items: center; width: 100%; height: 100%; border: 2px solid #397464; border-radius: 5px; background: radial-gradient(circle at center,#d9e9df 0 24%,transparent 25%),linear-gradient(45deg,transparent 44%,rgba(57,116,100,.2) 45% 55%,transparent 56%); color: #397464; font-style: normal; box-shadow: inset 0 0 0 2px rgba(57,116,100,.12); }
+.deal-tile i::after { content: '竹'; font: 700 15px/1 Georgia,serif; text-shadow: 0 1px white; }
 .deal-copy { position: relative; z-index: 2; align-self: end; padding: 0 24px 48px; text-align: center; }
 .deal-copy .kicker { margin-bottom: 9px; color: #f3ca74; }
 .deal-copy h1 { margin: 0; font: 700 clamp(30px,4vw,48px)/1 Georgia,serif; letter-spacing: -.025em; }
