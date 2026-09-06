@@ -567,7 +567,7 @@ export function GameExperience() {
     : respondingToDiscard ? 'Call, Mahjong, or pass?' : needsDraw ? 'Draw a tile' : 'Choose a discard';
 
   return (
-    <main className="shell">
+    <main className={`shell game-shell ${cardOpen ? 'card-is-open' : ''}`}>
       <header className="topbar"><button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button><span className="game-label">Game {gameNumber} · Full guidance · Saved locally</span><span className="table-links"><button className="toolbar-action" aria-label={cardOpen ? 'Hide Training Card' : 'Show Training Card'} aria-expanded={cardOpen} aria-controls="training-card" onClick={() => setCardOpen((open) => !open)}><span aria-hidden="true">▤</span><b>{cardOpen ? 'Hide card' : 'Show card'}</b></button><Link className="toolbar-action" aria-label="Save progress" href="/account"><span aria-hidden="true">↗</span><b>Save progress</b></Link><button className="toolbar-action leave-action" aria-label="Leave table" onClick={() => setStarted(false)}><span aria-hidden="true">×</span><b>Leave table</b></button></span></header>
       <section className="game-table" aria-label="Guided American Mahjong table">
         <MotionConfig reducedMotion="user">
