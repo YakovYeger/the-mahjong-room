@@ -12,7 +12,7 @@ import { runBotAction } from '../src/game/bots';
 import { applyGameAction, createGame, getLegalJokerExchangeOptions, totalPlayerTiles } from '../src/game/engine';
 import { moveTileId, normalizeTileOrder, placeTileId, tileLabel } from '../src/game/tiles';
 import { analyzeDiscardDeadHand, cardTileKey, getLegalCallOptions, TrainingCardProvider } from '../src/game/training-card';
-import type { GameState, HandGroup, Player, Suit, Tile } from '../src/game/types';
+import type { GameState, HandCandidate, HandGroup, Player, Suit, Tile } from '../src/game/types';
 
 const trainingHands = TrainingCardProvider.getHands();
 const charlestonDirections = ['Right', 'Across', 'Left', 'Left', 'Across', 'Right'];
@@ -193,6 +193,59 @@ function DealingScreen({ gameNumber, resuming }: { gameNumber: number; resuming:
         </div>
       </main>
     </MotionConfig>
+  );
+}
+
+function TrainingCardPanel({ candidates, onClose }: { candidates: HandCandidate[]; onClose: () => void }) {
+  return (
+    <motion.aside className="training-card-panel player-card-position" id="training-card" aria-label="Training Card" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
+      <div className="training-card-heading"><div><p className="kicker">Original · Player reference</p><h2>Training Card</h2><small>Swipe or scroll through ten rules-aware teaching hands.</small></div><button aria-label="Hide Training Card" onClick={onClose}>×</button></div>
+      <div className="training-hand-list">{trainingHands.map((hand) => {
+        const candidate = candidates.find((item) => item.handId === hand.id);
+        const rank = candidates.filter((item) => item.viable).findIndex((item) => item.handId === hand.id);
+        return <article className={rank === 0 ? 'leading' : candidate?.viable === false ? 'unavailable' : ''} key={hand.id}>
+          <div className="hand-meta"><span>{hand.section}</span><b>{hand.exposure === 'concealed' ? 'C' : 'X'}</b></div>
+          <div className="hand-title"><h3>{hand.name}</h3><small>{candidate?.viable ? `${candidate.matchingTileIds.length}/14` : 'Blocked'}</small></div>
+          <p>{hand.description}</p>
+          <div className="card-groups">{hand.groups.map((required) => <div className="card-group" aria-label={`${required.count} ${required.tileKey}, ${groupLabel(required)}`} key={required.id}>{Array.from({ length: required.count }, (_, index) => <span className={`mini-tile ${trainingTileClass(required.tileKey)}`} key={index}>{trainingTileLabel(required.tileKey)}</span>)}{required.jokerAllowed ? <i title="Jokers allowed">★</i> : null}</div>)}</div>
+          <small className="teaching-point">{hand.teachingPoint}</small>
+        </article>;
+      })}</div>
+      <footer><span><b>C</b> Concealed</span><span><b>X</b> Exposed</span><span><b>★</b> Jokers allowed</span></footer>
+    </motion.aside>
+  );
+}
+
+function ExposureTray({ players }: { players: Player[] }) {
+  const exposedPlayers = players.filter((player) => player.exposures.length > 0);
+  return (
+    <div className={`exposure-row ${exposedPlayers.length === 0 ? 'empty' : ''}`} aria-label="Called tile groups">
+      {exposedPlayers.map((player) => <section className="exposure-player" key={player.id}>
+        <header><strong>{player.id === 'human' ? 'Your calls' : `${player.name}’s calls`}</strong><span>{player.exposures.length} set{player.exposures.length === 1 ? '' : 's'}</span></header>
+        <div className="exposure-groups">{player.exposures.map((exposure) => <div className="called-set" key={exposure.id}><small>{exposure.kind}</small>{exposure.tiles.map((tile) => <span className="exposure-tile" title={tileLabel(tile)} key={tile.id}><TileFace tile={tile} compact /></span>)}</div>)}</div>
+      </section>)}
+    </div>
+  );
+}
+
+export function TableReveal({ game }: { game: GameState }) {
+  return (
+    <section className="table-reveal" aria-labelledby="table-reveal-title">
+      <header><div><p className="kicker">Everyone turns their rack</p><h2 id="table-reveal-title">The table at Mahjong</h2></div><p>Compare each direction and see how close every player was.</p></header>
+      <div className="reveal-grid">{game.players.map((player) => {
+        const tiles = allTiles(player);
+        const winner = player.id === game.winnerId;
+        const best = TrainingCardProvider.analyzeCandidates(tiles, player.exposures).find((candidate) => candidate.viable);
+        const winningHandId = winner ? TrainingCardProvider.validateMahjong(tiles, player.exposures).handId : undefined;
+        const winningHand = trainingHands.find((hand) => hand.id === winningHandId);
+        return <article className={winner ? 'winner' : ''} key={player.id}>
+          <div className="reveal-player"><div><strong>{player.name}</strong><small>{player.seat} seat · {tiles.length} tiles</small></div>{winner ? <b>Mahjong</b> : null}</div>
+          <div className="revealed-rack" aria-label={`${player.name}'s concealed tiles`}>{player.rack.map((tile) => <span className="revealed-tile" title={tileLabel(tile)} key={tile.id}><TileFace tile={tile} compact /></span>)}</div>
+          {player.exposures.length ? <div className="revealed-exposures">{player.exposures.map((exposure) => <div key={exposure.id}><small>{exposure.kind}</small>{exposure.tiles.map((tile) => <span className="revealed-tile exposed" title={tileLabel(tile)} key={tile.id}><TileFace tile={tile} compact /></span>)}</div>)}</div> : null}
+          <p>{winner ? `Completed ${winningHand?.name ?? 'a Training Card hand'}.` : best ? `${best.matchingTileIds.length} of 14 tiles supported ${best.name}.` : 'No exposure-compatible line remained.'}</p>
+        </article>;
+      })}</div>
+    </section>
   );
 }
 
@@ -498,6 +551,7 @@ export function GameExperience() {
       <main className="review-page">
         <header><span className="brand">The Mahjong Room</span><span>Game review</span></header>
         <section className="review-hero"><p className="kicker">Game {gameNumber} complete</p><h1>{game.winnerId === 'human' ? 'Mahjong—beautifully played.' : game.winnerId ? `${game.players.find((player) => player.id === game.winnerId)?.name} called Mahjong.` : 'The wall is complete.'}</h1><p>{gameReview.summary}</p></section>
+        {game.winnerId ? <TableReveal game={game} /> : null}
         <section className="review-grid">
           {gameReview.cards.map((card) => <article key={card.id}><span className={`review-icon ${card.tone === 'strong' ? '' : 'coral'}`}>{card.tone === 'strong' ? '✓' : '↗'}</span><p className="kicker">{card.eyebrow}</p><h2>{card.title}</h2><p>{card.body}</p></article>)}
           <article className="skill-card"><p className="kicker">Skills practiced</p>{gameReview.skills.map(({ name, score }) => <div className="skill" key={name}><span>{name}</span><i><b style={{ width: `${score}%` }} /></i></div>)}</article>
@@ -534,24 +588,9 @@ export function GameExperience() {
             <div className={`discard-grid ${visibleDiscards.length > 70 ? 'dense' : ''}`}>{visibleDiscards.length ? visibleDiscards.map((tile, index) => <motion.span layout className={`board-tile ${index === visibleDiscards.length - 1 ? 'latest' : ''}`} initial={{ opacity: 0, scale: .7, y: -12 }} animate={{ opacity: 1, scale: 1, y: 0 }} title={tileLabel(tile)} key={tile.id}><TileFace tile={tile} compact /></motion.span>) : <p>{game.discards.length ? 'Discard incoming…' : 'No tiles discarded yet'}</p>}</div>
           </section>
         </div>
-        {cardOpen ? <aside className="training-card-panel player-card-position" id="training-card" aria-label="Training Card">
-          <div className="training-card-heading"><div><p className="kicker">Original · Rules-aware</p><h2>Training Card</h2><small>Ten hands designed to teach the building blocks.</small></div><button aria-label="Hide Training Card" onClick={() => setCardOpen(false)}>×</button></div>
-          <div className="training-hand-list">{trainingHands.map((hand) => {
-            const candidate = coachContext.candidates.find((item) => item.handId === hand.id);
-            const rank = coachContext.candidates.filter((item) => item.viable).findIndex((item) => item.handId === hand.id);
-            return <article className={rank === 0 ? 'leading' : candidate?.viable === false ? 'unavailable' : ''} key={hand.id}>
-              <div className="hand-meta"><span>{hand.section}</span><b>{hand.exposure === 'concealed' ? 'C' : 'X'}</b></div>
-              <div className="hand-title"><h3>{hand.name}</h3><small>{candidate?.viable ? `${candidate.matchingTileIds.length}/14` : 'Blocked'}</small></div>
-              <p>{hand.description}</p>
-              <div className="card-groups">{hand.groups.map((required) => <div className="card-group" aria-label={`${required.count} ${required.tileKey}, ${groupLabel(required)}`} key={required.id}>{Array.from({ length: required.count }, (_, index) => <span className={`mini-tile ${trainingTileClass(required.tileKey)}`} key={index}>{trainingTileLabel(required.tileKey)}</span>)}{required.jokerAllowed ? <i title="Jokers allowed">★</i> : null}</div>)}</div>
-              <small className="teaching-point">{hand.teachingPoint}</small>
-            </article>;
-          })}</div>
-          <footer><span><b>C</b> Concealed</span><span><b>X</b> Exposed</span><span><b>★</b> Jokers allowed</span></footer>
-        </aside> : null}
         <aside className="coach-card"><div className="coach-eyebrow"><span>Coach</span><span>{hintLevel + 1} of 3</span></div><h1>{coachRecommendation.headline}</h1><p>{notice || coachHint}</p><div className="candidate-list">{candidates.map((candidate, index) => <div key={candidate.handId}><span>{index === 0 ? 'Best match' : 'Alternative'}</span><strong>{candidate.name}</strong><small>{candidate.matchingTileIds.length} / 14 useful</small></div>)}</div><button onClick={requestHint}>{hintLevel < 2 ? 'Show me what to notice' : 'Why these tiles?'}</button></aside>
         <div className="player-area">
-          <div className="exposure-row">{game.players.flatMap((player) => player.exposures.map((exposure) => <div key={exposure.id}><small>{player.id === 'human' ? `your ${exposure.kind}` : `${player.name} · ${exposure.kind}`}</small>{exposure.tiles.map((tile) => <span className="exposure-tile" title={tileLabel(tile)} key={tile.id}><TileFace tile={tile} compact /></span>)}</div>))}</div>
+          <ExposureTray players={game.players} />
           <MotionConfig reducedMotion="user" transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.7 }}>
             <div className={`rack ${draggingTileId ? 'is-reordering' : ''}`} aria-label="Your rack">
               <AnimatePresence>{draggingTileId ? <motion.div className="rack-drop-message" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}>Release beside the coral marker</motion.div> : null}</AnimatePresence>
@@ -576,6 +615,7 @@ export function GameExperience() {
           </div>
         </div>
       </section>
+      {cardOpen ? <TrainingCardPanel candidates={coachContext.candidates} onClose={() => setCardOpen(false)} /> : null}
     </main>
   );
 }
