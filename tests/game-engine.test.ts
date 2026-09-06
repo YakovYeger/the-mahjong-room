@@ -284,7 +284,11 @@ describe('turns, calls and exposures', () => {
     state.players[1].exposures = [{ id: 'flowers', kind: 'kong', tiles: [flowers[1], flowers[2], flowers[3], joker], calledFromPlayerId: 'bot-2' }];
     const result = applyGameAction(state, 'human', { type: 'EXCHANGE_JOKER', exposureOwnerId: 'bot-1', exposureId: 'flowers', rackTileId: flowers[0].id, jokerTileId: joker.id });
     expect(result.ok).toBe(true);
-    if (result.ok) expect(result.state.players[0].rack.some((tile) => tile.id === joker.id)).toBe(true);
+    if (!result.ok) return;
+    expect(result.state.players[0].rack.some((tile) => tile.id === joker.id)).toBe(true);
+    expect(totalPlayerTiles(result.state.players[0])).toBe(14);
+    const discard = applyGameAction(result.state, 'human', { type: 'DISCARD_TILE', tileId: joker.id });
+    expect(discard.ok).toBe(true);
   });
 
   it('finds shared Joker exchanges and bots redeem them before discarding', () => {
