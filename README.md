@@ -12,16 +12,19 @@ npm run simulate-games -- --count=100
 npm run build
 ```
 
-## Optional account persistence
+## Accounts and private multiplayer
 
-Guest play works without configuration. To enable passwordless accounts and cross-device progress:
+Guest play works without configuration. To enable accounts, authoritative cloud saves, and private multiplayer:
 
 1. Create a Supabase project and copy `.env.example` to `.env.local`.
 2. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from the project Connect dialog.
-3. Apply `supabase/migrations/20260830023731_persistence_and_auth.sql`.
-4. In the Supabase magic-link email template, point the link to `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`, and add the deployed site URL to Auth redirect URLs.
+3. Apply every migration in `supabase/migrations` in timestamp order.
+4. Add the server-only `SUPABASE_SECRET_KEY` and a random `TURN_TIMEOUT_SECRET` to the host. Never prefix either with `NEXT_PUBLIC_`.
+5. Configure Google OAuth credentials and the redirect URLs from `supabase/config.toml`.
+6. Store the deployed timeout endpoint and matching secret in Supabase Vault as `mahjong_turn_timeout_url` and `mahjong_turn_timeout_secret`. The installed Cron job checks every ten seconds.
+7. Optionally configure `RESEND_API_KEY` and `TURN_EMAIL_FROM` for throttled async-turn email reminders.
 
-Never expose a Supabase secret or service-role key to the browser. The current account API uses the signed-in user's cookie session and row-level security.
+Never expose a Supabase secret or service-role key to the browser. Browser Realtime messages only signal that a version changed; every reconnect fetches a fresh participant-specific snapshot.
 
 The project contains only original training-hand definitions. It does not reproduce or distribute a proprietary annual Mahjong card.
 

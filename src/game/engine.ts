@@ -1,6 +1,6 @@
 import { createWall, deterministicShuffle } from './tiles';
 import { cardTileKey, getLegalCallOptions, TrainingCardProvider } from './training-card';
-import type { CallResponse, Exposure, GameAction, GameActionResult, GameEvent, GameState, Player, Seat, Tile } from './types';
+import type { CallResponse, CreateGameOptions, Exposure, GameAction, GameActionResult, GameEvent, GameState, Player, Seat, Tile } from './types';
 
 const seats: Seat[] = ['east', 'south', 'west', 'north'];
 const names = ['You', 'Mara', 'June', 'Theo'];
@@ -38,21 +38,35 @@ export function getLegalJokerExchangeOptions(state: GameState, playerId: string)
   }));
 }
 
-export function createGame(seed = 2026): GameState {
+export function createGame(seedOrOptions: number | CreateGameOptions = 2026): GameState {
+  const options = typeof seedOrOptions === 'number' ? { seed: seedOrOptions } : seedOrOptions;
+  const seed = options.seed ?? 2026;
   const wall = deterministicShuffle(createWall(), seed);
-  const players: Player[] = seats.map((seat, index) => ({
-    id: index === 0 ? 'human' : `bot-${index}`,
-    name: names[index],
-    seat,
-    type: index === 0 ? 'human' : 'bot',
+  if (options.players && (options.players.length !== 4 || new Set(options.players.map((player) => player.seat)).size !== 4)) {
+    throw new Error('A Mahjong game requires exactly one player in each of four seats.');
+  }
+  const configured = options.players
+    ? seats.map((seat) => options.players!.find((player) => player.seat === seat)!)
+    : seats.map((seat, index) => ({
+      id: index === 0 ? 'human' : `bot-${index}`,
+      name: names[index],
+      seat,
+      type: index === 0 ? 'human' as const : 'bot' as const,
+      assistanceLevel: index === 0 ? 0 as const : 4 as const,
+    }));
+  const players: Player[] = configured.map((player) => ({
+    id: player.id,
+    name: player.name,
+    seat: player.seat,
+    type: player.type,
     rack: [],
     exposures: [],
-    assistanceLevel: index === 0 ? 0 : 4,
+    assistanceLevel: player.assistanceLevel ?? (player.type === 'human' ? 0 : 4),
   }));
   for (let tile = 0; tile < 13; tile += 1) for (const player of players) player.rack.push(wall.pop()!);
   players[0].rack.push(wall.pop()!);
   return {
-    id: `training-${seed}`, seed, phase: 'charleston', stateVersion: 1, eventSequence: 2,
+    id: options.id ?? `training-${seed}`, seed, phase: 'charleston', stateVersion: 1, eventSequence: 2,
     turnIndex: 0, turnCount: 0, charlestonRound: 0, charlestonPassIndex: 0, charlestonPendingPasses: {},
     charlestonAwaitingDecision: false, charlestonCourtesy: false, players, wall, discards: [], callWindow: null, winnerId: null,
     events: [{ type: 'GAME_CREATED', sequence: 1 }, { type: 'TILES_DEALT', sequence: 2 }],
@@ -291,6 +305,12 @@ export function getPublicGameState(state: GameState) {
     } : null,
     players: state.players.map(({ rack, ...publicPlayer }) => ({ ...publicPlayer, rackCount: rack.length })),
     winnerId: state.winnerId,
+    charlestonPassIndex: state.charlestonPassIndex,
+    charlestonAwaitingDecision: state.charlestonAwaitingDecision,
+    charlestonCourtesy: state.charlestonCourtesy,
+    charlestonActorId: state.phase === 'charleston' && !state.charlestonAwaitingDecision
+      ? state.players[state.charlestonRound % state.players.length]?.id ?? null
+      : null,
   };
 }
 
