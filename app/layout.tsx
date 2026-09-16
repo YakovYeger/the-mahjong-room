@@ -19,5 +19,21 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
+  const runtimeConfig = JSON.stringify({
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+    supabasePublishableKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? '',
+  }).replace(/</g, '\\u003c');
+
+  return (
+    <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__MAHJONG_RUNTIME_CONFIG__=${runtimeConfig};`,
+          }}
+        />
+      </head>
+      <body>{children}</body>
+    </html>
+  );
 }
