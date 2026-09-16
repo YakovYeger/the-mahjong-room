@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { tileLabel } from '../../../src/game/tiles';
 import { cardTileKey, TrainingCardProvider } from '../../../src/game/training-card';
@@ -87,7 +86,7 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
     if (response.ok) await refresh().catch(() => undefined);
   };
 
-  if (!snapshot) return <main className="cloud-game-loading"><span className="brand">The Mahjong Room</span><p>{message}</p><Link href="/games">Back to my games</Link></main>;
+  if (!snapshot) return <main className="cloud-game-loading"><span className="brand">The Mahjong Room</span><p>{message}</p><a href="/games">Back to my games</a></main>;
 
   const me = snapshot.publicState.players.find((player) => player.id === snapshot.privateState.playerId);
   const pending = snapshot.privateState.pendingAction;
@@ -105,7 +104,7 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
 
   return (
     <main className="cloud-game-page">
-      <header><Link className="brand" href="/">The Mahjong Room</Link><div><span className="live-dot" /> {online} online</div><strong>{snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}</strong><Link href="/games">Leave table</Link></header>
+      <header><a className="brand" href="/">The Mahjong Room</a><div><span className="live-dot" /> {online} online</div><strong>{snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}</strong><a href="/games">Leave table</a></header>
       <section className="cloud-status"><div><p className="kicker">{snapshot.status}</p><h1>{pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : 'Your move'}</h1><p>{pending.replaceAll('_', ' ')}</p></div><div className="turn-clock"><span>Time remaining</span><strong>{remainingLabel}</strong></div>{snapshot.mode === 'live' ? <button onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}</section>
       <section className="cloud-board">
         <div className="opponent-grid">{snapshot.publicState.players.filter((player) => player.id !== me?.id).map((player) => <article key={player.id}><div><strong>{player.name}</strong><small>{player.seat} · {player.rackCount} concealed</small></div>{player.revealedRack ? <div className="revealed-cloud-rack">{player.revealedRack.map((tile) => <span title={tileLabel(tile)} key={tile.id}>{compactTile(tile)}</span>)}</div> : <div className="rack-backs">{Array.from({ length: player.rackCount }, (_, index) => <i key={index} />)}</div>}{player.exposures.length ? <div className="cloud-exposures">{player.exposures.map((exposure) => <span key={exposure.id}>{exposure.kind}: {exposure.tiles.map(compactTile).join(' ')}</span>)}</div> : null}</article>)}</div>

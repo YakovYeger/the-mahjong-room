@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { createSupabaseBrowserClient } from '../../src/lib/supabase/client';
@@ -117,7 +116,7 @@ export default function AccountPage() {
 
   return (
     <main className="account-page">
-      <header><Link className="brand" href="/">The Mahjong Room</Link><nav><Link href="/games">My games</Link><Link href="/">Back to the table</Link></nav></header>
+      <header><a className="brand" href="/">The Mahjong Room</a><nav><a href="/games">My games</a><a href="/">Back to the table</a></nav></header>
       <section className="account-shell">
         <div className="account-copy"><p className="kicker">Your seat, on any device</p><h1>Save games and invite the table.</h1><p>Guest play stays available. An account adds cloud autosave, private rooms, live or time-based turns, and secure reconnects.</p><div className="guest-badge"><strong>{guestGames}</strong><span>guest game{guestGames === 1 ? '' : 's'} ready to save</span></div></div>
         <div className="account-card">
@@ -125,7 +124,7 @@ export default function AccountPage() {
             <p className="kicker">Signed in</p><h2>{profileUsername ? `@${profileUsername}` : userEmail}</h2>
             {!profileUsername ? <form onSubmit={claimUsername}><p>Choose a username before joining a multiplayer room.</p><label htmlFor="claim-username">Username</label><input id="claim-username" required minLength={3} maxLength={24} pattern="[A-Za-z0-9_]+" value={username} onChange={(event) => setUsername(event.target.value)} /><button className="account-primary" disabled={busy}>Choose username</button></form> : <p>{userEmail}<br />Your games autosave after every accepted action.</p>}
             {recoverySession ? <form onSubmit={updatePassword}><label htmlFor="new-password">New password</label><input id="new-password" type="password" minLength={8} required autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /><button className="account-primary" disabled={busy}>Update password</button></form> : null}
-            <div className="account-actions"><Link className="account-primary account-link" href="/games">Open my games</Link><button className="account-secondary" onClick={signOut}>Sign out</button></div>
+            <div className="account-actions"><a className="account-primary account-link" href="/games">Open my games</a><button className="account-secondary" onClick={signOut}>Sign out</button></div>
             {message ? <p className="account-message" role="status">{message}</p> : null}
           </> : <>
             <div className="auth-tabs" role="tablist" aria-label="Account options">

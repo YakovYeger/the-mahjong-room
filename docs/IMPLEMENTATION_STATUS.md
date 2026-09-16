@@ -43,8 +43,8 @@ Milestone 13 — Backend, accounts, private multiplayer, and timed turns
 
 ## Next
 
-- Add the dedicated project's server-only Supabase key to Sites, deploy the latest saved version, and then enable the installed ten-second timeout Cron job
-- Configure Google OAuth credentials, production SMTP/auth templates, and an optional verified Resend sender
+- Configure production SMTP/auth templates and an optional verified Resend sender
+- Disable the legacy project's timeout Cron job after reconnecting its original Supabase organization; its retired secret is rejected by production
 - Run the private 1/2/3/4-human beta and measure action latency, Realtime latency, reconnects, conflicts, timeout lag, and database contention
 - Add browser automation for account creation, room join/start, reconnect, and a complete multiplayer hand
 - Add structured external metrics and alert thresholds before the 1,000-room load test

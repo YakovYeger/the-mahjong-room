@@ -24,7 +24,7 @@ Guest play works without configuration. To enable accounts, authoritative cloud 
 6. Store the deployed timeout endpoint and matching secret in Supabase Vault as `mahjong_turn_timeout_url` and `mahjong_turn_timeout_secret`. The installed Cron job checks every ten seconds.
 7. Optionally configure `RESEND_API_KEY` and `TURN_EMAIL_FROM` for throttled async-turn email reminders.
 
-The production backend is the dedicated Supabase project in `eu-central-1` (`hwdjpoqkesviohnytclt`). Its migrations, generated types, RLS policies, staged public Sites variables, and Vault worker credentials are installed. Production activation still requires the project's server-only secret key in Sites, Google provider credentials for Google sign-in, and a redeployment of the saved Sites version. Keep the Cron timeout job paused until that deployment succeeds.
+The production backend is the dedicated Supabase project in `eu-central-1` (`hwdjpoqkesviohnytclt`). Its migrations, generated types, RLS policies, Sites variables, Google provider, Vault worker credentials, and ten-second timeout Cron job are active. Production SMTP and the optional verified Resend sender remain separate launch-hardening tasks.
 
 Never expose a Supabase secret or service-role key to the browser. Browser Realtime messages only signal that a version changed; every reconnect fetches a fresh participant-specific snapshot.
 

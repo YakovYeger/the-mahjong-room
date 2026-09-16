@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
 import { getCoachVisibleContext } from '../src/coach/analyze';
@@ -534,7 +533,7 @@ export function GameExperience() {
       : hasSavedSession ? `Resume game ${gameNumber}` : gameNumber === 1 ? 'Play your first hand' : `Play game ${gameNumber}`;
     return (
       <main className="welcome">
-        <nav><span className="brand">The Mahjong Room</span><span className="welcome-nav-actions"><span className="tiny-label">A calmer way to learn</span><Link href="/games">Private tables</Link><Link href="/account">Account</Link></span></nav>
+        <nav><span className="brand">The Mahjong Room</span><span className="welcome-nav-actions"><span className="tiny-label">A calmer way to learn</span><a href="/games">Private tables</a><a href="/account">Account</a></span></nav>
         <section className="welcome-grid">
           <div className="welcome-copy"><p className="kicker">{returning ? `Game ${gameNumber} is ready` : 'Your first game starts here'}</p><h1>{returning ? <>Build your Mahjong instincts <em>one hand at a time.</em></> : <>Learn American Mahjong by <em>actually playing.</em></>}</h1><p className="lede">{returning ? 'Pick up exactly where you left off. Your rack order, table state, coaching level, and game number are saved on this device.' : 'A patient coach sits beside you through the tiles, the Charleston, and every decision—then quietly steps away as you get better.'}</p><button className="start-button" onClick={enterGame}>{startLabel} <span>→</span></button><small>{hasSavedSession ? 'Saved automatically on this device.' : 'No account. No timer. We’ll explain as we go.'}</small></div>
           <div className="welcome-rack" aria-hidden="true">{human.rack.slice(0, 8).map((tile) => { const label = shortTile(tile); return <span className="hero-tile" key={tile.id}><strong>{label.top}</strong><small>{label.bottom}</small></span>; })}<div className="teacher-note"><span>Coach</span><p>You already have a few tiles that work beautifully together.</p></div></div>
@@ -568,7 +567,7 @@ export function GameExperience() {
 
   return (
     <main className={`shell game-shell ${cardOpen ? 'card-is-open' : ''}`}>
-      <header className="topbar"><button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button><span className="game-label">Game {gameNumber} · Full guidance · Saved locally</span><span className="table-links"><button className="toolbar-action" aria-label={cardOpen ? 'Hide Training Card' : 'Show Training Card'} aria-expanded={cardOpen} aria-controls="training-card" onClick={() => setCardOpen((open) => !open)}><span aria-hidden="true">▤</span><b>{cardOpen ? 'Hide card' : 'Show card'}</b></button><Link className="toolbar-action" aria-label="Save progress" href="/account"><span aria-hidden="true">↗</span><b>Save progress</b></Link><button className="toolbar-action leave-action" aria-label="Leave table" onClick={() => setStarted(false)}><span aria-hidden="true">×</span><b>Leave table</b></button></span></header>
+      <header className="topbar"><button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button><span className="game-label">Game {gameNumber} · Full guidance · Saved locally</span><span className="table-links"><button className="toolbar-action" aria-label={cardOpen ? 'Hide Training Card' : 'Show Training Card'} aria-expanded={cardOpen} aria-controls="training-card" onClick={() => setCardOpen((open) => !open)}><span aria-hidden="true">▤</span><b>{cardOpen ? 'Hide card' : 'Show card'}</b></button><a className="toolbar-action" aria-label="Save progress" href="/account"><span aria-hidden="true">↗</span><b>Save progress</b></a><button className="toolbar-action leave-action" aria-label="Leave table" onClick={() => setStarted(false)}><span aria-hidden="true">×</span><b>Leave table</b></button></span></header>
       <section className="game-table" aria-label="Guided American Mahjong table">
         <MotionConfig reducedMotion="user">
           <AnimatePresence mode="wait">

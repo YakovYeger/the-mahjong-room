@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.SITE_URL ?? 'https://the-mahjong-room.openai.site'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL ?? 'https://the-mahjong-room.jyeger.chatgpt.site'),
   title: 'The Mahjong Room — Learn by playing',
   description: 'Learn American Mahjong across guided games with a patient coach beside you.',
+  icons: { icon: '/favicon.svg' },
   openGraph: {
     title: 'Learn American Mahjong by playing.',
     description: 'A guided game that remembers where you left off.',
