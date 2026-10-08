@@ -1,0 +1,21 @@
+app/globals.css
+  s_d8a2804808cb86::t_cc57e29c05fe54 417,454-459,550,552-553,558-561,563,565,591-596,682-683,698-700
+app/games/[id]/page.tsx
+  s_d8a2804808cb86::t_a6d94b718adb18 291,296,303,309
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a4a626d4eb603fcc4e44dabe3d68daaeb825d0d4",
+  "prompts": {},
+  "sessions": {
+    "s_d8a2804808cb86": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a11a7a-058f-7d30-a6d7-6a27a441c1b6",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
