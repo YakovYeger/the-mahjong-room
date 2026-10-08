@@ -1,7 +1,8 @@
 'use client';
 
+/* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
+
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 
 interface GameItem {
@@ -127,11 +128,11 @@ export default function GamesPage() {
     finally { setBusy(false); }
   };
 
-  if (signedOut) return <main className="games-page"><header><Link className="brand" href="/">The Mahjong Room</Link></header><section className="games-empty"><p className="kicker">Account required</p><h1>Sign in to open cloud tables.</h1><p>Solo guest play remains available from the home page.</p><Link className="account-primary account-link" href="/account">Sign in or create an account</Link></section></main>;
+  if (signedOut) return <main className="games-page"><header><a className="brand" href="/">The Mahjong Room</a></header><section className="games-empty"><p className="kicker">Account required</p><h1>Sign in to open cloud tables.</h1><p>Solo guest play remains available from the home page.</p><a className="account-primary account-link" href="/account">Sign in or create an account</a></section></main>;
 
   return (
     <main className="games-page">
-      <header><Link className="brand" href="/">The Mahjong Room</Link><nav><Link href="/account">Account</Link><Link href="/">Guest table</Link></nav></header>
+      <header><a className="brand" href="/">The Mahjong Room</a><nav><a href="/account">Account</a><a href="/">Guest table</a></nav></header>
       <section className="games-hero"><div><p className="kicker">Private tables</p><h1>Your games</h1><p>Every accepted move autosaves. Rejoin on any device and continue from the canonical server snapshot.</p></div><div className="tier-chip"><strong>{entitlement.name}</strong><span>{entitlement.activeGameLimit} active cloud game{entitlement.activeGameLimit === 1 ? '' : 's'}</span></div></section>
       <section className="games-layout">
         <div className="games-list-panel">{notifications.some((item) => !item.read_at) ? <div className="turn-inbox"><div className="section-heading"><h2>Your turn</h2><span>{notifications.filter((item) => !item.read_at).length}</span></div>{notifications.filter((item) => !item.read_at).slice(0, 3).map((item) => <button onClick={() => void openNotification(item)} key={item.id}><strong>A table is waiting</strong><small>{new Date(item.created_at).toLocaleString()}</small><span>Play now →</span></button>)}</div> : null}<div className="section-heading"><h2>Active and recent</h2><button onClick={() => void loadGames()}>Refresh</button></div>
