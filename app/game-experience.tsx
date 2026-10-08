@@ -595,7 +595,7 @@ export function GameExperience() {
           <ExposureTray players={game.players} />
           <MotionConfig reducedMotion="user" transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.7 }}>
             <div className={`rack ${draggingTileId ? 'is-reordering' : ''}`} aria-label="Your rack">
-              <AnimatePresence>{draggingTileId ? <motion.div className="rack-drop-message" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}>Release beside the coral marker</motion.div> : null}</AnimatePresence>
+              <AnimatePresence>{draggingTileId ? <motion.div className="rack-drop-message" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}>Release in the open space between tiles</motion.div> : null}</AnimatePresence>
               {orderedRack.map((tile) => {
                 const cannotPassJoker = game.phase === 'charleston' && tile.type.kind === 'joker';
                 const intent = dropIntent?.targetId === tile.id ? dropIntent.placement : null;
