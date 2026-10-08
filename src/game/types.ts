@@ -50,6 +50,20 @@ export interface Player {
   assistanceLevel: AssistanceLevel;
 }
 
+export interface GamePlayerConfig {
+  id: string;
+  name: string;
+  seat: Seat;
+  type: 'human' | 'bot';
+  assistanceLevel?: AssistanceLevel;
+}
+
+export interface CreateGameOptions {
+  id?: string;
+  seed?: number;
+  players?: GamePlayerConfig[];
+}
+
 export type GameAction =
   | { type: 'PASS_TILES'; tileIds: string[]; blindCount?: number }
   | { type: 'CHOOSE_SECOND_CHARLESTON'; continue: boolean }

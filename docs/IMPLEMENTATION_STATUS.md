@@ -1,6 +1,6 @@
 # Current Milestone
 
-Milestone 9 — Animated dealing and a broader Training Card
+Milestone 13 — Backend, accounts, private multiplayer, and timed turns
 
 ## Complete
 
@@ -17,7 +17,7 @@ Milestone 9 — Animated dealing and a broader Training Card
 - Wall-game completion without an artificial turn cutoff
 - Bots that use the shared rules service for Charleston, calls, discards, and Mahjong
 - Refined, show/hide Training Card rail with visual group spacing, C/X labels, Joker markers, candidate progress, and teaching notes
-- Drag-and-drop and keyboard tile reordering that stays independent from game legality
+- Cloud rack selection, drag-to-reorder, drag-to-discard, keyboard shortcuts, touch move controls, and device-local order restoration
 - Custom, accessible suit marks with written labels on rack, discard, and exposed tiles
 - Complete chronological discard pool rather than a latest-discard-only view
 - Conservative dead-hand indicator proven solely from visible discards, never concealed or exposed opponent holdings
@@ -31,17 +31,24 @@ Milestone 9 — Animated dealing and a broader Training Card
 - Full-screen landing composition that keeps its green feature panel inside the content frame
 - Progressive coach, game review, guest progress, optional account foundation, and persistence schema
 - Engine, coach, persistence, and deterministic simulation coverage
+- Email/password registration with required unique username, username-or-email login, Google PKCE callback, recovery, and post-OAuth username selection
+- Database-owned Free/Plus/Club entitlements with transactional 1/5/20 active-game enforcement
+- Server-only canonical schema, participant-safe projections, fixed seat membership, and secure seed references
+- Action envelopes, idempotent receipts, optimistic state-version commits, and conflict recovery
+- Signed-in cloud game list, private room creation, expiring eight-character invites, 1–4 humans, and permanent bot fill at start
+- Participant-specific snapshots, cross-device reconnects, database-triggered private Realtime signals, and presence indicators
+- Live and async clocks, leased `SKIP LOCKED` timeout claims, deterministic timeout actions, three-strike permanent bot replacement, and unanimous live pause/resume
+- In-app async turn inbox plus throttled optional Resend email delivery
+- Configurable four-seat game creation and multiplayer projection/timer tests
 
 ## Next
 
-- Connect a dedicated Supabase project, apply the migration, and run database/advisor checks
-- Add a signed-in `game_sessions` record containing the latest canonical snapshot plus `stateVersion`
-- Sync the device checkpoint after each accepted action, with idempotency and optimistic version checks
-- On sign-in, merge learning progress but select the newest valid game checkpoint rather than merging game states
-- Reconnect and resume across devices from the server snapshot; keep local storage as an offline/device fallback
-- Move canonical action execution server-side before enabling multiplayer
+- Configure production SMTP/auth templates and an optional verified Resend sender
+- Disable the legacy project's timeout Cron job after reconnecting its original Supabase organization; its retired secret is rejected by production
+- Run the private 1/2/3/4-human beta and measure action latency, Realtime latency, reconnects, conflicts, timeout lag, and database contention
+- Add browser automation for account creation, room join/start, reconnect, and a complete multiplayer hand
+- Add structured external metrics and alert thresholds before the 1,000-room load test
 - Add browser automation for the complete first-game route to continuous integration
-- Multiplayer only after server-authoritative action handling is stable
 
 ## Explicit MVP boundaries
 
@@ -49,7 +56,8 @@ Milestone 9 — Animated dealing and a broader Training Card
 - Physical wall breaking, misnamed tiles, touch/rack timing, payments, and seat rotation are not part of the single-game learning MVP.
 - The rare all-player fully blind Charleston procedure is not automated.
 - Skill scores are transparent learning heuristics rather than a trained mastery model.
-- The deployed preview remains guest-first until a Supabase project is connected.
+- Billing collection remains deferred; entitlements can be assigned by admin until the beta validates pricing.
+- Public matchmaking, spectators, mid-game human replacement, and chat remain outside the multiplayer MVP.
 
 ## Architectural decisions
 
