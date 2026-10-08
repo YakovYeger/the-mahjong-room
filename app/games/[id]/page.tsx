@@ -3,13 +3,23 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
 
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { moveTileId, normalizeTileOrder, placeTileId, tileLabel } from '../../../src/game/tiles';
+import { DragDropProvider, PointerSensor, useDroppable } from '@dnd-kit/react';
+import { PointerActivationConstraints } from '@dnd-kit/dom';
+import { isSortable } from '@dnd-kit/react/sortable';
+import { moveTileId, normalizeTileOrder, tileLabel } from '../../../src/game/tiles';
+import { SortableRackItem } from '../../../src/game/sortable-rack-item';
 import { cardTileKey, TrainingCardProvider } from '../../../src/game/training-card';
+import type { ReactNode } from 'react';
 import type { GameAction, Tile } from '../../../src/game/types';
 import { createSupabaseBrowserClient } from '../../../src/lib/supabase/client';
 import type { GameSnapshot, RoomDetails } from '../../../src/multiplayer/types';
 
 const cloudTrainingHands = TrainingCardProvider.getHands();
+
+function CloudDiscardPool({ children, dropActive, label }: { children: ReactNode; dropActive: boolean; label: string }) {
+  const { ref, isDropTarget } = useDroppable({ id: 'discard-pool' });
+  return <div ref={ref} className={`cloud-discard-pool ${dropActive || isDropTarget ? 'drop-target-active' : ''}`} role="region" aria-label={label}>{children}</div>;
+}
 
 function trainingTileLabel(tileKey: string) {
   if (tileKey === 'flower-any') return 'F';
@@ -38,9 +48,8 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
   const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [rackOrder, setRackOrder] = useState<string[]>([]);
-  const [draggingTileId, setDraggingTileId] = useState<string | null>(null);
-  const [dropIntent, setDropIntent] = useState<{ targetId: string; placement: 'before' | 'after' } | null>(null);
   const [discardDropActive, setDiscardDropActive] = useState(false);
+  const suppressTileClickRef = useRef(false);
   const [message, setMessage] = useState('Connecting to the table…');
   const [busy, setBusy] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
@@ -246,16 +255,10 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
     try { localStorage.setItem(`mahjong:cloud-rack:${gameId}`, JSON.stringify(next)); } catch { /* In-memory ordering still works. */ }
     setMessage('Rack order updated. This only changes your view.');
   };
-  const placeTile = (movingId: string, targetId: string, placement: 'before' | 'after') => {
-    const next = placeTileId(normalizeTileOrder(rackOrder, snapshot.privateState.rack), movingId, targetId, placement);
-    setRackOrder(next);
-    try { localStorage.setItem(`mahjong:cloud-rack:${gameId}`, JSON.stringify(next)); } catch { /* In-memory ordering still works. */ }
-    setMessage('Rack order updated. This only changes your view.');
-  };
   const discardDraggedTile = (tileId: string) => {
     if (pending !== 'discard' || busy) return;
     void act({ type: 'DISCARD_TILE', tileId });
-    setDraggingTileId(null); setDiscardDropActive(false); setDropIntent(null);
+    setDiscardDropActive(false);
   };
 
   return (
@@ -285,19 +288,62 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
         const secondsLeft = Math.max(0, Math.ceil((Date.parse(player.lastActivityAt) + 120_000 - now) / 1000));
         return <p key={player.playerKey}><strong>{player.displayName}</strong> is disconnected. A bot takes over in {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} if they do not return.</p>;
       })}</div> : null}
+      <DragDropProvider
+        sensors={(defaults) => [
+          ...defaults.filter((sensor) => sensor !== PointerSensor),
+          PointerSensor.configure({
+            activationConstraints(event) {
+              return event.pointerType === 'touch'
+                ? [new PointerActivationConstraints.Delay({ value: 200, tolerance: { x: 8, y: 8 } })]
+                : [new PointerActivationConstraints.Distance({ value: 5 })];
+            },
+            preventActivation(event) {
+              return event.pointerType === 'touch'
+                && !(event.target instanceof Element && event.target.closest('[data-drag-handle]'));
+            },
+          }),
+        ]}
+        onDragStart={(event) => {
+          suppressTileClickRef.current = true;
+        }}
+        onDragMove={(event) => {
+          setDiscardDropActive(event.operation.target?.id === 'discard-pool' && pending === 'discard' && !busy);
+        }}
+        onDragEnd={(event) => {
+          const { source, target } = event.operation;
+          if (!event.canceled && source && isSortable(source)) {
+            if (target?.id === 'discard-pool') {
+              discardDraggedTile(String(source.id));
+            } else if (source.index !== source.initialIndex) {
+              const next = normalizeTileOrder(rackOrder, snapshot.privateState.rack);
+              const [movingId] = next.splice(source.initialIndex, 1);
+              if (movingId) {
+                next.splice(Math.max(0, Math.min(source.index, next.length)), 0, movingId);
+                setRackOrder(next);
+                try { localStorage.setItem(`mahjong:cloud-rack:${gameId}`, JSON.stringify(next)); } catch { /* In-memory ordering still works. */ }
+                setMessage('Rack order updated. This only changes your view.');
+              }
+            }
+          }
+          setDiscardDropActive(false);
+          window.setTimeout(() => { suppressTileClickRef.current = false; }, 0);
+        }}
+      >
       <section className="cloud-board" aria-label="Mahjong table">
         {orientedOpponents.map(({ player, position }) => <article className={`opponent-seat seat-${position} ${current?.id === player.id ? 'is-turn' : ''}`} aria-label={`${player.name}, ${player.seat}, ${player.rackCount} concealed tiles${current?.id === player.id ? ', their turn' : ''}`} key={player.id}>
           <div className="opponent-identity"><span className="player-avatar" aria-hidden="true">{player.name.slice(0, 1).toUpperCase()}</span><span><strong>{player.name}</strong><small>{player.seat}{current?.id === player.id ? ' · playing' : ''}</small></span></div>
           {player.revealedRack ? <div className="revealed-cloud-rack">{player.revealedRack.map((tile) => <span title={tileLabel(tile)} key={tile.id}>{compactTile(tile)}</span>)}</div> : <div className="rack-backs" role="img" aria-label={`${player.rackCount} concealed tiles`}>{Array.from({ length: player.rackCount }, (_, index) => <i key={index} />)}<b className="rack-backs-count" aria-hidden="true">{player.rackCount}</b></div>}
           {player.exposures.length ? <div className="cloud-exposures">{player.exposures.map((exposure) => <span key={exposure.id}>{exposure.kind}: {exposure.tiles.map(compactTile).join(' ')}</span>)}</div> : null}
         </article>)}
-        <div className={`cloud-discard-pool ${discardDropActive ? 'drop-target-active' : ''}`} role="region" aria-label={`Shared discard area, ${snapshot.publicState.discards.length} discarded tiles`} onDragOver={(event) => { if (pending === 'discard' && draggingTileId) { event.preventDefault(); setDiscardDropActive(true); } }} onDragLeave={() => setDiscardDropActive(false)} onDrop={(event) => { event.preventDefault(); const tileId = event.dataTransfer.getData('text/plain') || draggingTileId; if (tileId) discardDraggedTile(tileId); }}><div className="wall-counter"><strong>{snapshot.publicState.wallCount}</strong><span>in wall</span></div><div className="cloud-discards">{snapshot.publicState.discards.map((tile) => <span title={tileLabel(tile)} key={tile.id}>{compactTile(tile)}</span>)}</div>{snapshot.publicState.callWindow ? <div className="call-focus"><small>Latest discard</small><strong>{compactTile(snapshot.publicState.callWindow.discard)}</strong><span>{snapshot.publicState.callWindow.responseCount} responded</span></div> : null}{pending === 'discard' ? <small className="discard-drop-hint">Drop a tile here to discard</small> : null}</div>
+        <CloudDiscardPool dropActive={discardDropActive} label={`Shared discard area, ${snapshot.publicState.discards.length} discarded tiles`}><div className="wall-counter"><strong>{snapshot.publicState.wallCount}</strong><span>in wall</span></div><div className="cloud-discards">{snapshot.publicState.discards.map((tile) => <span title={tileLabel(tile)} key={tile.id}>{compactTile(tile)}</span>)}</div>{snapshot.publicState.callWindow ? <div className="call-focus"><small>Latest discard</small><strong>{compactTile(snapshot.publicState.callWindow.discard)}</strong><span>{snapshot.publicState.callWindow.responseCount} responded</span></div> : null}{pending === 'discard' ? <small className="discard-drop-hint">Drop a tile here to discard</small> : null}</CloudDiscardPool>
       </section>
-      <section className="cloud-rack-section"><div className="cloud-rack-heading"><div><p className="kicker">Your rack · {me?.seat}</p><strong>{me?.name}</strong></div><span>{selected.length ? `${selected.length} selected` : 'Select tiles to act'}</span></div><small className="cloud-rack-help" id="cloud-rack-help">Tap tiles to select. Use the separate Move buttons to arrange; drag a tile onto the discard area only when you want to discard.</small><div className={`cloud-rack ${draggingTileId ? 'is-reordering' : ''}`} role="group" aria-label="Your rack" onDragEnd={() => { setDraggingTileId(null); setDiscardDropActive(false); setDropIntent(null); }}>{orderedRack.map((tile) => {
-          const intent = dropIntent?.targetId === tile.id ? dropIntent.placement : null;
-          return <div className={`cloud-tile-slot ${intent ? `drop-${intent}` : ''}`} key={tile.id}>
-            <button className={`cloud-tile ${selected.includes(tile.id) ? 'selected' : ''} ${draggingTileId === tile.id ? 'dragging' : ''}`} disabled={busy || isTerminal} aria-describedby="cloud-rack-help" aria-pressed={selected.includes(tile.id)} aria-label={tileLabel(tile)} title={tileLabel(tile)} draggable={!isTerminal} onDragStart={(event) => { setDraggingTileId(tile.id); setDropIntent(null); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', tile.id); }} onDragOver={(event) => { if (draggingTileId && draggingTileId !== tile.id) { event.preventDefault(); const bounds = event.currentTarget.getBoundingClientRect(); const placement = event.clientX < bounds.left + bounds.width / 2 ? 'before' : 'after'; setDropIntent((current) => current?.targetId === tile.id && current.placement === placement ? current : { targetId: tile.id, placement }); } }} onDrop={(event) => { event.preventDefault(); const movingId = event.dataTransfer.getData('text/plain') || draggingTileId; if (movingId) placeTile(movingId, tile.id, dropIntent?.targetId === tile.id ? dropIntent.placement : 'before'); }} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); moveTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); moveTile(tile.id, 1); } }} onClick={() => toggle(tile.id)}><b>{compactTile(tile)}</b><small>{tile.type.kind === 'number' ? tile.type.suit : tile.type.kind}</small></button>
-          </div>;
+      <section className="cloud-rack-section"><div className="cloud-rack-heading"><div><p className="kicker">Your rack · {me?.seat}</p><strong>{me?.name}</strong></div><span>{selected.length ? `${selected.length} selected` : 'Select tiles to act'}</span></div><small className="cloud-rack-help" id="cloud-rack-help">Drag a tile to reorder (hold its grip on touch), or use Alt + arrow keys. Drop on the discard area only when you want to discard.</small><div className="cloud-rack" role="group" aria-label="Your rack">{orderedRack.map((tile, index) => {
+          return <SortableRackItem id={tile.id} index={index} disabled={busy || isTerminal} className="cloud-tile-slot" key={tile.id}>
+            {({ isDragging, handleRef }) => <>
+              <button className={`cloud-tile ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''}`} disabled={busy || isTerminal} aria-describedby="cloud-rack-help" aria-pressed={selected.includes(tile.id)} aria-label={tileLabel(tile)} title={tileLabel(tile)} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); moveTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); moveTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; toggle(tile.id); }}><b>{compactTile(tile)}</b><small>{tile.type.kind === 'number' ? tile.type.suit : tile.type.kind}</small></button>
+              <button ref={handleRef} className="tile-drag-handle cloud-tile-drag-handle" data-drag-handle type="button" aria-label={`Drag ${tileLabel(tile)} to reorder`} title="Drag to reorder"><span aria-hidden="true">⠿</span></button>
+            </>}
+          </SortableRackItem>;
         })}</div>
         {jokerExchanges.length ? <div className="cloud-exchange-row"><span>Joker available:</span>{jokerExchanges.map((option) => <button disabled={busy} onClick={() => void act({ type: 'EXCHANGE_JOKER', exposureOwnerId: option.owner.id, exposureId: option.exposure.id, rackTileId: option.rackTile.id, jokerTileId: option.joker.id })} key={`${option.exposure.id}-${option.rackTile.id}`}>Swap {compactTile(option.rackTile)} for {option.owner.name}&apos;s Joker</button>)}</div> : null}
         {selected.length === 1 ? <div className="cloud-rack-reorder"><strong>Reorder selected tile</strong><div className="cloud-rack-order-actions" role="group" aria-label="Reorder selected tile"><button className="secondary" aria-label="Move selected tile left" disabled={busy || orderedRack.findIndex((tile) => tile.id === selected[0]) <= 0} onClick={() => moveTile(selected[0], -1)}><span aria-hidden="true">←</span> Move left</button><button className="secondary" aria-label="Move selected tile right" disabled={busy || orderedRack.findIndex((tile) => tile.id === selected[0]) === orderedRack.length - 1} onClick={() => moveTile(selected[0], 1)}>Move right <span aria-hidden="true">→</span></button></div></div> : null}
@@ -313,6 +359,7 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
         {message ? <p className="cloud-message" role="status" aria-live="polite">{message}</p> : null}
         <details className="cloud-training-card"><summary>Show Training Card · 10 original hands</summary><div>{cloudTrainingHands.map((hand) => <article key={hand.id}><span>{hand.section} · {hand.exposure === 'concealed' ? 'Concealed' : 'Exposed'}</span><strong>{hand.name}</strong><div className="cloud-training-groups" aria-label={`${hand.groups.length} groups`}>{hand.groups.map((group) => <span className="cloud-training-group" key={group.id} aria-label={`${group.count} ${trainingTileLabel(group.tileKey)}`}><span className="cloud-training-tiles">{Array.from({ length: group.count }, (_, index) => <i key={index}>{trainingTileLabel(group.tileKey)}</i>)}</span></span>)}</div><p>{hand.description}</p></article>)}</div></details>
       </section>
+      </DragDropProvider>
     </main>
   );
 }

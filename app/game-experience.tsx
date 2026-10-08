@@ -3,7 +3,10 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
 
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
-import { useEffect, useMemo, useState } from 'react';
+import { DragDropProvider, PointerSensor } from '@dnd-kit/react';
+import { PointerActivationConstraints } from '@dnd-kit/dom';
+import { isSortable } from '@dnd-kit/react/sortable';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getCoachVisibleContext } from '../src/coach/analyze';
 import { getProgressiveHint, recommendCall, recommendCharlestonPass, recommendDiscard, recommendDraw } from '../src/coach/recommend';
 import { generateGameReview } from '../src/coach/review';
@@ -11,7 +14,8 @@ import { loadGuestProgress, saveGuestProgress } from '../src/persistence/guest-p
 import { loadGuestGameSession, saveGuestGameSession } from '../src/persistence/guest-session';
 import { runBotAction } from '../src/game/bots';
 import { applyGameAction, createGame, getLegalJokerExchangeOptions, totalPlayerTiles } from '../src/game/engine';
-import { moveTileId, normalizeTileOrder, placeTileId, tileLabel } from '../src/game/tiles';
+import { moveTileId, normalizeTileOrder, tileLabel } from '../src/game/tiles';
+import { SortableRackItem } from '../src/game/sortable-rack-item';
 import { analyzeDiscardDeadHand, cardTileKey, getLegalCallOptions, TrainingCardProvider } from '../src/game/training-card';
 import type { GameState, HandCandidate, HandGroup, Player, Suit, Tile } from '../src/game/types';
 
@@ -265,7 +269,7 @@ export function GameExperience() {
   const [cardOpen, setCardOpen] = useState(true);
   const [rackOrder, setRackOrder] = useState(() => game.players[0].rack.map((tile) => tile.id));
   const [draggingTileId, setDraggingTileId] = useState<string | null>(null);
-  const [dropIntent, setDropIntent] = useState<{ targetId: string; placement: 'before' | 'after' } | null>(null);
+  const suppressTileClickRef = useRef(false);
   const [discardQueue, setDiscardQueue] = useState<Tile[]>([]);
   const [gameNumber, setGameNumber] = useState(1);
   const [sessionReady, setSessionReady] = useState(false);
@@ -381,13 +385,6 @@ export function GameExperience() {
   const toggleTile = (id: string) => {
     setNotice('');
     setSelected((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length < 5 ? [...current, id] : current);
-  };
-
-  const dropTile = (movingId: string, targetId: string, placement: 'before' | 'after') => {
-    setRackOrder((current) => placeTileId(normalizeTileOrder(current, human.rack), movingId, targetId, placement));
-    setDraggingTileId(null);
-    setDropIntent(null);
-    setNotice('Rack order updated. Tile order does not affect the rules.');
   };
 
   const nudgeTile = (tileId: string, offset: -1 | 1) => {
@@ -594,16 +591,53 @@ export function GameExperience() {
         <div className="player-area">
           <ExposureTray players={game.players} />
           <MotionConfig reducedMotion="user" transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.7 }}>
-            <div className={`rack ${draggingTileId ? 'is-reordering' : ''}`} aria-label="Your rack">
+            <DragDropProvider
+              sensors={(defaults) => [
+                ...defaults.filter((sensor) => sensor !== PointerSensor),
+                PointerSensor.configure({
+                  activationConstraints(event) {
+                    return event.pointerType === 'touch'
+                      ? [new PointerActivationConstraints.Delay({ value: 200, tolerance: { x: 8, y: 8 } })]
+                      : [new PointerActivationConstraints.Distance({ value: 5 })];
+                  },
+                  preventActivation(event) {
+                    return event.pointerType === 'touch'
+                      && !(event.target instanceof Element && event.target.closest('[data-drag-handle]'));
+                  },
+                }),
+              ]}
+              onDragStart={(event) => {
+                suppressTileClickRef.current = true;
+                setDraggingTileId(event.operation.source ? String(event.operation.source.id) : null);
+              }}
+              onDragEnd={(event) => {
+                const source = event.operation.source;
+                if (!event.canceled && source && isSortable(source) && source.index !== source.initialIndex) {
+                  const next = normalizeTileOrder(rackOrder, human.rack);
+                  const [movingId] = next.splice(source.initialIndex, 1);
+                  if (movingId) {
+                    next.splice(Math.max(0, Math.min(source.index, next.length)), 0, movingId);
+                    setRackOrder(next);
+                    setNotice('Rack order updated. Tile order does not affect the rules.');
+                  }
+                }
+                setDraggingTileId(null);
+                window.setTimeout(() => { suppressTileClickRef.current = false; }, 0);
+              }}
+            >
+            <div className="rack" aria-label="Your rack">
               <AnimatePresence>{draggingTileId ? <motion.div className="rack-drop-message" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}>Release in the open space between tiles</motion.div> : null}</AnimatePresence>
-              {orderedRack.map((tile) => {
+              {orderedRack.map((tile, index) => {
                 const cannotPassJoker = game.phase === 'charleston' && tile.type.kind === 'joker';
-                const intent = dropIntent?.targetId === tile.id ? dropIntent.placement : null;
-                return <motion.div className={`tile-slot ${intent ? `drop-${intent}` : ''}`} layout key={tile.id}>
-                  <button className={`tile ${selected.includes(tile.id) ? 'selected' : ''} ${draggingTileId === tile.id ? 'dragging' : ''} ${cannotPassJoker ? 'cannot-pass' : ''} ${hintLevel >= 1 && coachRecommendation.tileIds.includes(tile.id) ? 'recommended' : ''} ${hintLevel >= 1 && best && !best.matchingTileIds.includes(tile.id) ? 'hinted' : ''}`} aria-label={`${tileLabel(tile)}${cannotPassJoker ? ', cannot be passed' : ''}. Drag to reorder or use Alt and arrow keys.`} aria-pressed={selected.includes(tile.id)} aria-disabled={cannotPassJoker} draggable onDragStart={(event) => { setDraggingTileId(tile.id); setDropIntent(null); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', tile.id); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; if (draggingTileId && draggingTileId !== tile.id) { const bounds = event.currentTarget.getBoundingClientRect(); const placement = event.clientX < bounds.left + bounds.width / 2 ? 'before' : 'after'; setDropIntent((current) => current?.targetId === tile.id && current.placement === placement ? current : { targetId: tile.id, placement }); } }} onDrop={(event) => { event.preventDefault(); const movingId = event.dataTransfer.getData('text/plain') || draggingTileId || ''; const placement = dropIntent?.targetId === tile.id ? dropIntent.placement : 'before'; dropTile(movingId, tile.id, placement); }} onDragEnd={() => { setDraggingTileId(null); setDropIntent(null); }} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); nudgeTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); nudgeTile(tile.id, 1); } }} onClick={() => cannotPassJoker ? setNotice('Jokers may be rearranged, but they cannot be passed during the Charleston.') : toggleTile(tile.id)}><span className="drag-grip" aria-hidden="true">••</span><TileFace tile={tile} /></button>
-                </motion.div>;
+                return <SortableRackItem id={tile.id} index={index} className="tile-slot" key={tile.id}>
+                  {({ isDragging, handleRef }) => <>
+                    <button className={`tile ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${cannotPassJoker ? 'cannot-pass' : ''} ${hintLevel >= 1 && coachRecommendation.tileIds.includes(tile.id) ? 'recommended' : ''} ${hintLevel >= 1 && best && !best.matchingTileIds.includes(tile.id) ? 'hinted' : ''}`} aria-label={`${tileLabel(tile)}${cannotPassJoker ? ', cannot be passed' : ''}. Drag to reorder or use Alt and arrow keys.`} aria-pressed={selected.includes(tile.id)} aria-disabled={cannotPassJoker} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); nudgeTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); nudgeTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; if (cannotPassJoker) setNotice('Jokers may be rearranged, but they cannot be passed during the Charleston.'); else toggleTile(tile.id); }}><TileFace tile={tile} /></button>
+                    <button ref={handleRef} className="tile-drag-handle" data-drag-handle type="button" aria-label={`Drag ${tileLabel(tile)} to reorder`} title="Drag to reorder"><span aria-hidden="true">⠿</span></button>
+                  </>}
+                </SortableRackItem>;
               })}
             </div>
+            </DragDropProvider>
           </MotionConfig>
           <div className="player-controls"><p><strong>Your rack</strong><span>{game.phase === 'charleston' ? game.charlestonCourtesy ? `${selected.length} selected · optional` : `${selected.length} of ${expectedPassTiles} selected${blindCount ? ` · ${blindCount} blind` : ''}` : respondingToDiscard ? `${selected.length} selected for a call` : needsDraw ? '13 tiles · ready to draw' : `${totalPlayerTiles(human)} tiles · ${selected.length} selected`}</span></p>
             <small className="reorder-hint" id="rack-reorder-hint"><span aria-hidden="true">↔</span> Drag tiles to arrange · Alt + arrow keys</small>
