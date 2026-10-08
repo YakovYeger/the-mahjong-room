@@ -345,8 +345,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 .cloud-game-page > header .host-end-action:hover:not(:disabled) { background: rgba(115,34,24,.42); }
 .cloud-game-page > header .leave-table-action { min-height: 38px; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 8px 13px; background: transparent; color: white; font-size: 12px; font-weight: 700; cursor: pointer; }
 .cloud-game-page > header .leave-table-action:hover { background: rgba(255,255,255,.1); }
-.leave-dialog-backdrop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: max(18px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom)); background: rgba(8,23,20,.68); }
-.leave-dialog { width: min(100%,480px); border: 1px solid #ddcbb0; border-radius: 18px; padding: clamp(22px,5vw,34px); background: #f5f0e7; color: #173e35; box-shadow: 0 22px 70px rgba(0,0,0,.35); }
+.leave-dialog { width: min(calc(100% - 36px),480px); max-height: calc(100dvh - 36px); margin: auto; border: 1px solid #ddcbb0; border-radius: 18px; padding: clamp(22px,5vw,34px); background: #f5f0e7; color: #173e35; box-shadow: 0 22px 70px rgba(0,0,0,.35); }
+.leave-dialog::backdrop { background: rgba(8,23,20,.68); }
 .leave-dialog h2 { margin: 0; font: 700 clamp(24px,6vw,32px) Georgia,serif; }
 .leave-dialog p { margin: 13px 0 24px; color: #566b63; font-size: 14px; line-height: 1.6; }
 .leave-dialog > div { display: flex; justify-content: flex-end; gap: 10px; }

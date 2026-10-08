@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useCallback, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { moveTileId, normalizeTileOrder, placeTileId, tileLabel } from '../../../src/game/tiles';
 import { cardTileKey, TrainingCardProvider } from '../../../src/game/training-card';
 import type { GameAction, Tile } from '../../../src/game/types';
@@ -33,6 +33,7 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
   const [message, setMessage] = useState('Connecting to the table…');
   const [busy, setBusy] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const leaveDialogRef = useRef<HTMLDialogElement>(null);
   const [online, setOnline] = useState(1);
   const [room, setRoom] = useState<RoomDetails | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -58,6 +59,12 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
 
   useEffect(() => { queueMicrotask(() => void refresh().catch((error) => setMessage(error.message))); }, [refresh]);
   useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
+
+  useEffect(() => {
+    const dialog = leaveDialogRef.current;
+    if (leaveDialogOpen && dialog && !dialog.open) dialog.showModal();
+    return () => { if (dialog?.open) dialog.close(); };
+  }, [leaveDialogOpen]);
 
   useEffect(() => {
     if (!gameId || !snapshot || snapshot.status !== 'active') return;
@@ -209,13 +216,11 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
   return (
     <main className="cloud-game-page">
       <header><a className="brand" href="/">The Mahjong Room</a><div><span className="live-dot" /> {online} online</div><strong>{snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}</strong>{room?.inviteCode && snapshot.status !== 'completed' && snapshot.status !== 'abandoned' ? <button className="table-invite-action" onClick={() => void copyInviteLink()}>Invite · {room.inviteCode}</button> : null}{isHost && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button className="host-end-action" onClick={() => void endGameForEveryone()} disabled={busy}>End game</button> : null}<button type="button" className="leave-table-action" onClick={requestLeaveTable}>Leave table</button></header>
-      {leaveDialogOpen ? <div className="leave-dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setLeaveDialogOpen(false); }}>
-        <section className="leave-dialog" role="alertdialog" aria-modal="true" aria-labelledby="leave-dialog-title" aria-describedby="leave-dialog-description" onKeyDown={(event) => { if (event.key === 'Escape') setLeaveDialogOpen(false); }}>
+      {leaveDialogOpen ? <dialog ref={leaveDialogRef} className="leave-dialog" aria-labelledby="leave-dialog-title" aria-describedby="leave-dialog-description" onCancel={(event) => { event.preventDefault(); setLeaveDialogOpen(false); }} onClick={(event) => { if (event.target === event.currentTarget) setLeaveDialogOpen(false); }}>
           <h2 id="leave-dialog-title">Leave this table?</h2>
           <p id="leave-dialog-description">The game will continue without you. Your seat stays available for two minutes while you can reconnect; after that, a bot takes over and the other players see that you disconnected.</p>
           <div><button type="button" className="secondary" autoFocus onClick={() => setLeaveDialogOpen(false)}>Stay</button><button type="button" className="leave-confirm-action" onClick={confirmLeaveTable}>Leave table</button></div>
-        </section>
-      </div> : null}
+      </dialog> : null}
       <section className="cloud-status"><div><p className="kicker">{snapshot.status}</p><h1>{snapshot.status === 'abandoned' ? 'Table ended' : snapshot.status === 'completed' ? 'Game complete' : snapshot.status === 'paused' ? 'Table paused' : pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : 'Your move'}</h1><p>{snapshot.status === 'abandoned' ? 'No active decisions' : pending.replaceAll('_', ' ')}</p></div><div className="turn-clock"><span>{snapshot.publicState.phase === 'charleston' ? 'Charleston' : 'Time remaining'}</span><strong>{snapshot.publicState.phase === 'charleston' ? 'Untimed' : remainingLabel}</strong></div>{snapshot.mode === 'live' && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}</section>
       {latestResolution?.type === 'TURN_AUTO_RESOLVED' ? <div className="game-resolution" role="status">Time expired. {snapshot.publicState.players.find((player) => player.id === latestResolution.playerId)?.name ?? 'A player'}'s legal move was selected automatically.</div> : null}
       {latestResolution?.type === 'PLAYER_CONTROL_CHANGED' ? <div className="game-resolution" role="status">{snapshot.publicState.players.find((player) => player.id === latestResolution.playerId)?.name ?? 'A player'} did not return during the two-minute grace period. A bot now controls that seat.</div> : null}
