@@ -250,6 +250,7 @@ export function TableReveal({ game }: { game: GameState }) {
 }
 
 export function GameExperience() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [started, setStarted] = useState(false);
   const [dealing, setDealing] = useState(false);
   const [game, setGame] = useState(() => createGame(2026));
@@ -534,7 +535,7 @@ export function GameExperience() {
       : hasSavedSession ? `Resume game ${gameNumber}` : gameNumber === 1 ? 'Play your first hand' : `Play game ${gameNumber}`;
     return (
       <main className="welcome">
-        <nav><span className="brand">The Mahjong Room</span><span className="welcome-nav-actions"><span className="tiny-label">A calmer way to learn</span><Link href="/games">Private tables</Link><Link href="/account">Account</Link></span><details className="welcome-menu"><summary aria-label="Open navigation menu">Menu</summary><span><Link href="/games">Private tables</Link><Link href="/account">Account</Link></span></details></nav>
+        <nav><span className="brand">The Mahjong Room</span><span className="welcome-nav-actions"><span className="tiny-label">A calmer way to learn</span><Link href="/games">Private tables</Link><Link href="/account">Account</Link></span><div className="welcome-menu"><button type="button" aria-expanded={mobileMenuOpen} aria-controls="welcome-mobile-navigation" onClick={() => setMobileMenuOpen((open) => !open)}>Menu</button>{mobileMenuOpen ? <div className="welcome-menu-panel" id="welcome-mobile-navigation"><Link href="/games" onClick={() => setMobileMenuOpen(false)}>Private tables</Link><Link href="/account" onClick={() => setMobileMenuOpen(false)}>Account</Link></div> : null}</div></nav>
         <section className="welcome-grid">
           <div className="welcome-copy"><p className="kicker">{returning ? `Game ${gameNumber} is ready` : 'Your first game starts here'}</p><h1>{returning ? <>Build your Mahjong instincts <em>one hand at a time.</em></> : <>Learn American Mahjong by <em>actually playing.</em></>}</h1><p className="lede">{returning ? 'Pick up exactly where you left off. Your rack order, table state, coaching level, and game number are saved on this device.' : 'A patient coach sits beside you through the tiles, the Charleston, and every decision—then quietly steps away as you get better.'}</p><button className="start-button" onClick={enterGame}>{startLabel} <span>→</span></button><small>{hasSavedSession ? 'Saved automatically on this device.' : 'No account. No timer. We’ll explain as we go.'}</small></div>
           <div className="welcome-rack" aria-hidden="true">{human.rack.slice(0, 8).map((tile) => { const label = shortTile(tile); return <span className="hero-tile" key={tile.id}><strong>{label.top}</strong><small>{label.bottom}</small></span>; })}<div className="teacher-note"><span>Coach</span><p>You already have a few tiles that work beautifully together.</p></div></div>
