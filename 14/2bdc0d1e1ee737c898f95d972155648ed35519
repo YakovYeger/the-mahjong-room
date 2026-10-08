@@ -1,0 +1,25 @@
+docs/IMPLEMENTATION_STATUS.md
+  s_d8a2804808cb86::t_1cddb824a5f310 20
+app/globals.css
+  s_d8a2804808cb86::t_a2c2f62f0b65ae 353-355,367,369-383,385,465-469,544
+app/games/[id]/page.tsx
+  s_d8a2804808cb86::t_4b65287b7a6cfb 84,86,90-91
+  s_d8a2804808cb86::t_4c63e083c92f2b 94-99,118,122,157,160
+  s_d8a2804808cb86::t_ea5cb0d83c6996 4,29-32,45-50,75,77-83,85,87-89,92-93,100,119-121,130-147,155,158-159,161-162,165,174
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "142bdc0d1e1ee737c898f95d972155648ed35519",
+  "prompts": {},
+  "sessions": {
+    "s_d8a2804808cb86": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a11a7a-058f-7d30-a6d7-6a27a441c1b6",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
