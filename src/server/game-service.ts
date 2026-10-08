@@ -165,6 +165,18 @@ export async function listGames(userId: string) {
   });
 }
 
+export async function deleteOwnedGame(gameId: string, userId: string) {
+  const { data, error } = await adminClient().from('games')
+    .delete()
+    .eq('id', gameId)
+    .eq('owner_id', userId)
+    .select('id')
+    .maybeSingle();
+  if (error) throw new ApiError(500, 'GAME_DELETE_FAILED', 'The game could not be deleted.');
+  if (!data) throw new ApiError(404, 'GAME_NOT_FOUND', 'That game was not found or you do not own it.');
+  return { deleted: true as const, gameId: data.id };
+}
+
 export async function getEntitlement() {
   const supabase = await createSupabaseServerClient();
   if (!supabase) throw new ApiError(503, 'BACKEND_NOT_CONFIGURED', 'Cloud games are not configured yet.');
@@ -325,6 +337,18 @@ export async function getSnapshot(gameId: string, userId: string) {
   let player = playerForUser(record, userId);
   if (!record.state) throw new ApiError(409, 'GAME_NOT_STARTED', 'The room is waiting for the host to start.');
 
+  // A replaced final human leaves no player who can trigger another decision.
+  // Retire legacy all-bot tables on reconnect so they stop consuming an active slot.
+  if (record.game.status === 'active' && !record.players.some((item) => item.controller_type === 'human' && item.join_status !== 'replaced')) {
+    const { data, error } = await adminClient().from('games')
+      .update({ status: 'abandoned', deadline_at: null })
+      .eq('id', gameId).eq('status', 'active').eq('state_version', record.game.state_version)
+      .select('id').maybeSingle();
+    if (error) throw new ApiError(503, 'GAME_RECOVERY_FAILED', 'The abandoned table could not be stopped.');
+    if (data) record = { ...record, game: { ...record.game, status: 'abandoned', deadline_at: null } };
+    else record = await loadCanonicalGame(gameId);
+  }
+
   // Older timeout handling could persist the next bot's turn without advancing
   // it, leaving every human with a permanent "wait" snapshot. Recover those
   // states when a participant reconnects, and keep future snapshots healthy.
@@ -472,6 +496,16 @@ export async function submitTimeoutAction(gameId: string, expectedVersion: numbe
   let state = structuredClone(record.state);
   const events: GameEvent[] = [];
   const replaced = new Set<string>();
+  let abandoned = false;
+  const stopIfNoHumansRemain = () => {
+    if (state.players.some((player) => player.type === 'human')) return false;
+    const event: GameEvent = { type: 'GAME_ABANDONED', sequence: state.eventSequence + 1, reason: 'no_human_players' };
+    state.eventSequence += 1;
+    state.events.push(event);
+    events.push(event);
+    abandoned = true;
+    return true;
+  };
   for (const playerKey of disconnectedKeys) {
     const statePlayer = state.players.find((player) => player.id === playerKey);
     if (statePlayer?.type === 'human') {
@@ -503,6 +537,7 @@ export async function submitTimeoutAction(gameId: string, expectedVersion: numbe
         events.push(event);
       }
     }
+    if (stopIfNoHumansRemain()) break;
     if (state.charlestonAwaitingDecision) {
       const action = { type: 'CHOOSE_SECOND_CHARLESTON', continue: false } as const;
       const applied = applyHumanActionAndAdvance(state, playerKey, action);
@@ -516,15 +551,18 @@ export async function submitTimeoutAction(gameId: string, expectedVersion: numbe
   if (state.stateVersion <= expectedVersion) state.stateVersion = expectedVersion + 1;
   // A disconnected player may not own the current decision. Let their bot
   // continue through any consecutive bot turns until a connected human acts.
+  if (!abandoned && stopIfNoHumansRemain()) {
+    // Nothing can make progress once every seat is bot-controlled.
+  }
   const versionBeforeBotAdvance = state.stateVersion;
-  const autoAdvanced = advanceBotsUntilHumanDecision(state);
+  const autoAdvanced = abandoned ? { state, events: [] as GameEvent[] } : advanceBotsUntilHumanDecision(state);
   const botActionAdvanced = autoAdvanced.state.stateVersion > versionBeforeBotAdvance;
   if (autoAdvanced.state.stateVersion > state.stateVersion) {
     state = autoAdvanced.state;
     events.push(...autoAdvanced.events);
   }
-  const status: GameStatus = state.phase === 'completed' ? 'completed' : 'active';
-  const deadlineAt = timedOutKeys.length || botActionAdvanced
+  const status: GameStatus = abandoned ? 'abandoned' : state.phase === 'completed' ? 'completed' : 'active';
+  const deadlineAt = abandoned ? null : timedOutKeys.length || botActionAdvanced
     ? deadlineForState(state, record.game.mode, record.game.turn_seconds, record.game.response_seconds)
     : record.game.deadline_at;
   const actionId = await deterministicUuid(`timeout:${gameId}:${expectedVersion}:${timedOutKeys.sort().join(',')}`);

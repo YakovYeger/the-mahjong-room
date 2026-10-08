@@ -114,6 +114,18 @@ export default function GamesPage() {
     } catch (error) { setMessage(error instanceof Error ? error.message : 'The game could not be started.'); setBusy(false); }
   };
 
+  const deleteGame = async (game: GameItem) => {
+    if (!game.isMine || !window.confirm('Delete this game and its saved history? This will free your active game slot.')) return;
+    setBusy(true); setMessage('');
+    try {
+      await api(`/api/games/${game.id}`, { method: 'DELETE' });
+      setGames((current) => current.filter((item) => item.id !== game.id));
+      if (room?.id === game.id) setRoom(null);
+      setMessage('Game deleted. Your active game slot is free.');
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'The game could not be deleted.'); }
+    finally { setBusy(false); }
+  };
+
   if (signedOut) return <main className="games-page"><header><a className="brand" href="/">The Mahjong Room</a></header><section className="games-empty"><p className="kicker">Account required</p><h1>Sign in to open cloud tables.</h1><p>Solo guest play remains available from the home page.</p><a className="account-primary account-link" href="/account">Sign in or create an account</a></section></main>;
 
   return (
@@ -122,7 +134,7 @@ export default function GamesPage() {
       <section className="games-hero"><div><p className="kicker">Private tables</p><h1>Your games</h1><p>Every accepted move autosaves. Rejoin on any device and continue from the canonical server snapshot.</p></div><div className="tier-chip"><strong>{entitlement.name}</strong><span>{entitlement.activeGameLimit} active cloud game{entitlement.activeGameLimit === 1 ? '' : 's'}</span></div></section>
       <section className="games-layout">
         <div className="games-list-panel">{notifications.some((item) => !item.read_at) ? <div className="turn-inbox"><div className="section-heading"><h2>Your turn</h2><span>{notifications.filter((item) => !item.read_at).length}</span></div>{notifications.filter((item) => !item.read_at).slice(0, 3).map((item) => <button onClick={() => void openNotification(item)} key={item.id}><strong>A table is waiting</strong><small>{new Date(item.created_at).toLocaleString()}</small><span>Play now →</span></button>)}</div> : null}<div className="section-heading"><h2>Active and recent</h2><button onClick={() => void loadGames()}>Refresh</button></div>
-          {games.length ? <div className="games-list">{games.map((game) => <button onClick={() => void openRoom(game.id)} key={game.id}><span className={`game-status status-${game.status}`}>{game.status}</span><strong>{game.mode === 'live' ? 'Live table' : 'Time-based table'}</strong><small>{game.humanCount} human{game.humanCount === 1 ? '' : 's'} · version {game.stateVersion}</small><time>{new Date(game.updatedAt).toLocaleString()}</time></button>)}</div> : <div className="empty-list"><strong>No cloud games yet</strong><p>Create a private room or join with an invite code.</p></div>}
+          {games.length ? <div className="games-list">{games.map((game) => <article className="game-list-item" key={game.id}><button className="game-open" onClick={() => void openRoom(game.id)} disabled={busy}><span className={`game-status status-${game.status}`}>{game.status}</span><strong>{game.mode === 'live' ? 'Live table' : 'Time-based table'}</strong><small>{game.humanCount} human{game.humanCount === 1 ? '' : 's'} · version {game.stateVersion}</small><time>{new Date(game.updatedAt).toLocaleString()}</time></button>{game.isMine ? <button className="game-delete" onClick={() => void deleteGame(game)} disabled={busy} aria-label={`Delete ${game.mode === 'live' ? 'live table' : 'time-based table'}`} title="Delete game">Delete</button> : null}</article>)}</div> : <div className="empty-list"><strong>No cloud games yet</strong><p>Create a private room or join with an invite code.</p></div>}
         </div>
         <aside className="room-tools">
           {room ? <div className="lobby-card"><p className="kicker">Lobby · {room.mode}</p><h2>Seats at the table</h2><div className="seat-list">{['east','south','west','north'].map((seat) => { const player = room.players.find((item) => item.seat === seat); return <div key={seat}><b>{seat[0].toUpperCase()}</b><span>{player?.displayName ?? 'Open seat'}</span><small>{player?.controllerType ?? 'Bot fills on start'}</small></div>; })}</div><p className="room-rules-summary">{room.mode === 'live' ? `${Math.floor(room.turnSeconds / 60)}-minute live turns · Charleston untimed · 2-minute reconnect grace, then bot takeover` : '24-hour turns · Charleston untimed'}</p>{inviteCode ? <div className="invite-code"><span>Invite code</span><strong>{inviteCode}</strong><button onClick={() => void navigator.clipboard?.writeText(`${location.origin}/games?join=${inviteCode}`)}>Copy invite link</button></div> : null}<button className="account-primary" onClick={start} disabled={busy}>Start game · bots fill open seats</button><button className="account-secondary" onClick={() => setRoom(null)}>Back</button></div> : <>
