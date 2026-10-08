@@ -282,8 +282,60 @@ export async function startRoom(gameId: string, userId: string): Promise<GameSna
 
 export async function getSnapshot(gameId: string, userId: string) {
   const startedAt = Date.now();
-  const record = await loadCanonicalGame(gameId);
-  const player = playerForUser(record, userId);
+  let record = await loadCanonicalGame(gameId);
+  let player = playerForUser(record, userId);
+  if (!record.state) throw new ApiError(409, 'GAME_NOT_STARTED', 'The room is waiting for the host to start.');
+
+  // Older timeout handling could persist the next bot's turn without advancing
+  // it, leaving every human with a permanent "wait" snapshot. Recover those
+  // states when a participant reconnects, and keep future snapshots healthy.
+  for (let attempt = 0; attempt < 2 && record.game.status === 'active' && record.state; attempt += 1) {
+    if (!record.players.some((item) => item.controller_type === 'human' && item.join_status !== 'replaced')) break;
+    if (requiredHumanPlayers(record.state).length > 0) break;
+    const advanced = advanceBotsUntilHumanDecision(record.state);
+    if (advanced.state.stateVersion === record.state.stateVersion) break;
+
+    const status: GameStatus = advanced.state.phase === 'completed' ? 'completed' : 'active';
+    const deadlineAt = deadlineForState(advanced.state, record.game.mode, record.game.turn_seconds, record.game.response_seconds);
+    const response = snapshotForPlayer(advanced.state, player.player_key, status, record.game.mode, deadlineAt, advanced.events);
+    const actionId = await deterministicUuid(`bot-recovery:${gameId}:${userId}:${record.game.state_version}`);
+    const requestHash = await sha256(JSON.stringify({ gameId, userId, expectedVersion: record.game.state_version, actionType: 'BOT_RECOVERY' }));
+    const { data, error } = await adminClient().rpc('commit_game_action', {
+      requested_game_id: gameId,
+      requested_action_id: actionId,
+      acting_user_id: null as unknown as string,
+      acting_player_key: 'system-bot-advance',
+      expected_version: record.game.state_version,
+      action_type_value: 'BOT_RECOVERY',
+      request_hash_value: requestHash,
+      next_state: toJson(advanced.state),
+      next_public_state: toJson(getPublicGameState(advanced.state)),
+      emitted_events: toJson(advanced.events),
+      next_deadline: deadlineAt as unknown as string,
+      next_status: status,
+      next_phase: advanced.state.phase,
+      response_value: toJson(response),
+      response_status_value: 200,
+      timeout_player_keys: toJson([]),
+      replacement_player_keys: toJson([]),
+    });
+    if (error) throw new ApiError(500, 'BOT_RECOVERY_FAILED', 'The table could not resume its automatic turns.');
+    if ((data as { conflict?: boolean } | null)?.conflict) {
+      record = await loadCanonicalGame(gameId);
+      player = playerForUser(record, userId);
+      continue;
+    }
+
+    record = {
+      ...record,
+      game: { ...record.game, status, state_version: advanced.state.stateVersion, deadline_at: deadlineAt },
+      state: advanced.state,
+    };
+    await createTurnNotification({ ...record, game: { ...record.game, deadline_at: deadlineAt } }, advanced.state);
+    break;
+  }
+
+  player = playerForUser(record, userId);
   if (!record.state) throw new ApiError(409, 'GAME_NOT_STARTED', 'The room is waiting for the host to start.');
   const recent = record.state.events.slice(-24);
   const snapshot = snapshotForPlayer(record.state, player.player_key, record.game.status, record.game.mode, record.game.deadline_at, recent);
@@ -387,7 +439,7 @@ export async function submitTimeoutAction(gameId: string, expectedVersion: numbe
       if (!('violation' in applied)) { state = applied.state; events.push(...applied.events); }
     } else {
       state = runBotAction(state, playerKey);
-      if (nextTimeoutCount >= 3) state = advanceBotsUntilHumanDecision(state).state;
+      state = advanceBotsUntilHumanDecision(state).state;
     }
     events.push(...state.events.filter((event) => event.sequence > before && !events.some((existing) => existing.sequence === event.sequence)));
   }
