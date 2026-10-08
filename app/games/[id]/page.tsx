@@ -33,6 +33,7 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
   const [message, setMessage] = useState('Connecting to the table…');
   const [busy, setBusy] = useState(false);
   const [online, setOnline] = useState(1);
+  const [room, setRoom] = useState<RoomDetails | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
@@ -49,12 +50,30 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
     } catch { /* A local rack preference never blocks reconnecting. */ }
     setRackOrder((current) => normalizeTileOrder(current.length ? current : savedOrder, data.snapshot!.privateState.rack));
     setSnapshot(data.snapshot);
+    if (data.room) setRoom(data.room);
     setSelected([]);
     setMessage('');
   }, [gameId]);
 
   useEffect(() => { queueMicrotask(() => void refresh().catch((error) => setMessage(error.message))); }, [refresh]);
   useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
+
+  useEffect(() => {
+    if (!gameId || !snapshot || snapshot.status !== 'active') return;
+    let stopped = false;
+    const heartbeat = async () => {
+      if (document.visibilityState !== 'visible') return;
+      try {
+        const response = await fetch(`/api/games/${gameId}/heartbeat`, { method: 'POST', cache: 'no-store' });
+        const data = await response.json() as { room?: RoomDetails };
+        if (!stopped && data.room) setRoom(data.room);
+        if (response.status === 409) await refresh().catch(() => undefined);
+      } catch { /* The last saved heartbeat remains authoritative until the grace window ends. */ }
+    };
+    void heartbeat();
+    const timer = window.setInterval(() => void heartbeat(), 20_000);
+    return () => { stopped = true; window.clearInterval(timer); };
+  }, [gameId, refresh, snapshot?.status]);
 
   useEffect(() => {
     if (!supabase || !gameId || !snapshot) return;
@@ -115,6 +134,11 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
   const remaining = snapshot.deadlineAt ? Math.max(0, Math.ceil((new Date(snapshot.deadlineAt).getTime() - now) / 1000)) : null;
   const remainingLabel = remaining === null ? 'No clock running' : remaining >= 3600 ? `${Math.floor(remaining / 3600)}h ${Math.floor((remaining % 3600) / 60)}m` : `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
   const current = snapshot.publicState.players[snapshot.publicState.turnIndex];
+  const latestResolution = [...snapshot.recentEvents].reverse().find((event) => event.type === 'TURN_AUTO_RESOLVED' || event.type === 'PLAYER_CONTROL_CHANGED');
+  const disconnectedPlayers = (room?.players ?? []).filter((player) => {
+    if (player.controllerType !== 'human' || player.joinStatus === 'replaced') return false;
+    return player.joinStatus === 'disconnected' || now - Date.parse(player.lastActivityAt) >= 35_000;
+  });
   const orderedRack = (() => {
     const order = normalizeTileOrder(rackOrder, snapshot.privateState.rack);
     const byId = new Map(snapshot.privateState.rack.map((tile) => [tile.id, tile]));
@@ -149,7 +173,13 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
   return (
     <main className="cloud-game-page">
       <header><a className="brand" href="/">The Mahjong Room</a><div><span className="live-dot" /> {online} online</div><strong>{snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}</strong><a href="/games">Leave table</a></header>
-      <section className="cloud-status"><div><p className="kicker">{snapshot.status}</p><h1>{pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : 'Your move'}</h1><p>{pending.replaceAll('_', ' ')}</p></div><div className="turn-clock"><span>Time remaining</span><strong>{remainingLabel}</strong></div>{snapshot.mode === 'live' ? <button onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}</section>
+      <section className="cloud-status"><div><p className="kicker">{snapshot.status}</p><h1>{pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : 'Your move'}</h1><p>{pending.replaceAll('_', ' ')}</p></div><div className="turn-clock"><span>{snapshot.publicState.phase === 'charleston' ? 'Charleston' : 'Time remaining'}</span><strong>{snapshot.publicState.phase === 'charleston' ? 'Untimed' : remainingLabel}</strong></div>{snapshot.mode === 'live' ? <button onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}</section>
+      {latestResolution?.type === 'TURN_AUTO_RESOLVED' ? <div className="game-resolution" role="status">Time expired. {snapshot.publicState.players.find((player) => player.id === latestResolution.playerId)?.name ?? 'A player'}'s legal move was selected automatically.</div> : null}
+      {latestResolution?.type === 'PLAYER_CONTROL_CHANGED' ? <div className="game-resolution" role="status">{snapshot.publicState.players.find((player) => player.id === latestResolution.playerId)?.name ?? 'A player'} did not return during the two-minute grace period. A bot now controls that seat.</div> : null}
+      {disconnectedPlayers.length ? <div className="connection-alert" role="status">{disconnectedPlayers.map((player) => {
+        const secondsLeft = Math.max(0, Math.ceil((Date.parse(player.lastActivityAt) + 120_000 - now) / 1000));
+        return <p key={player.playerKey}><strong>{player.displayName}</strong> is disconnected. A bot takes over in {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} if they do not return.</p>;
+      })}</div> : null}
       <section className="cloud-board">
         <div className="opponent-grid">{snapshot.publicState.players.filter((player) => player.id !== me?.id).map((player) => <article key={player.id}><div><strong>{player.name}</strong><small>{player.seat} · {player.rackCount} concealed</small></div>{player.revealedRack ? <div className="revealed-cloud-rack">{player.revealedRack.map((tile) => <span title={tileLabel(tile)} key={tile.id}>{compactTile(tile)}</span>)}</div> : <div className="rack-backs">{Array.from({ length: player.rackCount }, (_, index) => <i key={index} />)}</div>}{player.exposures.length ? <div className="cloud-exposures">{player.exposures.map((exposure) => <span key={exposure.id}>{exposure.kind}: {exposure.tiles.map(compactTile).join(' ')}</span>)}</div> : null}</article>)}</div>
         <div className={`cloud-discard-pool ${discardDropActive ? 'drop-target-active' : ''}`} onDragOver={(event) => { if (pending === 'discard' && draggingTileId) { event.preventDefault(); setDiscardDropActive(true); } }} onDragLeave={() => setDiscardDropActive(false)} onDrop={(event) => { event.preventDefault(); const tileId = event.dataTransfer.getData('text/plain') || draggingTileId; if (tileId) discardDraggedTile(tileId); }}><div className="wall-counter"><strong>{snapshot.publicState.wallCount}</strong><span>tiles in wall</span></div><div className="cloud-discards">{snapshot.publicState.discards.map((tile) => <span title={tileLabel(tile)} key={tile.id}>{compactTile(tile)}</span>)}</div>{snapshot.publicState.callWindow ? <div className="call-focus"><small>Latest discard</small><strong>{compactTile(snapshot.publicState.callWindow.discard)}</strong><span>{snapshot.publicState.callWindow.responseCount} responded</span></div> : null}{pending === 'discard' ? <small className="discard-drop-hint">Drop a tile here to discard</small> : null}</div>

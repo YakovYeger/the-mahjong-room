@@ -84,7 +84,8 @@ export function deadlineForState(
   responseSeconds: number,
   now = new Date(),
 ): string | null {
-  if (state.phase === 'completed' || requiredHumanPlayers(state).length === 0) return null;
+  // The Charleston is a cooperative passing phase, not a timed turn.
+  if (state.phase === 'completed' || state.phase === 'charleston' || requiredHumanPlayers(state).length === 0) return null;
   const seconds = state.callWindow ? responseSeconds : turnSeconds;
   const duration = mode === 'async'
     ? Math.max(seconds, state.callWindow ? 4 * 60 * 60 : 24 * 60 * 60)

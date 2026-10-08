@@ -9,7 +9,7 @@ interface GameItem {
 }
 
 interface RoomPlayer { playerKey: string; displayName: string; seat: string; controllerType: string }
-interface Room { id: string; ownerId: string; status: string; mode: string; players: RoomPlayer[] }
+interface Room { id: string; ownerId: string; status: string; mode: string; turnSeconds: number; players: RoomPlayer[] }
 interface TurnNotification { id: string; game_id: string; kind: string; read_at: string | null; created_at: string }
 interface Entitlement { planId: string; name: string; activeGameLimit: number }
 
@@ -29,6 +29,7 @@ export default function GamesPage() {
   const [inviteCode, setInviteCode] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [mode, setMode] = useState<'live' | 'async'>('live');
+  const [turnSeconds, setTurnSeconds] = useState(300);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
@@ -70,7 +71,7 @@ export default function GamesPage() {
   const create = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true); setMessage('');
     try {
-      const data = await api('/api/games', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ mode }) });
+      const data = await api('/api/games', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ mode, turnSeconds }) });
       const game = data.game as { id: string };
       setInviteCode(data.inviteCode as string);
       const snapshot = await api(`/api/games/${game.id}/snapshot`);
@@ -124,8 +125,8 @@ export default function GamesPage() {
           {games.length ? <div className="games-list">{games.map((game) => <button onClick={() => void openRoom(game.id)} key={game.id}><span className={`game-status status-${game.status}`}>{game.status}</span><strong>{game.mode === 'live' ? 'Live table' : 'Time-based table'}</strong><small>{game.humanCount} human{game.humanCount === 1 ? '' : 's'} · version {game.stateVersion}</small><time>{new Date(game.updatedAt).toLocaleString()}</time></button>)}</div> : <div className="empty-list"><strong>No cloud games yet</strong><p>Create a private room or join with an invite code.</p></div>}
         </div>
         <aside className="room-tools">
-          {room ? <div className="lobby-card"><p className="kicker">Lobby · {room.mode}</p><h2>Seats at the table</h2><div className="seat-list">{['east','south','west','north'].map((seat) => { const player = room.players.find((item) => item.seat === seat); return <div key={seat}><b>{seat[0].toUpperCase()}</b><span>{player?.displayName ?? 'Open seat'}</span><small>{player?.controllerType ?? 'Bot fills on start'}</small></div>; })}</div>{inviteCode ? <div className="invite-code"><span>Invite code</span><strong>{inviteCode}</strong><button onClick={() => void navigator.clipboard?.writeText(`${location.origin}/games?join=${inviteCode}`)}>Copy invite link</button></div> : null}<button className="account-primary" onClick={start} disabled={busy}>Start game · bots fill open seats</button><button className="account-secondary" onClick={() => setRoom(null)}>Back</button></div> : <>
-            <form className="room-card" onSubmit={create}><p className="kicker">Host a table</p><h2>Create a private room</h2><div className="mode-picker"><button type="button" className={mode === 'live' ? 'active' : ''} onClick={() => setMode('live')}><strong>Live</strong><small>60-second turns</small></button><button type="button" className={mode === 'async' ? 'active' : ''} onClick={() => setMode('async')}><strong>Time-based</strong><small>24-hour turns</small></button></div><button className="account-primary" disabled={busy}>Create room</button></form>
+          {room ? <div className="lobby-card"><p className="kicker">Lobby · {room.mode}</p><h2>Seats at the table</h2><div className="seat-list">{['east','south','west','north'].map((seat) => { const player = room.players.find((item) => item.seat === seat); return <div key={seat}><b>{seat[0].toUpperCase()}</b><span>{player?.displayName ?? 'Open seat'}</span><small>{player?.controllerType ?? 'Bot fills on start'}</small></div>; })}</div><p className="room-rules-summary">{room.mode === 'live' ? `${Math.floor(room.turnSeconds / 60)}-minute live turns · Charleston untimed · 2-minute reconnect grace, then bot takeover` : '24-hour turns · Charleston untimed'}</p>{inviteCode ? <div className="invite-code"><span>Invite code</span><strong>{inviteCode}</strong><button onClick={() => void navigator.clipboard?.writeText(`${location.origin}/games?join=${inviteCode}`)}>Copy invite link</button></div> : null}<button className="account-primary" onClick={start} disabled={busy}>Start game · bots fill open seats</button><button className="account-secondary" onClick={() => setRoom(null)}>Back</button></div> : <>
+            <form className="room-card" onSubmit={create}><p className="kicker">Host a table</p><h2>Create a private room</h2><div className="mode-picker"><button type="button" className={mode === 'live' ? 'active' : ''} onClick={() => setMode('live')}><strong>Live</strong><small>{Math.floor(turnSeconds / 60)}-minute turns</small></button><button type="button" className={mode === 'async' ? 'active' : ''} onClick={() => setMode('async')}><strong>Time-based</strong><small>24-hour turns</small></button></div>{mode === 'live' ? <label className="turn-setting">Live turn length<select value={turnSeconds} onChange={(event) => setTurnSeconds(Number(event.target.value))}><option value={60}>1 minute</option><option value={300}>5 minutes · default</option><option value={600}>10 minutes</option></select><small>Charleston is untimed. A disconnected player has 2 minutes to return before a bot takes over.</small></label> : null}<button className="account-primary" disabled={busy}>Create room</button></form>
             <form className="room-card join-card" onSubmit={join}><p className="kicker">Have an invitation?</p><h2>Join by code</h2><input aria-label="Eight-character room code" maxLength={8} required value={joinCode} onChange={(event) => setJoinCode(event.target.value.toUpperCase())} placeholder="ABCD2345" /><button className="account-primary" disabled={busy}>Join table</button></form>
           </>}
           {message ? <p className="account-message" role="status">{message}</p> : null}

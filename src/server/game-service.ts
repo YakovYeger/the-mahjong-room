@@ -35,6 +35,7 @@ interface DbPlayer {
   display_name: string;
   join_status: 'joined' | 'disconnected' | 'replaced';
   timeout_count: number;
+  last_activity_at: string;
 }
 
 interface CanonicalRecord {
@@ -88,6 +89,7 @@ function roomPlayer(row: DbPlayer): RoomPlayer {
     displayName: row.display_name,
     joinStatus: row.join_status,
     timeoutCount: row.timeout_count,
+    lastActivityAt: row.last_activity_at,
   };
 }
 
@@ -175,7 +177,7 @@ export async function getEntitlement() {
 export async function createRoom(user: Parameters<typeof displayNameForUser>[0], input: { mode: GameMode; turnSeconds?: number; responseSeconds?: number }) {
   const admin = adminClient();
   const mode = input.mode;
-  const turnSeconds = mode === 'async' ? 86_400 : Math.max(15, Math.min(input.turnSeconds ?? 60, 3600));
+  const turnSeconds = mode === 'async' ? 86_400 : Math.max(15, Math.min(input.turnSeconds ?? 300, 3600));
   const responseSeconds = mode === 'async' ? 14_400 : Math.max(5, Math.min(input.responseSeconds ?? 15, 300));
   const inviteCode = randomInviteCode();
   const playerKey = `player-${crypto.randomUUID()}`;
@@ -223,6 +225,39 @@ export async function joinRoom(user: Parameters<typeof displayNameForUser>[0], i
 export async function getRoom(gameId: string, userId: string) {
   const record = await loadCanonicalGame(gameId);
   playerForUser(record, userId);
+  return roomDetails(record);
+}
+
+export async function heartbeatPlayer(gameId: string, userId: string) {
+  const admin = adminClient();
+  let record = await loadCanonicalGame(gameId);
+  const player = playerForUser(record, userId);
+  if (record.game.status !== 'active') return roomDetails(record);
+  if (player.join_status === 'replaced' || player.controller_type !== 'human') {
+    throw new ApiError(409, 'SEAT_REPLACED', 'This seat is now controlled by a bot.');
+  }
+
+  const lastActivity = Date.parse(player.last_activity_at);
+  const withinGrace = Number.isFinite(lastActivity) && Date.now() - lastActivity < 2 * 60 * 1000;
+  if (!withinGrace) throw new ApiError(409, 'GRACE_EXPIRED', 'Your reconnect window has expired. The table is restoring this seat.');
+
+  // Other seats become visibly disconnected after a missed heartbeat. Their
+  // deadline is anchored to last_activity_at, so refreshing cannot restart it.
+  await admin.from('game_players')
+    .update({ join_status: 'disconnected' })
+    .eq('game_id', gameId).eq('controller_type', 'human').eq('join_status', 'joined')
+    .lt('last_activity_at', new Date(Date.now() - 35_000).toISOString());
+
+  const { data: heartbeat, error } = await admin.rpc('heartbeat_game_player', {
+    requested_game_id: gameId,
+    requesting_user_id: userId,
+  });
+  if (error) throw new ApiError(503, 'HEARTBEAT_FAILED', 'Your connection status could not be saved.');
+  if (!(heartbeat as { accepted?: boolean } | null)?.accepted) {
+    throw new ApiError(409, 'GRACE_EXPIRED', 'Your reconnect window has expired. The table is restoring this seat.');
+  }
+
+  record = await loadCanonicalGame(gameId);
   return roomDetails(record);
 }
 
@@ -375,6 +410,9 @@ export async function submitAction(gameId: string, userId: string, envelope: Act
   if (record.game.status !== 'active') throw new ApiError(409, 'GAME_NOT_ACTIVE', 'This game is not currently active.');
   if (!record.state) throw new ApiError(409, 'GAME_NOT_STARTED', 'This game has not started.');
   if (player.controller_type !== 'human') throw new ApiError(403, 'SEAT_CONTROLLED_BY_BOT', 'This seat is now controlled by a bot.');
+  if (!Number.isFinite(Date.parse(player.last_activity_at)) || Date.now() - Date.parse(player.last_activity_at) >= 2 * 60 * 1000) {
+    throw new ApiError(409, 'GRACE_EXPIRED', 'Your reconnect window has expired. The table is restoring this seat.');
+  }
   if (record.game.state_version !== envelope.expectedStateVersion) {
     void recordOperationalEvent({ eventType: 'action.conflict', gameId, userId, stateVersion: record.game.state_version, durationMs: Date.now() - startedAt, metadata: { expectedVersion: envelope.expectedStateVersion } });
     throw new ApiError(409, 'STATE_CONFLICT', `The game advanced to version ${record.game.state_version}. Refresh the snapshot.`);
@@ -418,20 +456,48 @@ export async function submitTimeoutAction(gameId: string, expectedVersion: numbe
   const admin = adminClient();
   const record = await loadCanonicalGame(gameId);
   if (!record.state || record.game.status !== 'active' || record.game.state_version !== expectedVersion) return null;
-  const timedOutKeys = requiredHumanPlayers(record.state);
-  if (!timedOutKeys.length) return null;
+  const now = Date.now();
+  const deadlineExpired = record.state.phase !== 'charleston' && record.game.deadline_at !== null && Date.parse(record.game.deadline_at) <= now;
+  const timedOutKeys = deadlineExpired ? requiredHumanPlayers(record.state) : [];
+  const disconnectedKeys = record.players
+    .filter((player) => player.controller_type === 'human' && player.join_status !== 'replaced'
+      && Number.isFinite(Date.parse(player.last_activity_at))
+      && now - Date.parse(player.last_activity_at) >= 2 * 60 * 1000)
+    .map((player) => player.player_key);
+  if (!timedOutKeys.length && !disconnectedKeys.length) return null;
   let state = structuredClone(record.state);
   const events: GameEvent[] = [];
-  const replaced: string[] = [];
+  const replaced = new Set<string>();
+  for (const playerKey of disconnectedKeys) {
+    const statePlayer = state.players.find((player) => player.id === playerKey);
+    if (statePlayer?.type === 'human') {
+      statePlayer.type = 'bot';
+      replaced.add(playerKey);
+      const event: GameEvent = { type: 'PLAYER_CONTROL_CHANGED', sequence: state.eventSequence + 1, playerId: playerKey, controllerType: 'bot', reason: 'disconnect' };
+      state.eventSequence += 1;
+      state.events.push(event);
+      events.push(event);
+    }
+  }
   for (const playerKey of timedOutKeys) {
     const dbPlayer = record.players.find((player) => player.player_key === playerKey);
     if (!dbPlayer) continue;
     const nextTimeoutCount = Math.min(3, dbPlayer.timeout_count + 1);
     const before = state.eventSequence;
+    const timeoutEvent: GameEvent = { type: 'TURN_AUTO_RESOLVED', sequence: state.eventSequence + 1, playerId: playerKey, reason: 'timeout' };
+    state.eventSequence += 1;
+    state.events.push(timeoutEvent);
+    events.push(timeoutEvent);
     if (nextTimeoutCount >= 3) {
       const statePlayer = state.players.find((player) => player.id === playerKey);
-      if (statePlayer) statePlayer.type = 'bot';
-      replaced.push(playerKey);
+      if (statePlayer?.type === 'human') {
+        statePlayer.type = 'bot';
+        replaced.add(playerKey);
+        const event: GameEvent = { type: 'PLAYER_CONTROL_CHANGED', sequence: state.eventSequence + 1, playerId: playerKey, controllerType: 'bot', reason: 'timeouts' };
+        state.eventSequence += 1;
+        state.events.push(event);
+        events.push(event);
+      }
     }
     if (state.charlestonAwaitingDecision) {
       const action = { type: 'CHOOSE_SECOND_CHARLESTON', continue: false } as const;
@@ -443,12 +509,24 @@ export async function submitTimeoutAction(gameId: string, expectedVersion: numbe
     }
     events.push(...state.events.filter((event) => event.sequence > before && !events.some((existing) => existing.sequence === event.sequence)));
   }
-  if (state.stateVersion <= expectedVersion) return null;
+  if (state.stateVersion <= expectedVersion) state.stateVersion = expectedVersion + 1;
+  // A disconnected player may not own the current decision. Let their bot
+  // continue through any consecutive bot turns until a connected human acts.
+  const versionBeforeBotAdvance = state.stateVersion;
+  const autoAdvanced = advanceBotsUntilHumanDecision(state);
+  const botActionAdvanced = autoAdvanced.state.stateVersion > versionBeforeBotAdvance;
+  if (autoAdvanced.state.stateVersion > state.stateVersion) {
+    state = autoAdvanced.state;
+    events.push(...autoAdvanced.events);
+  }
   const status: GameStatus = state.phase === 'completed' ? 'completed' : 'active';
-  const deadlineAt = deadlineForState(state, record.game.mode, record.game.turn_seconds, record.game.response_seconds);
+  const deadlineAt = timedOutKeys.length || botActionAdvanced
+    ? deadlineForState(state, record.game.mode, record.game.turn_seconds, record.game.response_seconds)
+    : record.game.deadline_at;
   const actionId = await deterministicUuid(`timeout:${gameId}:${expectedVersion}:${timedOutKeys.sort().join(',')}`);
-  const response = { stateVersion: state.stateVersion, timedOutPlayerKeys: timedOutKeys, replacedPlayerKeys: replaced };
-  const { data, error } = await admin.rpc('commit_game_action', {
+  const replacedPlayerKeys = [...replaced];
+  const response = { stateVersion: state.stateVersion, timedOutPlayerKeys: timedOutKeys, replacedPlayerKeys };
+  const { data, error } = await admin.rpc('commit_timeout_action', {
     requested_game_id: gameId,
     requested_action_id: actionId,
     acting_user_id: null as unknown as string,
@@ -465,10 +543,10 @@ export async function submitTimeoutAction(gameId: string, expectedVersion: numbe
     response_value: toJson(response),
     response_status_value: 200,
     timeout_player_keys: toJson(timedOutKeys),
-    replacement_player_keys: toJson(replaced),
+    replacement_player_keys: toJson(replacedPlayerKeys),
   });
   const committed = data as unknown as { conflict?: boolean } | null;
   if (error || committed?.conflict) return null;
-  void recordOperationalEvent({ eventType: 'timeout.processed', gameId, stateVersion: state.stateVersion, durationMs: Date.now() - startedAt, metadata: { timedOutPlayerKeys: timedOutKeys, replacedPlayerKeys: replaced } });
+  void recordOperationalEvent({ eventType: 'timeout.processed', gameId, stateVersion: state.stateVersion, durationMs: Date.now() - startedAt, metadata: { timedOutPlayerKeys: timedOutKeys, replacedPlayerKeys } });
   return response;
 }

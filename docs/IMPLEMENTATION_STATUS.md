@@ -38,6 +38,7 @@ Milestone 13 — Backend, accounts, private multiplayer, and timed turns
 - Signed-in cloud game list, private room creation, expiring eight-character invites, 1–4 humans, and permanent bot fill at start
 - Participant-specific snapshots, cross-device reconnects, database-triggered private Realtime signals, and presence indicators
 - Live and async clocks, leased `SKIP LOCKED` timeout claims, deterministic timeout actions, three-strike permanent bot replacement, and unanimous live pause/resume
+- Five-minute default live turns with pre-room duration choices, untimed Charleston, server heartbeats, visible two-minute reconnect grace, and transactional bot takeover after disconnect expiry
 - In-app async turn inbox plus throttled optional Resend email delivery
 - Configurable four-seat game creation and multiplayer projection/timer tests
 

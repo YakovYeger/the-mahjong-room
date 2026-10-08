@@ -74,6 +74,7 @@ export interface RoomPlayer {
   displayName: string;
   joinStatus: 'joined' | 'disconnected' | 'replaced';
   timeoutCount: number;
+  lastActivityAt: string;
 }
 
 export interface RoomDetails {
