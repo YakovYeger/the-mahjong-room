@@ -343,6 +343,16 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 .cloud-game-page > header .table-invite-action:hover { background: rgba(255,255,255,.1); }
 .cloud-game-page > header .host-end-action { border-color: rgba(244,160,140,.65); color: #ffd0c4; }
 .cloud-game-page > header .host-end-action:hover:not(:disabled) { background: rgba(115,34,24,.42); }
+.cloud-game-page > header .leave-table-action { min-height: 38px; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 8px 13px; background: transparent; color: white; font-size: 12px; font-weight: 700; cursor: pointer; }
+.cloud-game-page > header .leave-table-action:hover { background: rgba(255,255,255,.1); }
+.leave-dialog-backdrop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: max(18px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom)); background: rgba(8,23,20,.68); }
+.leave-dialog { width: min(100%,480px); border: 1px solid #ddcbb0; border-radius: 18px; padding: clamp(22px,5vw,34px); background: #f5f0e7; color: #173e35; box-shadow: 0 22px 70px rgba(0,0,0,.35); }
+.leave-dialog h2 { margin: 0; font: 700 clamp(24px,6vw,32px) Georgia,serif; }
+.leave-dialog p { margin: 13px 0 24px; color: #566b63; font-size: 14px; line-height: 1.6; }
+.leave-dialog > div { display: flex; justify-content: flex-end; gap: 10px; }
+.leave-dialog button { min-height: 46px; border: 1px solid #9baaa1; border-radius: 999px; padding: 11px 20px; background: transparent; color: #173e35; font-size: 14px; font-weight: 700; cursor: pointer; }
+.leave-dialog button:focus-visible { outline: 3px solid #dd684e; outline-offset: 3px; }
+.leave-dialog .leave-confirm-action { border-color: #bc604b; background: #bc604b; color: white; }
 .live-dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #79df9c; box-shadow: 0 0 0 4px rgba(121,223,156,.12); }
 .cloud-status { display: grid; grid-template-columns: 1fr auto auto; gap: 26px; align-items: center; padding: 18px clamp(18px,4vw,62px); background: rgba(0,0,0,.1); }
 .cloud-status h1 { margin: 0; font: 700 27px Georgia,serif; }
