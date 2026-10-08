@@ -22,6 +22,7 @@ interface DbGame {
   response_seconds: number;
   deadline_at: string | null;
   invite_expires_at: string | null;
+  invite_code: string | null;
   updated_at: string;
 }
 
@@ -102,6 +103,7 @@ function roomDetails(record: CanonicalRecord): RoomDetails {
     turnSeconds: record.game.turn_seconds,
     responseSeconds: record.game.response_seconds,
     inviteExpiresAt: record.game.invite_expires_at,
+    inviteCode: record.game.status === 'completed' || record.game.status === 'abandoned' ? null : record.game.invite_code,
     players: record.players.map(roomPlayer),
   };
 }
@@ -175,6 +177,45 @@ export async function deleteOwnedGame(gameId: string, userId: string) {
   if (error) throw new ApiError(500, 'GAME_DELETE_FAILED', 'The game could not be deleted.');
   if (!data) throw new ApiError(404, 'GAME_NOT_FOUND', 'That game was not found or you do not own it.');
   return { deleted: true as const, gameId: data.id };
+}
+
+export async function endGame(gameId: string, userId: string) {
+  const record = await loadCanonicalGame(gameId);
+  if (record.game.owner_id !== userId) throw new ApiError(403, 'HOST_REQUIRED', 'Only the host can end this game.');
+  if (record.game.status !== 'active' && record.game.status !== 'paused') {
+    throw new ApiError(409, 'GAME_NOT_ACTIVE', 'Only an active table can be ended.');
+  }
+  if (!record.state) throw new ApiError(409, 'GAME_NOT_STARTED', 'This game has not started.');
+  const hostPlayer = playerForUser(record, userId);
+  const state = structuredClone(record.state);
+  state.stateVersion = record.game.state_version + 1;
+  const event: GameEvent = { type: 'GAME_ABANDONED', sequence: state.eventSequence + 1, reason: 'host_ended' };
+  state.eventSequence += 1;
+  state.events.push(event);
+  const response = { status: 'abandoned' as const, stateVersion: state.stateVersion };
+  const actionId = await deterministicUuid(`end-game:${gameId}:${record.game.state_version}:${userId}`);
+  const requestHash = await sha256(JSON.stringify({ gameId, userId, expectedVersion: record.game.state_version, actionType: 'END_GAME' }));
+  const { data, error } = await adminClient().rpc('commit_game_action', {
+    requested_game_id: gameId,
+    requested_action_id: actionId,
+    acting_user_id: userId,
+    acting_player_key: hostPlayer.player_key,
+    expected_version: record.game.state_version,
+    action_type_value: 'END_GAME',
+    request_hash_value: requestHash,
+    next_state: toJson(state),
+    next_public_state: toJson(getPublicGameState(state)),
+    emitted_events: toJson([event]),
+    next_deadline: null,
+    next_status: 'abandoned',
+    next_phase: state.phase,
+    response_value: toJson(response),
+    response_status_value: 200,
+  });
+  if (error) throw new ApiError(500, 'GAME_END_FAILED', 'The game could not be ended.');
+  const committed = data as unknown as { conflict?: boolean } | null;
+  if (committed?.conflict) throw new ApiError(409, 'STATE_CONFLICT', 'The table changed. Refresh it and try again.');
+  return response;
 }
 
 export async function getEntitlement() {

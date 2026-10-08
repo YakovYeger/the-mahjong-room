@@ -127,14 +127,36 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
     if (response.ok) await refresh().catch(() => undefined);
   };
 
+  const endGameForEveryone = async () => {
+    if (!snapshot || !gameId || busy || !window.confirm('End this game for everyone? Players will see that the table has ended, and no one can continue it.')) return;
+    setBusy(true); setMessage('Ending game…');
+    try {
+      const response = await fetch(`/api/games/${gameId}/end`, { method: 'POST' });
+      const data = await response.json() as { error?: { message?: string } };
+      if (!response.ok) throw new Error(data.error?.message ?? 'The game could not be ended.');
+      await refresh();
+      setMessage('The table has ended for everyone.');
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'The game could not be ended.'); }
+    finally { setBusy(false); }
+  };
+
+  const copyInviteLink = async () => {
+    if (!room?.inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(`${location.origin}/games?join=${room.inviteCode}`);
+      setMessage('Invite link copied.');
+    } catch { setMessage('Copy failed. Invite code: ' + room.inviteCode); }
+  };
+
   if (!snapshot) return <main className="cloud-game-loading"><span className="brand">The Mahjong Room</span><p>{message}</p><a href="/games">Back to my games</a></main>;
 
   const me = snapshot.publicState.players.find((player) => player.id === snapshot.privateState.playerId);
-  const pending = snapshot.privateState.pendingAction;
+  const pending = snapshot.status === 'abandoned' || snapshot.status === 'completed' ? 'completed' : snapshot.status === 'paused' ? 'wait' : snapshot.privateState.pendingAction;
   const remaining = snapshot.deadlineAt ? Math.max(0, Math.ceil((new Date(snapshot.deadlineAt).getTime() - now) / 1000)) : null;
   const remainingLabel = remaining === null ? 'No clock running' : remaining >= 3600 ? `${Math.floor(remaining / 3600)}h ${Math.floor((remaining % 3600) / 60)}m` : `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
   const current = snapshot.publicState.players[snapshot.publicState.turnIndex];
-  const latestResolution = [...snapshot.recentEvents].reverse().find((event) => event.type === 'TURN_AUTO_RESOLVED' || event.type === 'PLAYER_CONTROL_CHANGED');
+  const latestResolution = [...snapshot.recentEvents].reverse().find((event) => event.type === 'TURN_AUTO_RESOLVED' || event.type === 'PLAYER_CONTROL_CHANGED' || event.type === 'GAME_ABANDONED');
+  const isHost = Boolean(room && room.ownerId === room.players.find((player) => player.playerKey === snapshot.privateState.playerId)?.userId);
   const disconnectedPlayers = (room?.players ?? []).filter((player) => {
     if (player.controllerType !== 'human' || player.joinStatus === 'replaced') return false;
     return player.joinStatus === 'disconnected' || now - Date.parse(player.lastActivityAt) >= 35_000;
@@ -172,11 +194,11 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
 
   return (
     <main className="cloud-game-page">
-      <header><a className="brand" href="/">The Mahjong Room</a><div><span className="live-dot" /> {online} online</div><strong>{snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}</strong><a href="/games">Leave table</a></header>
-      <section className="cloud-status"><div><p className="kicker">{snapshot.status}</p><h1>{pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : 'Your move'}</h1><p>{pending.replaceAll('_', ' ')}</p></div><div className="turn-clock"><span>{snapshot.publicState.phase === 'charleston' ? 'Charleston' : 'Time remaining'}</span><strong>{snapshot.publicState.phase === 'charleston' ? 'Untimed' : remainingLabel}</strong></div>{snapshot.mode === 'live' ? <button onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}</section>
+      <header><a className="brand" href="/">The Mahjong Room</a><div><span className="live-dot" /> {online} online</div><strong>{snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}</strong>{room?.inviteCode && snapshot.status !== 'completed' && snapshot.status !== 'abandoned' ? <button className="table-invite-action" onClick={() => void copyInviteLink()}>Invite · {room.inviteCode}</button> : null}{isHost && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button className="host-end-action" onClick={() => void endGameForEveryone()} disabled={busy}>End game</button> : null}<a href="/games">Leave table</a></header>
+      <section className="cloud-status"><div><p className="kicker">{snapshot.status}</p><h1>{snapshot.status === 'abandoned' ? 'Table ended' : snapshot.status === 'completed' ? 'Game complete' : snapshot.status === 'paused' ? 'Table paused' : pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : 'Your move'}</h1><p>{snapshot.status === 'abandoned' ? 'No active decisions' : pending.replaceAll('_', ' ')}</p></div><div className="turn-clock"><span>{snapshot.publicState.phase === 'charleston' ? 'Charleston' : 'Time remaining'}</span><strong>{snapshot.publicState.phase === 'charleston' ? 'Untimed' : remainingLabel}</strong></div>{snapshot.mode === 'live' && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}</section>
       {latestResolution?.type === 'TURN_AUTO_RESOLVED' ? <div className="game-resolution" role="status">Time expired. {snapshot.publicState.players.find((player) => player.id === latestResolution.playerId)?.name ?? 'A player'}'s legal move was selected automatically.</div> : null}
       {latestResolution?.type === 'PLAYER_CONTROL_CHANGED' ? <div className="game-resolution" role="status">{snapshot.publicState.players.find((player) => player.id === latestResolution.playerId)?.name ?? 'A player'} did not return during the two-minute grace period. A bot now controls that seat.</div> : null}
-      {snapshot.status === 'abandoned' ? <div className="game-resolution" role="status">This table stopped because no human seats remained. The bot players have stopped, and you can delete the game from your games list to clear it away.</div> : null}
+      {snapshot.status === 'abandoned' ? <div className="game-resolution" role="status">{latestResolution?.type === 'GAME_ABANDONED' && latestResolution.reason === 'host_ended' ? 'The host ended this table. No further moves can be made.' : 'This table stopped because no human seats remained. The bot players have stopped. You can delete the game from your games list.'}</div> : null}
       {disconnectedPlayers.length ? <div className="connection-alert" role="status">{disconnectedPlayers.map((player) => {
         const secondsLeft = Math.max(0, Math.ceil((Date.parse(player.lastActivityAt) + 120_000 - now) / 1000));
         return <p key={player.playerKey}><strong>{player.displayName}</strong> is disconnected. A bot takes over in {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} if they do not return.</p>;

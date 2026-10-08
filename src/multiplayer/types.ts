@@ -85,5 +85,6 @@ export interface RoomDetails {
   turnSeconds: number;
   responseSeconds: number;
   inviteExpiresAt: string | null;
+  inviteCode: string | null;
   players: RoomPlayer[];
 }
