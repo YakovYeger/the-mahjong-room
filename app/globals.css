@@ -335,8 +335,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 .invite-code strong { grid-row: 2; font: 800 22px monospace; letter-spacing: .1em; }
 .invite-code button { grid-row: 1 / 3; border: 0; border-radius: 999px; padding: 8px; background: #e5eee8; cursor: pointer; }
 
-.cloud-game-page { min-height: 100vh; background: #163e35; color: white; }
-.cloud-game-page > header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 18px; align-items: center; min-height: 70px; padding: 10px clamp(18px,4vw,62px); border-bottom: 1px solid rgba(255,255,255,.13); }
+.cloud-game-page { min-height: 100svh; padding-bottom: env(safe-area-inset-bottom); overflow-x: clip; background: #163e35; color: white; }
+.cloud-game-page > header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 18px; align-items: center; min-height: 64px; padding: max(10px,env(safe-area-inset-top)) clamp(18px,4vw,62px) 10px; border-bottom: 1px solid rgba(255,255,255,.13); }
 .cloud-game-page > header a { color: white; text-decoration: none; font-size: 11px; }
 .cloud-game-page > header > div, .cloud-game-page > header > strong { color: rgba(255,255,255,.7); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
 .cloud-game-page > header .table-invite-action, .cloud-game-page > header .host-end-action { min-height: 38px; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 8px 13px; background: transparent; color: white; font-size: 12px; font-weight: 700; cursor: pointer; }
@@ -399,18 +399,25 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 .turn-clock strong { font: 700 22px Georgia,serif; }
 .connection-alert { margin: 0; padding: 8px clamp(18px,4vw,62px); background: #fff0d7; color: #59462a; }
 .connection-alert p { margin: 4px 0; font-size: 12px; }
-.cloud-board { min-height: 46vh; margin: 0 clamp(14px,3vw,45px); padding: 20px; border: 9px solid #79583d; border-radius: 35px; background: radial-gradient(circle at center,#347a66,#235a4d 70%); box-shadow: inset 0 0 70px rgba(0,0,0,.25),0 14px 28px rgba(0,0,0,.25); }
-.opponent-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
-.opponent-grid article { min-width: 0; padding: 10px; border-radius: 12px; background: rgba(10,43,35,.45); }
-.opponent-grid article > div:first-child { display: flex; justify-content: space-between; gap: 5px; }
-.opponent-grid small { color: rgba(255,255,255,.55); font-size: 8px; }
+.cloud-board { position: relative; flex: 1 1 auto; min-height: clamp(360px,48svh,620px); margin: 0 clamp(8px,1.6vw,24px); padding: 0; border: 6px solid #79583d; border-radius: 29px; background: radial-gradient(circle at center,#347a66,#235a4d 70%); box-shadow: inset 0 0 58px rgba(0,0,0,.2),0 9px 22px rgba(0,0,0,.18); }
+.opponent-seat { position: absolute; z-index: 1; display: grid; gap: 5px; width: min(31%,310px); min-width: 0; min-height: 56px; padding: 7px 9px; border: 1px solid transparent; border-radius: 12px; background: rgba(10,43,35,.55); transition: border-color .18s,background-color .18s; }
+.opponent-seat.seat-top { top: 12px; left: 50%; transform: translateX(-50%); }
+.opponent-seat.seat-left { top: 50%; left: 12px; transform: translateY(-50%); }
+.opponent-seat.seat-right { top: 50%; right: 12px; transform: translateY(-50%); }
+.opponent-seat.is-turn { border-color: rgba(240,201,117,.82); background: rgba(10,43,35,.78); }
+.opponent-identity { display: flex; align-items: center; min-width: 0; gap: 7px; }
+.opponent-identity > span:last-child { display: grid; min-width: 0; }
+.opponent-identity strong { overflow: hidden; color: white; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.opponent-identity small { color: rgba(255,255,255,.58); font-size: 9px; text-transform: capitalize; }
+.player-avatar { display: grid; flex: 0 0 28px; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #e2c993; color: #173e35; font: 700 12px Georgia,serif; }
 .rack-backs { display: flex; gap: 2px; margin-top: 7px; overflow: hidden; }
-.rack-backs i { flex: 0 1 15px; height: 25px; border: 1px solid #dad2c2; border-bottom: 4px solid #c8baa3; border-radius: 3px; background: linear-gradient(135deg,#f9f6ed,#dce9e1); }
+.rack-backs { margin-top: 0; }
+.rack-backs i { flex: 0 1 15px; height: 23px; border: 1px solid #dad2c2; border-bottom: 4px solid #c8baa3; border-radius: 3px; background: linear-gradient(135deg,#f9f6ed,#dce9e1); }
 .revealed-cloud-rack { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 7px; }
 .revealed-cloud-rack span { display: grid; place-items: center; width: 22px; height: 30px; border-bottom: 4px solid #c8baa3; border-radius: 3px; background: white; color: #234f44; font: 800 7px Georgia,serif; }
 .cloud-exposures { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .cloud-exposures span { border-radius: 4px; padding: 3px 5px; background: #f3eee4; color: #234f44; font-size: 7px; }
-.cloud-discard-pool { position: relative; display: grid; place-items: center; min-height: 260px; transition: outline-color .15s, background-color .15s; }
+.cloud-discard-pool { position: absolute; inset: 108px 19% 22px; display: grid; place-items: center; min-height: 0; border-radius: 16px; transition: outline-color .15s, background-color .15s; }
 .cloud-discard-pool.drop-target-active { outline: 3px dashed #f0b96b; outline-offset: -8px; background: rgba(255,255,255,.08); }
 .discard-drop-hint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); border-radius: 999px; padding: 7px 12px; background: #f0b96b; color: #342417; font-size: 10px; font-weight: 800; white-space: nowrap; }
 .cloud-discards { display: grid; grid-template-columns: repeat(12,34px); gap: 5px; max-width: 470px; }
@@ -509,9 +516,16 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
   .games-list .game-open { grid-template-columns: auto 1fr; }
   .games-list .game-open time { grid-column: 2; grid-row: 3; }
   .game-list-item { grid-template-columns: minmax(0,1fr) auto; }
-  .cloud-game-page > header { justify-content: flex-start; gap: 8px; }
+  .cloud-game-page > header { justify-content: flex-start; gap: 6px; padding-right: 10px; padding-left: 10px; }
+  .cloud-game-page > header .brand { margin-right: auto; font-size: 15px; }
+  .cloud-game-page > header > div { font-size: 9px; }
+  .cloud-game-page > header .table-invite-action, .cloud-game-page > header .host-end-action, .cloud-game-page > header .leave-table-action { min-height: 44px; padding: 8px 10px; font-size: 11px; }
   .cloud-game-page > header > strong { display: none; }
-  .cloud-status { grid-template-columns: 1fr auto; padding-inline: 15px; }
+  .cloud-status { grid-template-columns: 1fr auto; gap: 10px; padding: 10px 12px; }
+  .cloud-status h1 { font-size: clamp(19px,6vw,25px); }
+  .cloud-status p:not(.kicker) { font-size: 10px; }
+  .turn-clock { min-width: 82px; }
+  .turn-clock strong { font-size: 17px; }
   .cloud-status > button { grid-column: 1 / -1; }
   .game-over-banner { align-items: stretch; flex-direction: column; gap: 14px; margin-inline: 8px; padding: 17px; }
   .game-over-banner nav { display: grid; grid-template-columns: 1fr; }
@@ -520,22 +534,37 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
   .cloud-review-heading > p { text-align: left; }
   .review-racks { grid-template-columns: 1fr; }
   .review-next-actions { display: grid; grid-template-columns: 1fr; }
-  .cloud-board { min-height: 42vh; margin-inline: 5px; padding: 9px; border-width: 6px; border-radius: 22px; }
-  .opponent-grid { gap: 5px; }
-  .opponent-grid article { padding: 7px; }
-  .opponent-grid article > div:first-child { display: grid; }
-  .rack-backs i { height: 18px; }
-  .cloud-discard-pool { min-height: 210px; }
-  .cloud-discards { grid-template-columns: repeat(9,25px); gap: 3px; }
-  .cloud-discards span { height: 32px; border-bottom-width: 4px; font-size: 8px; }
+  .cloud-board { height: clamp(220px,36svh,310px); min-height: 220px; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
+  .opponent-seat { gap: 3px; min-height: 0; padding: 5px; border-radius: 9px; }
+  .opponent-seat.seat-top { top: 5px; width: min(62%,360px); }
+  .opponent-seat.seat-left { top: 38%; left: 5px; width: 27%; transform: none; }
+  .opponent-seat.seat-right { top: 38%; right: 5px; width: 27%; transform: none; }
+  .opponent-identity { gap: 4px; }
+  .opponent-identity strong { font-size: 10px; }
+  .opponent-identity small { font-size: 8px; }
+  .player-avatar { flex-basis: 22px; width: 22px; height: 22px; font-size: 10px; }
+  .rack-backs { flex-wrap: wrap; max-height: 34px; gap: 2px; }
+  .rack-backs i { flex: 0 0 8px; height: 15px; border-bottom-width: 3px; }
+  .opponent-seat .revealed-cloud-rack span { width: 17px; height: 23px; font-size: 6px; }
+  .opponent-seat .cloud-exposures { max-height: 26px; overflow: auto; }
+  .opponent-seat .cloud-exposures span { font-size: 6px; }
+  .cloud-discard-pool { inset: 41% 0 8px; padding: 0 34px 18px; border-radius: 8px; }
+  .cloud-discards { width: 100%; max-width: 100%; max-height: 100%; overflow: auto; grid-template-columns: repeat(8,minmax(20px,25px)); justify-content: center; gap: 3px; padding-bottom: 16px; }
+  .cloud-discards span { height: 30px; border-bottom-width: 4px; font-size: 8px; }
+  .wall-counter { left: 2px; bottom: 0; }
+  .wall-counter strong { font-size: 18px; }
+  .wall-counter span { font-size: 7px; }
   .call-focus { display: none; }
-  .cloud-rack-section { padding-inline: 7px; }
+  .cloud-rack-section { padding: 9px 8px max(12px,env(safe-area-inset-bottom)); }
   .cloud-rack-help { font-size: 9px; line-height: 1.4; }
-  .cloud-rack { justify-content: flex-start; gap: 3px; overflow-x: auto; overscroll-behavior-x: contain; padding: 4px 4px 12px; scroll-padding: 12px; -webkit-overflow-scrolling: touch; }
-  .cloud-tile-slot { flex: 0 0 42px; }
-  .cloud-rack .cloud-tile { height: 62px; border-bottom-width: 6px; padding-inline: 1px; }
+  .cloud-rack { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); justify-content: stretch; gap: 4px; overflow: visible; margin-top: 6px; padding: 4px 2px 8px; }
+  .cloud-tile-slot { min-width: 0; }
+  .cloud-rack .cloud-tile { height: 54px; border-bottom-width: 5px; padding-inline: 1px; }
+  .cloud-rack .cloud-tile b { font-size: clamp(9px,3.1vw,13px); }
+  .cloud-rack .cloud-tile.selected { transform: translateY(-4px); }
   .cloud-rack .cloud-tile small { display: none; }
   .cloud-actions { flex-wrap: wrap; }
+  .cloud-actions button, .cloud-actions .secondary { min-height: 44px; }
   .dealing-screen header { min-height: 68px; padding-inline: 18px; }
   .deal-stage { height: 45vh; transform: scale(.78); }
   .deal-copy { padding-bottom: 34px; }
@@ -602,15 +631,30 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 }
 
 @media (orientation: landscape) and (max-height: 600px) {
-  .cloud-game-page > header { min-height: 48px; }
-  .cloud-status { padding-block: 6px; }
+  .cloud-game-page > header { min-height: 44px; padding-block: max(5px,env(safe-area-inset-top)) 5px; }
+  .cloud-status { gap: 12px; padding-block: 5px; }
   .cloud-status h1 { font-size: 19px; }
-  .cloud-board { min-height: 42vh; padding: 7px; border-width: 5px; }
-  .cloud-discard-pool { min-height: 100px; }
-  .cloud-rack-section { padding-block: 7px; }
-  .cloud-rack { margin-top: 4px; }
-  .cloud-rack .cloud-tile { height: 52px; }
-  .cloud-actions { min-height: 35px; margin-top: 4px; }
+  .cloud-board { height: min(42svh,230px); min-height: 160px; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
+  .opponent-seat { gap: 2px; padding: 4px 6px; }
+  .opponent-seat.seat-top { top: 4px; }
+  .opponent-seat.seat-left { left: 6px; }
+  .opponent-seat.seat-right { right: 6px; }
+  .player-avatar { flex-basis: 22px; width: 22px; height: 22px; }
+  .rack-backs i { height: 15px; }
+  .cloud-discard-pool { inset: 73px 20% 5px; min-height: 0; }
+  .cloud-discards { grid-template-columns: repeat(10,25px); gap: 3px; }
+  .cloud-discards span { height: 28px; }
+  .wall-counter { left: 2px; bottom: 0; }
+  .wall-counter strong { font-size: 18px; }
+  .wall-counter span { font-size: 7px; }
+  .cloud-rack-section { padding: 6px 10px max(8px,env(safe-area-inset-bottom)); }
+  .cloud-rack-help { margin-top: 4px; font-size: 9px; }
+  .cloud-rack { display: flex; justify-content: center; gap: 2px; margin-top: 4px; padding: 2px 0 5px; overflow-x: auto; }
+  .cloud-tile-slot { flex: 0 0 36px; }
+  .cloud-rack .cloud-tile { height: 48px; }
+  .cloud-rack .cloud-tile b { font-size: 10px; }
+  .cloud-actions { min-height: 42px; margin-top: 3px; }
+  .cloud-actions button, .cloud-actions .secondary { min-height: 42px; padding-block: 8px; }
   .topbar { min-height: 56px; padding-block: 5px; }
   .game-shell { --card-drawer-height: 118px; min-height: 320px; }
   .game-table { min-height: calc(100svh - 56px); }

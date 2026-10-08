@@ -47,6 +47,10 @@ Milestone 13 — Backend, accounts, private multiplayer, and timed turns
 - In-app async turn inbox plus throttled optional Resend email delivery
 - Configurable four-seat game creation and multiplayer projection/timer tests
 
+## In Progress
+
+- G6 responsive tabletop: opponents are placed relative to the player's seat, the shared discard area sits in the table center, and phone racks reflow into two rows with safe-area spacing. Remaining: review the phone portrait, phone landscape, tablet, and desktop layouts and tune any overlap or sizing issues.
+
 ## Next
 
 - Configure production SMTP/auth templates and an optional verified Resend sender
