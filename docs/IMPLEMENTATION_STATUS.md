@@ -17,7 +17,7 @@ Milestone 13 — Backend, accounts, private multiplayer, and timed turns
 - Wall-game completion without an artificial turn cutoff
 - Bots that use the shared rules service for Charleston, calls, discards, and Mahjong
 - Refined, show/hide Training Card rail with visual group spacing, C/X labels, Joker markers, candidate progress, and teaching notes
-- Drag-and-drop and keyboard tile reordering that stays independent from game legality
+- Cloud rack selection, drag-to-reorder, drag-to-discard, keyboard shortcuts, touch move controls, and device-local order restoration
 - Custom, accessible suit marks with written labels on rack, discard, and exposed tiles
 - Complete chronological discard pool rather than a latest-discard-only view
 - Conservative dead-hand indicator proven solely from visible discards, never concealed or exposed opponent holdings
