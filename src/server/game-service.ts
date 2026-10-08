@@ -297,6 +297,10 @@ export async function startRoom(gameId: string, userId: string): Promise<GameSna
   const state = advanced.state;
   const deadlineAt = deadlineForState(state, record.game.mode, record.game.turn_seconds, record.game.response_seconds);
   const seedReference = crypto.randomUUID();
+  const { error: activityError } = await admin.from('game_players')
+    .update({ join_status: 'joined', last_activity_at: new Date().toISOString() })
+    .eq('game_id', gameId).eq('controller_type', 'human').neq('join_status', 'replaced');
+  if (activityError) throw new ApiError(503, 'ROOM_START_FAILED', 'The room could not confirm its players before starting.');
   const { error } = await admin.rpc('start_game_room', {
     requested_game_id: gameId,
     requesting_user_id: userId,
