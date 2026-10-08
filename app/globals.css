@@ -414,6 +414,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 .rack-backs { display: flex; gap: 2px; margin-top: 7px; overflow: hidden; }
 .rack-backs { margin-top: 0; }
 .rack-backs i { flex: 0 1 15px; height: 23px; border: 1px solid #dad2c2; border-bottom: 4px solid #c8baa3; border-radius: 3px; background: linear-gradient(135deg,#f9f6ed,#dce9e1); }
+.rack-backs-count { display: none; }
 .revealed-cloud-rack { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 7px; }
 .revealed-cloud-rack span { display: grid; place-items: center; width: 22px; height: 30px; border-bottom: 4px solid #c8baa3; border-radius: 3px; background: white; color: #234f44; font: 800 7px Georgia,serif; }
 .cloud-exposures { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
@@ -450,7 +451,12 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 .cloud-rack .cloud-tile b { font: 800 clamp(11px,1.3vw,18px) Georgia,serif; text-shadow: 0 1px rgba(255,255,255,.9); }
 .cloud-rack .cloud-tile small { margin-top: 7px; color: #907064; font-size: 6px; text-transform: uppercase; overflow: hidden; }
 .cloud-actions { display: flex; justify-content: center; gap: 9px; align-items: center; min-height: 48px; margin-top: 13px; }
-.cloud-rack-order-actions { display: flex; gap: 6px; }
+.cloud-rack-reorder { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 12px; padding: 9px 12px; border: 1px solid #ded5c6; border-radius: 10px; background: rgba(255,255,255,.62); }
+.cloud-rack-reorder > strong { color: #61716a; font-size: 10px; }
+.cloud-rack-order-actions { display: flex; gap: 8px; }
+.cloud-rack-order-actions button { min-height: 42px; border: 1px solid #d7cfc1; border-radius: 8px; padding: 8px 14px; background: #e6dfd2; color: var(--ink); font-weight: 750; cursor: pointer; }
+.cloud-rack-order-actions button:disabled { opacity: .4; cursor: not-allowed; }
+.cloud-actions { margin-top: 17px; padding-top: 13px; border-top: 1px solid #ded5c6; }
 .cloud-exchange-row { display: flex; justify-content: center; gap: 7px; align-items: center; margin-top: 10px; color: #687872; font-size: 9px; }
 .cloud-exchange-row button { border: 1px solid #d6c7aa; border-radius: 999px; padding: 7px 10px; background: #fff5d9; color: #5c491d; cursor: pointer; }
 .cloud-actions button { border: 0; border-radius: 999px; padding: 11px 17px; background: var(--coral); color: white; font-weight: 800; cursor: pointer; }
@@ -541,20 +547,22 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
   .review-racks { grid-template-columns: 1fr; }
   .review-next-actions { display: grid; grid-template-columns: 1fr; }
   .cloud-board { height: clamp(220px,36svh,310px); min-height: 220px; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
-  .opponent-seat { gap: 3px; min-height: 0; padding: 5px; border-radius: 9px; }
+  .opponent-seat { gap: 3px; min-height: 0; padding: 4px 5px; border-radius: 8px; }
   .opponent-seat.seat-top { top: 5px; width: min(62%,360px); }
-  .opponent-seat.seat-left { top: 38%; left: 5px; width: 27%; transform: none; }
-  .opponent-seat.seat-right { top: 38%; right: 5px; width: 27%; transform: none; }
+  .opponent-seat.seat-left { top: 47px; left: 5px; width: calc(50% - 7px); transform: none; }
+  .opponent-seat.seat-right { top: 47px; right: 5px; width: calc(50% - 7px); transform: none; }
   .opponent-identity { gap: 4px; }
   .opponent-identity strong { font-size: 10px; }
   .opponent-identity small { font-size: 8px; }
   .player-avatar { flex-basis: 22px; width: 22px; height: 22px; font-size: 10px; }
-  .rack-backs { flex-wrap: wrap; max-height: 34px; gap: 2px; }
-  .rack-backs i { flex: 0 0 8px; height: 15px; border-bottom-width: 3px; }
+  .rack-backs { flex-wrap: nowrap; align-items: center; gap: 2px; max-height: 16px; }
+  .rack-backs i { flex: 0 0 6px; height: 13px; border-bottom-width: 3px; }
+  .rack-backs i:nth-child(n+4) { display: none; }
+  .rack-backs-count { display: inline; margin-left: 2px; color: rgba(255,255,255,.76); font: 700 8px/1 Arial,sans-serif; }
   .opponent-seat .revealed-cloud-rack span { width: 17px; height: 23px; font-size: 6px; }
-  .opponent-seat .cloud-exposures { max-height: 26px; overflow: auto; }
+  .opponent-seat .cloud-exposures { max-height: 14px; overflow: hidden; gap: 2px; margin-top: 2px; }
   .opponent-seat .cloud-exposures span { font-size: 6px; }
-  .cloud-discard-pool { inset: 41% 0 8px; padding: 0 34px 18px; border-radius: 8px; }
+  .cloud-discard-pool { inset: 96px 0 8px; padding: 0 34px 18px; border-radius: 8px; }
   .cloud-discards { width: 100%; max-width: 100%; max-height: 100%; overflow: auto; grid-template-columns: repeat(8,minmax(20px,25px)); justify-content: center; gap: 3px; padding-bottom: 16px; }
   .cloud-discards span { height: 30px; border-bottom-width: 4px; font-size: 8px; }
   .wall-counter { left: 2px; bottom: 0; }
@@ -580,8 +588,12 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
   .cloud-training-groups { gap: 2px; min-height: 26px; margin-top: 5px; }
   .cloud-training-group { padding: 1px; }
   .cloud-training-tiles i { width: 12px; height: 17px; font-size: 5px; }
-  .cloud-actions { flex-wrap: wrap; }
-  .cloud-actions button, .cloud-actions .secondary { min-height: 44px; }
+  .cloud-rack-reorder { display: grid; gap: 6px; margin-top: 8px; padding: 8px; }
+  .cloud-rack-reorder > strong { font-size: 11px; }
+  .cloud-rack-order-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cloud-rack-order-actions button { min-height: 48px; padding-inline: 7px; font-size: 13px; touch-action: manipulation; }
+  .cloud-actions { display: grid; grid-template-columns: 1fr; gap: 8px; min-height: 0; margin-top: 16px; padding-top: 12px; }
+  .cloud-actions button, .cloud-actions .secondary { width: 100%; min-height: 48px; touch-action: manipulation; }
   .dealing-screen header { min-height: 68px; padding-inline: 18px; }
   .deal-stage { height: 45vh; transform: scale(.78); }
   .deal-copy { padding-bottom: 34px; }
@@ -667,8 +679,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
   .cloud-board { height: min(42svh,230px); min-height: 160px; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
   .opponent-seat { gap: 2px; padding: 4px 6px; }
   .opponent-seat.seat-top { top: 4px; }
-  .opponent-seat.seat-left { left: 6px; }
-  .opponent-seat.seat-right { right: 6px; }
+  .opponent-seat.seat-left { top: 39px; left: 6px; }
+  .opponent-seat.seat-right { top: 39px; right: 6px; }
   .player-avatar { flex-basis: 22px; width: 22px; height: 22px; }
   .rack-backs i { height: 15px; }
   .cloud-discard-pool { inset: 73px 20% 5px; min-height: 0; }
@@ -683,7 +695,9 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
   .cloud-tile-slot { flex: 0 0 36px; }
   .cloud-rack .cloud-tile { height: 48px; }
   .cloud-rack .cloud-tile b { font-size: 10px; }
-  .cloud-actions { min-height: 42px; margin-top: 3px; }
+  .cloud-rack-reorder { gap: 5px; margin-top: 5px; padding: 5px 8px; }
+  .cloud-rack-order-actions button { min-height: 42px; }
+  .cloud-actions { min-height: 0; margin-top: 8px; padding-top: 8px; }
   .cloud-actions button, .cloud-actions .secondary { min-height: 42px; padding-block: 8px; }
   .topbar { min-height: 56px; padding-block: 5px; }
   .game-shell { --card-drawer-height: 118px; min-height: 320px; }
