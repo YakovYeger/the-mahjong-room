@@ -358,6 +358,42 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 .cloud-status h1 { margin: 0; font: 700 27px Georgia,serif; }
 .cloud-status p:not(.kicker) { margin: 3px 0 0; color: rgba(255,255,255,.62); font-size: 10px; text-transform: capitalize; }
 .cloud-status button { border: 1px solid rgba(255,255,255,.28); border-radius: 999px; padding: 10px 14px; background: transparent; color: white; cursor: pointer; }
+.game-over-banner { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 22px; overflow: hidden; margin: 18px clamp(14px,3vw,45px); border: 1px solid #d8c7a9; border-radius: 18px; padding: 22px clamp(18px,3vw,34px); background: #f5f0e7; color: #173e35; }
+.game-over-banner > div:first-of-type { position: relative; z-index: 1; }
+.game-over-banner .kicker { margin: 0 0 5px; color: #c8614d; }
+.game-over-banner h2 { margin: 0; font: 700 clamp(23px,3vw,34px)/1.1 Georgia,serif; }
+.game-over-banner p:not(.kicker) { margin: 7px 0 0; color: #64756f; font-size: 12px; }
+.game-over-banner nav { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px; }
+.game-over-banner nav a, .review-next-actions a { display: inline-flex; justify-content: center; align-items: center; min-height: 44px; border: 1px solid #cfc7b8; border-radius: 999px; padding: 10px 16px; color: #173e35; font-size: 12px; font-weight: 800; text-decoration: none; }
+.game-over-banner nav .game-list-link, .review-next-actions .primary { border-color: #bc604b; background: #bc604b; color: white; }
+.mahjong-celebration { position: absolute; top: -35px; right: 28%; width: 170px; height: 140px; pointer-events: none; }
+.mahjong-celebration i { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; border-radius: 50%; background: #d99444; box-shadow: 0 0 0 4px rgba(217,148,68,.13), 0 0 18px 5px rgba(217,148,68,.3); animation: mahjong-firework 1.25s ease-out both; }
+.mahjong-celebration i:nth-child(2) { --burst-angle: 115deg; --burst-distance: 52px; animation-delay: .12s; background: #c8614d; }
+.mahjong-celebration i:nth-child(3) { --burst-angle: 245deg; --burst-distance: 42px; animation-delay: .22s; background: #6c9b75; }
+@keyframes mahjong-firework { 0% { opacity: 0; transform: rotate(var(--burst-angle,0deg)) translateY(0) scale(.2); } 25% { opacity: 1; } 100% { opacity: 0; transform: rotate(var(--burst-angle,0deg)) translateY(calc(-1 * var(--burst-distance,58px))) scale(1.4); } }
+.cloud-game-review { scroll-margin-top: 18px; margin: 0 clamp(14px,3vw,45px) 18px; border: 1px solid #ded7c9; border-radius: 18px; padding: clamp(18px,3vw,32px); background: #f5f0e7; color: #173e35; }
+.cloud-review-heading { display: flex; justify-content: space-between; align-items: end; gap: 15px; margin-bottom: 18px; }
+.cloud-review-heading .kicker { margin: 0 0 5px; color: #c8614d; }
+.cloud-review-heading h2 { margin: 0; font: 700 clamp(26px,3vw,36px) Georgia,serif; }
+.cloud-review-heading > p { max-width: 430px; margin: 0; color: #64756f; font-size: 12px; text-align: right; }
+.winning-line-card, .review-discard-record, .review-racks article { border: 1px solid #ded7c9; border-radius: 13px; padding: 16px; background: #fffdf8; }
+.winning-line-card { margin-bottom: 14px; }
+.winning-line-card .kicker { margin: 0 0 5px; color: #c8614d; }
+.winning-line-card h3 { margin: 0; font: 700 21px Georgia,serif; }
+.winning-line-card > p:not(.kicker), .winning-line-card small { display: block; margin: 5px 0 0; color: #64756f; font-size: 12px; line-height: 1.5; }
+.review-racks { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.review-racks article.review-winner { border-color: #d8b66d; box-shadow: inset 4px 0 #d8b66d; }
+.review-racks article > div:first-child, .review-discard-record > div:first-child { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; }
+.review-racks article > div:first-child strong, .review-discard-record > div:first-child strong { font: 700 16px Georgia,serif; }
+.review-racks article > div:first-child small, .review-discard-record > div:first-child small { color: #64756f; font-size: 10px; }
+.review-tile-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.review-tile-row span { display: grid; place-items: center; min-width: 34px; height: 43px; border: 1px solid #ded7c9; border-bottom: 5px solid #c8baa3; border-radius: 5px; padding: 0 5px; background: white; color: #234f44; font: 800 12px Georgia,serif; }
+.review-exposures { margin-top: 12px; padding-top: 9px; border-top: 1px solid #eee8dc; }
+.review-exposures strong { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+.review-exposures p { margin: 5px 0 0; color: #526660; font-size: 11px; }
+.review-note { margin: 8px 0 0; color: #64756f; font-size: 11px; line-height: 1.5; }
+.review-discard-record { margin-top: 10px; }
+.review-next-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .turn-clock { display: grid; min-width: 130px; text-align: right; }
 .turn-clock span { color: rgba(255,255,255,.55); font-size: 8px; text-transform: uppercase; }
 .turn-clock strong { font: 700 22px Georgia,serif; }
@@ -477,6 +513,13 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
   .cloud-game-page > header > strong { display: none; }
   .cloud-status { grid-template-columns: 1fr auto; padding-inline: 15px; }
   .cloud-status > button { grid-column: 1 / -1; }
+  .game-over-banner { align-items: stretch; flex-direction: column; gap: 14px; margin-inline: 8px; padding: 17px; }
+  .game-over-banner nav { display: grid; grid-template-columns: 1fr; }
+  .cloud-game-review { margin-inline: 8px; padding: 14px; }
+  .cloud-review-heading { align-items: start; flex-direction: column; }
+  .cloud-review-heading > p { text-align: left; }
+  .review-racks { grid-template-columns: 1fr; }
+  .review-next-actions { display: grid; grid-template-columns: 1fr; }
   .cloud-board { min-height: 42vh; margin-inline: 5px; padding: 9px; border-width: 6px; border-radius: 22px; }
   .opponent-grid { gap: 5px; }
   .opponent-grid article { padding: 7px; }
@@ -607,4 +650,5 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  .mahjong-celebration { display: none !important; }
 }

@@ -42,6 +42,7 @@ Milestone 13 — Backend, accounts, private multiplayer, and timed turns
 - Bot play stops and retires a table when its final human seat is replaced; reconnect also retires legacy all-bot stalls
 - G3 host controls: invite code stays available through active play, only the host can end a table for everyone, and terminal tables clear invite credentials
 - G4 leave confirmation: active and paused tables explain the two-minute reconnect grace and bot takeover; Stay, Escape, and dismiss preserve the seat, while Leave returns to the games list
+- G5 game-over review: completed wins, wall games, and abandoned tables show a clear terminal outcome, immutable final review, and next-game navigation; completed games reveal final racks and winning Training Card line, while abandoned games keep opponents' concealed racks hidden
 - Owners can delete their cloud games and saved history from the games list
 - In-app async turn inbox plus throttled optional Resend email delivery
 - Configurable four-seat game creation and multiplayer projection/timer tests
