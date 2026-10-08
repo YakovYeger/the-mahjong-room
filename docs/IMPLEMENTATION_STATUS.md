@@ -38,6 +38,11 @@ Milestone 13 — Backend, accounts, private multiplayer, and timed turns
 - Signed-in cloud game list, private room creation, expiring eight-character invites, 1–4 humans, and permanent bot fill at start
 - Participant-specific snapshots, cross-device reconnects, database-triggered private Realtime signals, and presence indicators
 - Live and async clocks, leased `SKIP LOCKED` timeout claims, deterministic timeout actions, three-strike permanent bot replacement, and unanimous live pause/resume
+- Five-minute default live turns with pre-room duration choices, untimed Charleston, server heartbeats, visible two-minute reconnect grace, and transactional bot takeover after disconnect expiry
+- Bot play stops and retires a table when its final human seat is replaced; reconnect also retires legacy all-bot stalls
+- G3 host controls: invite code stays available through active play, only the host can end a table for everyone, and terminal tables clear invite credentials
+- G4 leave confirmation: active and paused tables explain the two-minute reconnect grace and bot takeover; Stay, Escape, and dismiss preserve the seat, while Leave returns to the games list
+- Owners can delete their cloud games and saved history from the games list
 - In-app async turn inbox plus throttled optional Resend email delivery
 - Configurable four-seat game creation and multiplayer projection/timer tests
 

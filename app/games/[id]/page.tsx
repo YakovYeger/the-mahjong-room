@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useCallback, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { moveTileId, normalizeTileOrder, placeTileId, tileLabel } from '../../../src/game/tiles';
 import { cardTileKey, TrainingCardProvider } from '../../../src/game/training-card';
 import type { GameAction, Tile } from '../../../src/game/types';
@@ -32,7 +32,10 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
   const [discardDropActive, setDiscardDropActive] = useState(false);
   const [message, setMessage] = useState('Connecting to the table…');
   const [busy, setBusy] = useState(false);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const leaveDialogRef = useRef<HTMLDialogElement>(null);
   const [online, setOnline] = useState(1);
+  const [room, setRoom] = useState<RoomDetails | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
@@ -49,12 +52,36 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
     } catch { /* A local rack preference never blocks reconnecting. */ }
     setRackOrder((current) => normalizeTileOrder(current.length ? current : savedOrder, data.snapshot!.privateState.rack));
     setSnapshot(data.snapshot);
+    if (data.room) setRoom(data.room);
     setSelected([]);
     setMessage('');
   }, [gameId]);
 
   useEffect(() => { queueMicrotask(() => void refresh().catch((error) => setMessage(error.message))); }, [refresh]);
   useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
+
+  useEffect(() => {
+    const dialog = leaveDialogRef.current;
+    if (leaveDialogOpen && dialog && !dialog.open) dialog.showModal();
+    return () => { if (dialog?.open) dialog.close(); };
+  }, [leaveDialogOpen]);
+
+  useEffect(() => {
+    if (!gameId || !snapshot || snapshot.status !== 'active') return;
+    let stopped = false;
+    const heartbeat = async () => {
+      if (document.visibilityState !== 'visible') return;
+      try {
+        const response = await fetch(`/api/games/${gameId}/heartbeat`, { method: 'POST', cache: 'no-store' });
+        const data = await response.json() as { room?: RoomDetails };
+        if (!stopped && data.room) setRoom(data.room);
+        if (response.status === 409) await refresh().catch(() => undefined);
+      } catch { /* The last saved heartbeat remains authoritative until the grace window ends. */ }
+    };
+    void heartbeat();
+    const timer = window.setInterval(() => void heartbeat(), 20_000);
+    return () => { stopped = true; window.clearInterval(timer); };
+  }, [gameId, refresh, snapshot?.status]);
 
   useEffect(() => {
     if (!supabase || !gameId || !snapshot) return;
@@ -108,13 +135,53 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
     if (response.ok) await refresh().catch(() => undefined);
   };
 
+  const endGameForEveryone = async () => {
+    if (!snapshot || !gameId || busy || !window.confirm('End this game for everyone? Players will see that the table has ended, and no one can continue it.')) return;
+    setBusy(true); setMessage('Ending game…');
+    try {
+      const response = await fetch(`/api/games/${gameId}/end`, { method: 'POST' });
+      const data = await response.json() as { error?: { message?: string } };
+      if (!response.ok) throw new Error(data.error?.message ?? 'The game could not be ended.');
+      await refresh();
+      setMessage('The table has ended for everyone.');
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'The game could not be ended.'); }
+    finally { setBusy(false); }
+  };
+
+  const copyInviteLink = async () => {
+    if (!room?.inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(`${location.origin}/games?join=${room.inviteCode}`);
+      setMessage('Invite link copied.');
+    } catch { setMessage('Copy failed. Invite code: ' + room.inviteCode); }
+  };
+
+  const requestLeaveTable = () => {
+    if (snapshot.status === 'active' || snapshot.status === 'paused') {
+      setLeaveDialogOpen(true);
+      return;
+    }
+    window.location.assign('/games');
+  };
+
+  const confirmLeaveTable = () => {
+    setLeaveDialogOpen(false);
+    window.location.assign('/games');
+  };
+
   if (!snapshot) return <main className="cloud-game-loading"><span className="brand">The Mahjong Room</span><p>{message}</p><a href="/games">Back to my games</a></main>;
 
   const me = snapshot.publicState.players.find((player) => player.id === snapshot.privateState.playerId);
-  const pending = snapshot.privateState.pendingAction;
+  const pending = snapshot.status === 'abandoned' || snapshot.status === 'completed' ? 'completed' : snapshot.status === 'paused' ? 'wait' : snapshot.privateState.pendingAction;
   const remaining = snapshot.deadlineAt ? Math.max(0, Math.ceil((new Date(snapshot.deadlineAt).getTime() - now) / 1000)) : null;
   const remainingLabel = remaining === null ? 'No clock running' : remaining >= 3600 ? `${Math.floor(remaining / 3600)}h ${Math.floor((remaining % 3600) / 60)}m` : `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
   const current = snapshot.publicState.players[snapshot.publicState.turnIndex];
+  const latestResolution = [...snapshot.recentEvents].reverse().find((event) => event.type === 'TURN_AUTO_RESOLVED' || event.type === 'PLAYER_CONTROL_CHANGED' || event.type === 'GAME_ABANDONED');
+  const isHost = Boolean(room && room.ownerId === room.players.find((player) => player.playerKey === snapshot.privateState.playerId)?.userId);
+  const disconnectedPlayers = (room?.players ?? []).filter((player) => {
+    if (player.controllerType !== 'human' || player.joinStatus === 'replaced') return false;
+    return player.joinStatus === 'disconnected' || now - Date.parse(player.lastActivityAt) >= 35_000;
+  });
   const orderedRack = (() => {
     const order = normalizeTileOrder(rackOrder, snapshot.privateState.rack);
     const byId = new Map(snapshot.privateState.rack.map((tile) => [tile.id, tile]));
@@ -148,8 +215,20 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
 
   return (
     <main className="cloud-game-page">
-      <header><a className="brand" href="/">The Mahjong Room</a><div><span className="live-dot" /> {online} online</div><strong>{snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}</strong><a href="/games">Leave table</a></header>
-      <section className="cloud-status"><div><p className="kicker">{snapshot.status}</p><h1>{pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : 'Your move'}</h1><p>{pending.replaceAll('_', ' ')}</p></div><div className="turn-clock"><span>Time remaining</span><strong>{remainingLabel}</strong></div>{snapshot.mode === 'live' ? <button onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}</section>
+      <header><a className="brand" href="/">The Mahjong Room</a><div><span className="live-dot" /> {online} online</div><strong>{snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}</strong>{room?.inviteCode && snapshot.status !== 'completed' && snapshot.status !== 'abandoned' ? <button className="table-invite-action" onClick={() => void copyInviteLink()}>Invite · {room.inviteCode}</button> : null}{isHost && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button className="host-end-action" onClick={() => void endGameForEveryone()} disabled={busy}>End game</button> : null}<button type="button" className="leave-table-action" onClick={requestLeaveTable}>Leave table</button></header>
+      {leaveDialogOpen ? <dialog ref={leaveDialogRef} className="leave-dialog" aria-labelledby="leave-dialog-title" aria-describedby="leave-dialog-description" onCancel={(event) => { event.preventDefault(); setLeaveDialogOpen(false); }} onClick={(event) => { if (event.target === event.currentTarget) setLeaveDialogOpen(false); }}>
+          <h2 id="leave-dialog-title">Leave this table?</h2>
+          <p id="leave-dialog-description">The game will continue without you. Your seat stays available for two minutes while you can reconnect; after that, a bot takes over and the other players see that you disconnected.</p>
+          <div><button type="button" className="secondary" autoFocus onClick={() => setLeaveDialogOpen(false)}>Stay</button><button type="button" className="leave-confirm-action" onClick={confirmLeaveTable}>Leave table</button></div>
+      </dialog> : null}
+      <section className="cloud-status"><div><p className="kicker">{snapshot.status}</p><h1>{snapshot.status === 'abandoned' ? 'Table ended' : snapshot.status === 'completed' ? 'Game complete' : snapshot.status === 'paused' ? 'Table paused' : pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : 'Your move'}</h1><p>{snapshot.status === 'abandoned' ? 'No active decisions' : pending.replaceAll('_', ' ')}</p></div><div className="turn-clock"><span>{snapshot.publicState.phase === 'charleston' ? 'Charleston' : 'Time remaining'}</span><strong>{snapshot.publicState.phase === 'charleston' ? 'Untimed' : remainingLabel}</strong></div>{snapshot.mode === 'live' && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}</section>
+      {latestResolution?.type === 'TURN_AUTO_RESOLVED' ? <div className="game-resolution" role="status">Time expired. {snapshot.publicState.players.find((player) => player.id === latestResolution.playerId)?.name ?? 'A player'}'s legal move was selected automatically.</div> : null}
+      {latestResolution?.type === 'PLAYER_CONTROL_CHANGED' ? <div className="game-resolution" role="status">{snapshot.publicState.players.find((player) => player.id === latestResolution.playerId)?.name ?? 'A player'} did not return during the two-minute grace period. A bot now controls that seat.</div> : null}
+      {snapshot.status === 'abandoned' ? <div className="game-resolution" role="status">{latestResolution?.type === 'GAME_ABANDONED' && latestResolution.reason === 'host_ended' ? 'The host ended this table. No further moves can be made.' : 'This table stopped because no human seats remained. The bot players have stopped. You can delete the game from your games list.'}</div> : null}
+      {disconnectedPlayers.length ? <div className="connection-alert" role="status">{disconnectedPlayers.map((player) => {
+        const secondsLeft = Math.max(0, Math.ceil((Date.parse(player.lastActivityAt) + 120_000 - now) / 1000));
+        return <p key={player.playerKey}><strong>{player.displayName}</strong> is disconnected. A bot takes over in {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} if they do not return.</p>;
+      })}</div> : null}
       <section className="cloud-board">
         <div className="opponent-grid">{snapshot.publicState.players.filter((player) => player.id !== me?.id).map((player) => <article key={player.id}><div><strong>{player.name}</strong><small>{player.seat} · {player.rackCount} concealed</small></div>{player.revealedRack ? <div className="revealed-cloud-rack">{player.revealedRack.map((tile) => <span title={tileLabel(tile)} key={tile.id}>{compactTile(tile)}</span>)}</div> : <div className="rack-backs">{Array.from({ length: player.rackCount }, (_, index) => <i key={index} />)}</div>}{player.exposures.length ? <div className="cloud-exposures">{player.exposures.map((exposure) => <span key={exposure.id}>{exposure.kind}: {exposure.tiles.map(compactTile).join(' ')}</span>)}</div> : null}</article>)}</div>
         <div className={`cloud-discard-pool ${discardDropActive ? 'drop-target-active' : ''}`} onDragOver={(event) => { if (pending === 'discard' && draggingTileId) { event.preventDefault(); setDiscardDropActive(true); } }} onDragLeave={() => setDiscardDropActive(false)} onDrop={(event) => { event.preventDefault(); const tileId = event.dataTransfer.getData('text/plain') || draggingTileId; if (tileId) discardDraggedTile(tileId); }}><div className="wall-counter"><strong>{snapshot.publicState.wallCount}</strong><span>tiles in wall</span></div><div className="cloud-discards">{snapshot.publicState.discards.map((tile) => <span title={tileLabel(tile)} key={tile.id}>{compactTile(tile)}</span>)}</div>{snapshot.publicState.callWindow ? <div className="call-focus"><small>Latest discard</small><strong>{compactTile(snapshot.publicState.callWindow.discard)}</strong><span>{snapshot.publicState.callWindow.responseCount} responded</span></div> : null}{pending === 'discard' ? <small className="discard-drop-hint">Drop a tile here to discard</small> : null}</div>

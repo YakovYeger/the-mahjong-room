@@ -91,6 +91,9 @@ export type GameEvent =
   | { type: 'CALL_WINDOW_CLOSED'; sequence: number; playerId: string }
   | { type: 'JOKER_EXCHANGED'; sequence: number; playerId: string; exposureOwnerId: string; exposureId: string; jokerTileId: string }
   | { type: 'MAHJONG_DECLARED'; sequence: number; playerId: string }
+  | { type: 'PLAYER_CONTROL_CHANGED'; sequence: number; playerId: string; controllerType: 'bot'; reason: 'disconnect' | 'timeouts' }
+  | { type: 'TURN_AUTO_RESOLVED'; sequence: number; playerId: string; reason: 'timeout' }
+  | { type: 'GAME_ABANDONED'; sequence: number; reason: 'no_human_players' | 'host_ended' }
   | { type: 'GAME_COMPLETED'; sequence: number; winnerId: string | null };
 
 export interface GameState {
