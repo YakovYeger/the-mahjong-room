@@ -49,7 +49,7 @@ Milestone 13 — Backend, accounts, private multiplayer, and timed turns
 
 ## In Progress
 
-- G6 responsive tabletop: opponents are placed relative to the player's seat, the shared discard area sits in the table center, and phone racks reflow into two rows with safe-area spacing. Remaining: review the phone portrait, phone landscape, tablet, and desktop layouts and tune any overlap or sizing issues.
+- G6 responsive tabletop: opponents are placed relative to the player's seat, the shared discard area sits in the table center, and phone racks reflow into two rows with safe-area spacing. Mobile polish now adds tactile tile faces, a compact two-column Training Card with tile groups, a hamburger home menu, and a coach note below the decorative rack. Timeout and bot-takeover notices are transient and only appear for newly observed events; active-game invites are hidden because seats lock at start. Remaining: review phone portrait, phone landscape, tablet, and desktop layouts and tune any overlap or sizing issues.
 
 ## Next
 
