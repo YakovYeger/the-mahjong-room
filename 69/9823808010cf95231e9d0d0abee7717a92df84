@@ -1,0 +1,48 @@
+tests/game-experience.test.ts
+  s_35d506958491c4::t_0463589826d275 15,20-21
+src/table/reference-hands.tsx
+  s_35d506958491c4::t_7d1eb6e8faf028 6,19
+  s_35d506958491c4::t_7627911c852b1a 12
+app/game-experience.tsx
+  s_35d506958491c4::t_3b739f212b16cd 3,22,166,172,462,480,492
+src/game/training-card.ts
+  s_35d506958491c4::t_1b0ede03fb62b6 214-218,220-224,226-229,241-244,247-250,252-255,257-259
+app/games/[id]/page.tsx
+  s_35d506958491c4::t_3b739f212b16cd 23,45,179,201
+  s_35d506958491c4::t_fb040c9722c87d 181,254-256
+src/table/table.css
+  s_35d506958491c4::t_7627911c852b1a 398-424
+  s_35d506958491c4::t_fb040c9722c87d 319-391
+  s_35d506958491c4::t_f80bbb080743ba 397
+  s_35d506958491c4::t_af4d84287c3a2e 392-396
+src/table/training-hands.tsx
+  s_35d506958491c4::t_7d1eb6e8faf028 23,34
+src/table/card-companion.tsx
+  s_35d506958491c4::t_ad8bbef1880ef4 1-2,4-25,33-34,40-62,64-67,69-95,97-98,102-114,116-118
+  s_35d506958491c4::t_f80bbb080743ba 28,37-38
+  s_35d506958491c4::t_7627911c852b1a 101
+  s_35d506958491c4::t_ddea0f7183e28d 3,26-27,29-32,35-36,39,63,68,96,99-100,115
+tests/card-companion.test.ts
+  s_35d506958491c4::t_0463589826d275 1-41,43-50
+  s_35d506958491c4::t_be81bca6cbaae0 42
+app/table-preview/table-preview.tsx
+  s_35d506958491c4::t_fdcd7fc0f45746 8-11,20-27,29,37-38,41,49
+tests/hand-arrangement.test.ts
+  s_35d506958491c4::t_ef755c32b9e2d1 1-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "699823808010cf95231e9d0d0abee7717a92df84",
+  "prompts": {},
+  "sessions": {
+    "s_35d506958491c4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12ad7-ec16-78c1-bbb9-b788fbf64014",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
