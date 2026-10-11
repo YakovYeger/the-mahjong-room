@@ -176,7 +176,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
   };
 
   return (
-    <main className={`cloud-game-page shared-table-page ${cardOpen && !isTerminal ? 'card-is-open' : ''}`}>
+    <main className={`cloud-game-page shared-table-page unified-game ${cardOpen && !isTerminal ? 'card-is-open' : ''}`}>
       <TableHeader brand={<a className="brand" href="/">The Mahjong Room</a>} context={snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}>
         {!isTerminal ? <button className="table-tool-button" aria-expanded={cardOpen} onClick={() => setCardOpen(open => !open)}>{snapshot.publicState.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button> : null}
         <details className="table-menu"><summary>Table</summary><div><span>{online} online</span>{isHost && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button onClick={() => setEndDialogOpen(true)} disabled={busy}>End game</button> : null}<button onClick={requestLeaveTable}>Leave table</button></div></details>
@@ -203,6 +203,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
         <div className="review-next-actions"><a href="/games">Return to My Games</a><a className="primary" href="/games">Start another game</a></div>
       </section> : null}
       {snapshot.status === 'active' ? <ConnectionAlert room={room} /> : null}
+      <section className="game-table" aria-label="Multiplayer Mahjong table">
       <DragDropProvider
         sensors={(defaults) => [
           ...defaults.filter((sensor) => sensor !== PointerSensor),
@@ -277,6 +278,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
         {!isTerminal ? <CardCompanion cardId={snapshot.publicState.cardId} rack={snapshot.privateState.rack} exposures={snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? []} storageKey={`${gameId}:${snapshot.privateState.playerId}`} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory order still works. */ } setMessage('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} /> : null}
       </RackPanel>
       </DragDropProvider>
+      </section>
     </main>
   );
 }

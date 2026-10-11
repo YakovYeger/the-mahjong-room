@@ -475,7 +475,7 @@ export function GameExperience() {
     : respondingToDiscard ? 'Call, Mahjong, or pass?' : needsDraw ? 'Draw a tile' : 'Choose a discard';
 
   return (
-    <main className={`shell game-shell shared-table-page ${cardOpen ? 'card-is-open' : ''}`}>
+    <main className={`shell game-shell shared-table-page unified-game ${cardOpen ? 'card-is-open' : ''}`}>
       <TableHeader brand={<button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={`Practice · Game ${gameNumber}`}>
         <button className="table-tool-button" aria-label={`${cardOpen ? 'Hide' : 'Show'} ${game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}`} aria-expanded={cardOpen} onClick={() => setCardOpen((open) => !open)}>{game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button>
         <details className="table-menu"><summary>Table</summary><div><span>Saved on this device</span><a href="/account">Save progress</a><button onClick={() => setStarted(false)}>Leave table</button></div></details>
@@ -497,6 +497,7 @@ export function GameExperience() {
                       : <>{exchangeOption ? <button className="finish-button" onClick={exchangeJoker}>Exchange for Joker</button> : null}{manualTurns >= 4 ? <button className="finish-button" onClick={finishGame}>Complete with coach</button> : null}{selfMahjong ? <button className="mahjong-button" onClick={() => declareMahjong(false)}>Declare Mahjong</button> : null}<button className="primary" disabled={!canDiscard || selected.length !== 1} onClick={discardTile}>Discard tile</button></>}
             </div>
           </div>
+        <details className="table-coach"><summary>Coach · {coachRecommendation.headline}</summary><div><p>{coachHint}</p><div className="candidate-list">{candidates.map((candidate, index) => <div key={candidate.handId}><span>{index === 0 ? 'Best match' : 'Alternative'}</span><strong>{candidate.name}</strong><small>{candidate.matchingTileIds.length} / 14 useful</small></div>)}</div><button onClick={requestHint}>{hintLevel < 2 ? 'Show me what to notice' : 'Why these tiles?'}</button></div></details>
           <MotionConfig reducedMotion="user" transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.7 }}>
             <DragDropProvider
               sensors={(defaults) => [
@@ -547,7 +548,7 @@ export function GameExperience() {
           </MotionConfig>
             <small className="reorder-hint" id="rack-reorder-hint"><span aria-hidden="true">↔</span> Drag tiles to arrange · Alt + arrow keys</small>
           <CardCompanion key={game.id} cardId={game.cardId} rack={human.rack} exposures={human.exposures} storageKey={`${game.id}:${human.id}`} candidates={coachContext.candidates} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); setNotice('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
-        <details className="table-coach"><summary>Coach · {coachRecommendation.headline}</summary><div><p>{coachHint}</p><div className="candidate-list">{candidates.map((candidate, index) => <div key={candidate.handId}><span>{index === 0 ? 'Best match' : 'Alternative'}</span><strong>{candidate.name}</strong><small>{candidate.matchingTileIds.length} / 14 useful</small></div>)}</div><button onClick={requestHint}>{hintLevel < 2 ? 'Show me what to notice' : 'Why these tiles?'}</button></div></details>
+
 
         </RackPanel>
       </section>

@@ -48,3 +48,20 @@ it('closes the card browser with Escape and returns focus to its trigger', () =>
   expect(document.activeElement).toBe(trigger);
   trigger.remove();
 });
+
+it('keeps three candidate choices available after pinning and contains keyboard focus in the card picker', () => {
+  const view = render(createElement(CardCompanion, { rack, exposures: [], storageKey: 'choices-test', onArrange: vi.fn(), open: true, onOpenChange: vi.fn() }));
+  fireEvent.click(screen.getAllByRole('button', { name: 'Follow this hand →' })[1]);
+  expect(view.container.querySelectorAll('.companion-suggestions button')).toHaveLength(3);
+  expect(view.container.querySelector('.companion-pattern')).toBeTruthy();
+  const fit = view.container.querySelector<HTMLDetailsElement>('.companion-fit')!;
+  expect(fit.open).toBe(false);
+  expect(fit.querySelector('.hand-comparison')).toBeTruthy();
+  const close = screen.getByRole('button', { name: 'Close card browser' });
+  const followButtons = screen.getAllByRole('button', { name: 'Follow this hand →' });
+  followButtons.at(-1)!.focus();
+  fireEvent.keyDown(document, { key: 'Tab' });
+  expect(document.activeElement).toBe(close);
+  fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+  expect(document.activeElement).toBe(followButtons.at(-1));
+});

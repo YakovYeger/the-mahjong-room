@@ -64,7 +64,7 @@ export function DiscardPool({ tiles, latestTileId, dropRef, dropActive = false, 
   }, [tiles.length, currentTileId]);
   return <div ref={dropRef} className={`table-discards${dropActive ? ' table-discards-drop-active' : ''}`} role="region" aria-label={`Discard pool, ${tiles.length} visible tiles`}>
     <header><strong>Discards</strong><span>{tiles.length ? `${tiles.length} · oldest first` : 'No discards yet'}</span></header>
-    {latest ? <p className="table-latest-discard">{latestTileId ? 'Claim tile' : 'Latest'} · <strong>{tileLabel(latest)}</strong></p> : null}
+    {latest ? <div className="table-latest-discard"><span>{latestTileId ? 'Claim tile' : 'Latest discard'}</span><span className="table-latest-tile"><TileFace tile={latest} /></span><strong>{tileLabel(latest)}</strong></div> : null}
     <div className="table-discard-grid" ref={historyRef} tabIndex={tiles.length ? 0 : undefined} aria-label="Discard history, scroll to inspect older tiles">{tiles.map((tile, index) => <span className={`table-discard-tile${tile.id === latest?.id ? ' table-discard-latest' : ''}`} title={`${tileLabel(tile)}, discard ${index + 1}`} key={tile.id}><TileFace tile={tile} compact /></span>)}</div>
     {children}
   </div>;
