@@ -8,7 +8,7 @@ import { PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable } from '@dnd-kit/react/sortable';
 import { moveTileId, normalizeTileOrder, tileLabel } from '../../../src/game/tiles';
 import { SortableRackItem } from '../../../src/game/sortable-rack-item';
-import { cardTileKey, TrainingCardProvider } from '../../../src/game/training-card';
+import { cardTileKey } from '../../../src/game/training-card';
 import type { GameAction, GameEvent } from '../../../src/game/types';
 import type { GameSnapshot } from '../../../src/multiplayer/types';
 
@@ -19,10 +19,12 @@ import { EndGameDialog } from '../../../src/table/end-game-dialog';
 
 import { compactTile } from '../../../src/table/tile-presentation';
 import { TileFace } from '../../../src/table/tile-face';
+import { getCardProvider } from '../../../src/game/cards';
+import { ReferenceHands } from '../../../src/table/reference-hands';
 import { TrainingHands } from '../../../src/table/training-hands';
 import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../../../src/table/table-surface';
 
-const cloudTrainingHands = TrainingCardProvider.getHands();
+
 
 function CloudDiscardPool({ tiles, dropActive, latestTileId, canDiscard }: { tiles: GameSnapshot['publicState']['discards']; dropActive: boolean; latestTileId?: string; canDiscard: boolean }) {
   const { ref, isDropTarget } = useDroppable({ id: 'discard-pool' });
@@ -133,10 +135,10 @@ function CloudGameTable({ gameId }: { gameId: string }) {
   const winner = snapshot.publicState.players.find((player) => player.id === snapshot.publicState.winnerId) ?? null;
   const winnerRack = winner?.revealedRack ?? (winner?.id === snapshot.privateState.playerId ? snapshot.privateState.rack : null);
   const winningValidation = winner && winnerRack
-    ? TrainingCardProvider.validateMahjong([...winnerRack, ...winner.exposures.flatMap((exposure) => exposure.tiles)], winner.exposures)
+    ? getCardProvider(snapshot.publicState.cardId).validateMahjong([...winnerRack, ...winner.exposures.flatMap((exposure) => exposure.tiles)], winner.exposures)
     : null;
   const winningLine = winningValidation?.handId
-    ? cloudTrainingHands.find((hand) => hand.id === winningValidation.handId) ?? null
+    ? getCardProvider(snapshot.publicState.cardId).getHands().find((hand) => hand.id === winningValidation.handId) ?? null
     : null;
   const terminalOutcome = snapshot.status === 'completed'
     ? winner ? `${winner.name} called Mahjong.` : 'The wall ran out. The game ended without a winner.'
@@ -194,7 +196,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
       </section> : null}
       {isTerminal ? <section className="cloud-game-review" id="game-review" aria-labelledby="cloud-review-title">
         <div className="cloud-review-heading"><div><p className="kicker">Final table</p><h2 id="cloud-review-title">Game review</h2></div><p>{terminalOutcome}</p></div>
-        {winningLine ? <article className="winning-line-card"><p className="kicker">Winning line · Original Training Card</p><h3>{winningLine.name}</h3><p>{winningLine.section} · {winningLine.exposure === 'concealed' ? 'Concealed' : 'Exposed'}</p><small>{winningLine.description}</small></article> : winner ? <p className="review-note">The winner was confirmed by the game rules. A matching Training Card line was not included in this saved result.</p> : null}
+        {winningLine ? <article className="winning-line-card"><p className="kicker">Winning line · Selected game card</p><h3>{winningLine.name}</h3><p>{winningLine.section} · {winningLine.exposure === 'concealed' ? 'Concealed' : 'Exposed'}</p><small>{winningLine.description}</small></article> : winner ? <p className="review-note">The winner was confirmed by the game rules. A matching Training Card line was not included in this saved result.</p> : null}
         <div className="review-racks">{finalRacks.map(({ player, tiles }) => <article key={player.id} className={player.id === winner?.id ? 'review-winner' : ''}><div><strong>{player.name}{player.id === winner?.id ? ' · Winner' : ''}</strong><small>{tiles ? `${tiles.length} tiles in final rack` : 'Concealed rack'}</small></div>{tiles ? <div className="review-tile-row">{tiles.map((tile) => <span key={tile.id} title={tileLabel(tile)}>{compactTile(tile)}</span>)}</div> : <p className="review-note">This rack remains concealed because the table ended before the hand was completed.</p>}{player.exposures.length ? <div className="review-exposures"><strong>Exposures</strong>{player.exposures.map((exposure) => <p key={exposure.id}>{exposure.kind}: {exposure.tiles.map(compactTile).join(' ')}</p>)}</div> : null}</article>)}</div>
         <article className="review-discard-record"><div><strong>Discarded tiles</strong><small>{snapshot.publicState.discards.length} total</small></div>{snapshot.publicState.discards.length ? <div className="review-tile-row">{snapshot.publicState.discards.map((tile) => <span key={tile.id} title={tileLabel(tile)}>{compactTile(tile)}</span>)}</div> : <p className="review-note">No tiles were discarded.</p>}</article>
         <div className="review-next-actions"><a href="/games">Return to My Games</a><a className="primary" href="/games">Start another game</a></div>
@@ -267,7 +269,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
           {pending === 'wait' ? <span>Waiting for the next move.</span> : null}
         </div>
         {message ? <p className="cloud-message" role="status" aria-live="polite">{cloud.uncertain ? 'Reconnecting to confirm your saved move…' : cloud.error?.message ?? message}</p> : null}
-        <details className="table-training-card"><summary>Training Card · 10 original hands</summary><TrainingHands /></details>
+        <details className="table-training-card"><summary>{snapshot.publicState.cardId === 'photo-2025' ? 'Your 2025 Card · 55 hands' : 'Training Card · 10 original hands'}</summary>{snapshot.publicState.cardId === 'photo-2025' ? <ReferenceHands /> : <TrainingHands />}</details>
       </RackPanel>
       </DragDropProvider>
     </main>

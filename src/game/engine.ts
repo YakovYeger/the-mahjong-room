@@ -1,5 +1,6 @@
+import { getCardProvider } from './cards';
 import { createWall, deterministicShuffle } from './tiles';
-import { cardTileKey, getLegalCallOptions, TrainingCardProvider } from './training-card';
+import { cardTileKey, getLegalCallOptions } from './training-card';
 import type { CallResponse, CreateGameOptions, Exposure, GameAction, GameActionResult, GameEvent, GameState, Player, Seat, Tile } from './types';
 
 const seats: Seat[] = ['east', 'south', 'west', 'north'];
@@ -66,7 +67,7 @@ export function createGame(seedOrOptions: number | CreateGameOptions = 2026): Ga
   for (let tile = 0; tile < 13; tile += 1) for (const player of players) player.rack.push(wall.pop()!);
   players[0].rack.push(wall.pop()!);
   return {
-    id: options.id ?? `training-${seed}`, seed, phase: 'charleston', stateVersion: 1, eventSequence: 2,
+    cardId: options.cardId ?? 'training-card', id: options.id ?? `training-${seed}`, seed, phase: 'charleston', stateVersion: 1, eventSequence: 2,
     turnIndex: 0, turnCount: 0, charlestonRound: 0, charlestonPassIndex: 0, charlestonPendingPasses: {},
     charlestonAwaitingDecision: false, charlestonCourtesy: false, players, wall, discards: [], callWindow: null, winnerId: null,
     events: [{ type: 'GAME_CREATED', sequence: 1 }, { type: 'TILES_DEALT', sequence: 2 }],
@@ -237,10 +238,10 @@ export function applyGameAction(state: GameState, playerId: string, action: Game
     if (next.callWindow.responses[playerId]) return violation('ALREADY_RESPONDED', 'You already responded to this discard.');
     if (new Set(action.rackTileIds).size !== action.rackTileIds.length) return violation('ILLEGAL_EXPOSURE', 'Each physical tile may be used only once in an exposure.');
     const selectedTiles = action.rackTileIds.map((id) => player.rack.find((tile) => tile.id === id));
-    const option = getLegalCallOptions(player.rack, player.exposures, next.callWindow.discard)
+    const option = getLegalCallOptions(player.rack, player.exposures, next.callWindow.discard, getCardProvider(next.cardId).getHands())
       .find((candidate) => candidate.rackTileIds.length === action.rackTileIds.length
         && selectedTiles.every((tile) => tile && (tile.type.kind === 'joker' || cardTileKey(tile) === cardTileKey(next.callWindow!.discard))));
-    if (!option) return violation('ILLEGAL_EXPOSURE', 'Those tiles do not make a legal Training Card exposure with this discard.');
+    if (!option) return violation('ILLEGAL_EXPOSURE', 'Those tiles do not make a legal exposure on the selected card with this discard.');
     next.callWindow.responses[playerId] = { type: 'exposure', rackTileIds: action.rackTileIds, kind: option.kind };
     emitted.push(appendEvent(next, { type: 'CALL_RESPONSE_RECORDED', playerId, response: 'exposure' }));
     resolveCallResponses(next, emitted);
@@ -275,7 +276,7 @@ export function applyGameAction(state: GameState, playerId: string, action: Game
       if (next.phase !== 'playing' || !next.callWindow || next.callWindow.discardedByPlayerId === playerId) return violation('NO_MAHJONG_DISCARD', 'There is no opponent discard available for Mahjong.');
       if (next.callWindow.responses[playerId]) return violation('ALREADY_RESPONDED', 'You already responded to this discard.');
       const tiles = [...player.rack, ...player.exposures.flatMap((exposure) => exposure.tiles), next.callWindow.discard];
-      const validation = TrainingCardProvider.validateMahjong(tiles, player.exposures);
+      const validation = getCardProvider(next.cardId).validateMahjong(tiles, player.exposures);
       if (!validation.valid || !validation.handId) return violation('INVALID_MAHJONG', validation.message);
       next.callWindow.responses[playerId] = { type: 'mahjong', handId: validation.handId };
       emitted.push(appendEvent(next, { type: 'CALL_RESPONSE_RECORDED', playerId, response: 'mahjong' }));
@@ -284,7 +285,7 @@ export function applyGameAction(state: GameState, playerId: string, action: Game
       const heavenly = next.phase === 'charleston' && player.seat === 'east' && next.charlestonPassIndex === 0 && next.charlestonRound === 0;
       if (!heavenly && (next.phase !== 'playing' || next.players[next.turnIndex].id !== playerId || next.callWindow)) return violation('NOT_YOUR_TURN', 'Declare Mahjong after drawing or by claiming the latest discard.');
       const tiles = [...player.rack, ...player.exposures.flatMap((exposure) => exposure.tiles)];
-      const validation = TrainingCardProvider.validateMahjong(tiles, player.exposures);
+      const validation = getCardProvider(next.cardId).validateMahjong(tiles, player.exposures);
       if (!validation.valid) return violation('INVALID_MAHJONG', validation.message);
       completeWithWinner(next, player, null, emitted);
     }
@@ -296,7 +297,7 @@ export function applyGameAction(state: GameState, playerId: string, action: Game
 
 export function getPublicGameState(state: GameState) {
   return {
-    id: state.id, phase: state.phase, stateVersion: state.stateVersion, turnIndex: state.turnIndex,
+    cardId: state.cardId ?? 'training-card', id: state.id, phase: state.phase, stateVersion: state.stateVersion, turnIndex: state.turnIndex,
     turnCount: state.turnCount, wallCount: state.wall.length, discards: state.discards,
     callWindow: state.callWindow ? {
       discard: state.callWindow.discard,

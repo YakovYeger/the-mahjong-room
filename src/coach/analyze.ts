@@ -1,4 +1,4 @@
-import { TrainingCardProvider } from '../game/training-card';
+import { getCardProvider } from '../game/cards';
 import type { GameState, Tile } from '../game/types';
 import type { CoachVisibleContext } from './types';
 
@@ -8,13 +8,14 @@ export function getCoachVisibleContext(state: GameState, playerId: string): Coac
   const tiles = [...player.rack, ...player.exposures.flatMap((exposure) => exposure.tiles)];
   return {
     playerId,
+    cardId: state.cardId,
     rack: player.rack,
     ownExposures: player.exposures,
     visibleExposures: state.players.flatMap((item) => item.exposures.map((exposure) => ({ playerId: item.id, exposure }))),
     discards: state.discards,
     callWindow: state.callWindow,
     wallCount: state.wall.length,
-    candidates: TrainingCardProvider.analyzeCandidates(tiles, player.exposures),
+    candidates: getCardProvider(state.cardId).analyzeCandidates(tiles, player.exposures),
   };
 }
 

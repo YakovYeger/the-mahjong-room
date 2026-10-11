@@ -16,6 +16,7 @@ export interface PublicPlayerState extends Omit<Player, 'rack'> {
 }
 
 export interface PublicGameState {
+  cardId?: GameState['cardId'];
   id: string;
   phase: GameState['phase'];
   stateVersion: number;
@@ -78,6 +79,7 @@ export interface RoomPlayer {
 }
 
 export interface RoomDetails {
+  cardId?: GameState['cardId'];
   id: string;
   ownerId: string;
   status: GameStatus;

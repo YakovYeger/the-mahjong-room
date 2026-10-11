@@ -21,8 +21,10 @@ export async function POST(request: NextRequest) {
     const body = await readJson(request) as Record<string, unknown>;
     const mode = body.mode === 'async' ? 'async' : body.mode === 'live' ? 'live' : null;
     if (!mode) throw new ApiError(400, 'INVALID_MODE', 'Choose live or async play.');
+    if (body.cardId !== undefined && body.cardId !== 'training-card' && body.cardId !== 'photo-2025') throw new ApiError(400, 'INVALID_CARD', 'Choose an available card.');
     const result = await createRoom(user, {
       mode,
+      cardId: body.cardId as 'training-card' | 'photo-2025' | undefined,
       turnSeconds: typeof body.turnSeconds === 'number' ? body.turnSeconds : undefined,
       responseSeconds: typeof body.responseSeconds === 'number' ? body.responseSeconds : undefined,
     });

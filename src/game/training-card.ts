@@ -194,8 +194,8 @@ function handPossibleFromDiscards(hand: HandDefinition, usedGroups: number[], ex
   return requiredJokers <= jokerCapacity;
 }
 
-export function analyzeDiscardDeadHand(exposures: Exposure[], discards: Tile[]): DiscardDeadHandAnalysis {
-  const compatible = hands.flatMap((hand) => {
+export function analyzeDiscardDeadHand(exposures: Exposure[], discards: Tile[], cardHands = hands): DiscardDeadHandAnalysis {
+  const compatible = cardHands.flatMap((hand) => {
     const usedGroups = matchExposureGroups(exposures, hand);
     return usedGroups ? [{ hand, usedGroups }] : [];
   });
@@ -212,13 +212,16 @@ export function analyzeDiscardDeadHand(exposures: Exposure[], discards: Tile[]):
 }
 
 function scoreHand(tiles: Tile[], exposures: Exposure[], hand: HandDefinition): HandCandidate {
-  if (!matchExposureGroups(exposures, hand)) {
+  const usedGroups = matchExposureGroups(exposures, hand);
+  if (!usedGroups) {
     return { handId: hand.id, name: hand.name, completionDistance: 14, matchingTileIds: [], recommendationScore: -1000, reasonCodes: ['EXPOSURE_CONFLICT'], viable: false };
   }
 
+  const exposedIds = new Set(exposures.flatMap(exposure => exposure.tiles.map(tile => tile.id)));
   const naturals = new Map<string, Tile[]>();
   const jokers: Tile[] = [];
   for (const tile of tiles) {
+    if (exposedIds.has(tile.id)) continue;
     if (tile.type.kind === 'joker') jokers.push(tile);
     else {
       const key = cardTileKey(tile);
@@ -226,9 +229,9 @@ function scoreHand(tiles: Tile[], exposures: Exposure[], hand: HandDefinition): 
     }
   }
 
-  const matchingTileIds: string[] = [];
+  const matchingTileIds: string[] = [...exposedIds];
   let jokerIndex = 0;
-  for (const required of hand.groups) {
+  for (const required of hand.groups.filter((_, index) => !usedGroups.includes(index)).sort((a, b) => Number(a.jokerAllowed) - Number(b.jokerAllowed))) {
     const available = naturals.get(required.tileKey) ?? [];
     const matches = available.splice(0, required.count);
     matchingTileIds.push(...matches.map((tile) => tile.id));
@@ -248,13 +251,13 @@ function scoreHand(tiles: Tile[], exposures: Exposure[], hand: HandDefinition): 
   };
 }
 
-export function getLegalCallOptions(rack: Tile[], exposures: Exposure[], discard: Tile): LegalCallOption[] {
+export function getLegalCallOptions(rack: Tile[], exposures: Exposure[], discard: Tile, cardHands = hands): LegalCallOption[] {
   if (discard.type.kind === 'joker') return [];
   const discardKey = cardTileKey(discard);
   const options: LegalCallOption[] = [];
   const seen = new Set<string>();
 
-  for (const hand of hands) {
+  for (const hand of cardHands) {
     if (hand.exposure !== 'exposed') continue;
     const usedGroups = matchExposureGroups(exposures, hand);
     if (!usedGroups) continue;
@@ -274,16 +277,20 @@ export function getLegalCallOptions(rack: Tile[], exposures: Exposure[], discard
   return options.sort((left, right) => left.rackTileIds.length - right.rackTileIds.length);
 }
 
-export const TrainingCardProvider: HandDefinitionProvider = {
-  id: 'training-card', name: 'The Mahjong Room Training Card', version: '3.0.0',
+export function createCardProvider(id: string, name: string, hands: HandDefinition[]): HandDefinitionProvider { return {
+  id, name, version: '3.0.0',
   getSections: () => [...new Set(hands.map((hand) => hand.section))],
   getHands: () => hands,
   validateMahjong(tiles, exposures = []) {
     if (tiles.length !== 14) return { valid: false, message: `A Mahjong hand must contain exactly 14 tiles; this hand has ${tiles.length}.` };
     const match = hands.map((hand) => scoreHand(tiles, exposures, hand)).find((candidate) => candidate.viable && candidate.completionDistance === 0);
-    return match ? { valid: true, handId: match.handId, message: 'Mahjong!' } : { valid: false, message: 'This hand does not exactly match a legal Training Card line.' };
+    return match ? { valid: true, handId: match.handId, message: 'Mahjong!' } : { valid: false, message: 'This hand does not exactly match a legal line on the selected card.' };
   },
   analyzeCandidates(tiles, exposures = []) {
     return hands.map((hand) => scoreHand(tiles, exposures, hand)).sort((a, b) => b.recommendationScore - a.recommendationScore);
   },
 };
+
+}
+
+export const TrainingCardProvider = createCardProvider('training-card', 'The Mahjong Room Training Card', hands);

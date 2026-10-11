@@ -59,6 +59,7 @@ export interface GamePlayerConfig {
 }
 
 export interface CreateGameOptions {
+  cardId?: 'training-card' | 'photo-2025';
   id?: string;
   seed?: number;
   players?: GamePlayerConfig[];
@@ -97,6 +98,7 @@ export type GameEvent =
   | { type: 'GAME_COMPLETED'; sequence: number; winnerId: string | null };
 
 export interface GameState {
+  cardId?: 'training-card' | 'photo-2025';
   id: string;
   seed: number;
   phase: GamePhase;
@@ -118,6 +120,7 @@ export interface GameState {
 }
 
 export interface HandDefinition {
+  value?: number;
   id: string;
   section: string;
   name: string;

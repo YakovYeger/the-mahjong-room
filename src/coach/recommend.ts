@@ -1,3 +1,4 @@
+import { getCardProvider } from '../game/cards';
 import { tileLabel } from '../game/tiles';
 import { getLegalCallOptions } from '../game/training-card';
 import type { Tile } from '../game/types';
@@ -27,7 +28,7 @@ export function recommendCharlestonPass(context: CoachVisibleContext): CoachReco
     tileIds: tiles.map((tile) => tile.id),
     reasonCodes: ['NOT_USED_BY_TOP_HANDS', 'LOW_FLEXIBILITY', 'JOKER_PROTECTED'],
     headline: 'Look for the tiles doing the least work.',
-    explanation: `${tiles.map(tileLabel).join(', ')} contribute least to your three strongest Training Card directions. Your jokers stay protected because they cannot be passed.`,
+    explanation: `${tiles.map(tileLabel).join(', ')} contribute least to your three strongest card directions. Your jokers stay protected because they cannot be passed.`,
     confidence: context.candidates[0]?.matchingTileIds.length >= 6 ? 'high' : 'medium',
   };
 }
@@ -54,7 +55,7 @@ export function recommendCall(context: CoachVisibleContext): CoachRecommendation
   if (!discard || discard.type.kind === 'joker') {
     return { kind: 'call', tileIds: [], reasonCodes: ['CALL_REDUCES_FLEXIBILITY'], headline: 'Let this one go.', explanation: 'There is no legal set to expose from this discard.', confidence: 'high' };
   }
-  const option = getLegalCallOptions(context.rack, context.ownExposures, discard)[0];
+  const option = getLegalCallOptions(context.rack, context.ownExposures, discard, getCardProvider(context.cardId).getHands())[0];
   const matches = option ? context.rack.filter((tile) => option.rackTileIds.includes(tile.id)) : [];
   const supportsTop = option?.handId === context.candidates[0]?.handId;
   const canCall = Boolean(option);

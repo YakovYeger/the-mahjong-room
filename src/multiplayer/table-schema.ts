@@ -39,6 +39,7 @@ const gameEvent = z.discriminatedUnion('type', [
 export const snapshotSchema = z.strictObject({
   stateVersion: z.number().int().positive(), eventSequence: integer, deadlineAt: timestamp.nullable(), status, mode,
   publicState: z.strictObject({
+    cardId: z.enum(['training-card', 'photo-2025']).optional(),
     id, phase: z.enum(['charleston', 'playing', 'completed']), stateVersion: z.number().int().positive(),
     turnIndex: z.number().int().min(0).max(3), turnCount: integer, wallCount: integer.max(152),
     discards: z.array(tileSchema).max(152),
@@ -59,6 +60,7 @@ export const snapshotSchema = z.strictObject({
   if (value.status !== 'completed' && value.publicState.players.some((player) => player.revealedRack)) ctx.addIssue({ code: 'custom', message: 'Concealed racks were exposed.' });
 }) satisfies z.ZodType<GameSnapshot>;
 export const roomSchema = z.strictObject({
+  cardId: z.enum(['training-card', 'photo-2025']).optional(),
   id, ownerId: id, status, mode, turnSeconds: integer.positive(), responseSeconds: integer.positive(),
   inviteExpiresAt: timestamp.nullable(), inviteCode: z.string().max(8).nullable(),
   players: z.array(z.strictObject({ userId: id.nullable(), playerKey: id, seat,

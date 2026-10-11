@@ -1,6 +1,10 @@
 import { TrainingCardProvider } from '../game/training-card';
 import type { HandCandidate, HandGroup } from '../game/types';
 import { trainingTileLabel } from './tile-presentation';
+import { createWall } from '../game/tiles';
+import { cardTileKey } from '../game/training-card';
+import { TileFace } from './tile-face';
+const sampleTiles = new Map(createWall().map(tile => [cardTileKey(tile), tile]));
 
 const trainingHands = TrainingCardProvider.getHands();
 
@@ -25,7 +29,7 @@ export function TrainingHands({ candidates = [] }: { candidates?: HandCandidate[
           <div className="hand-meta"><span>{hand.section}</span><b>{hand.exposure === 'concealed' ? 'C' : 'X'}</b></div>
           <div className="hand-title"><h3>{hand.name}</h3><small>{candidate ? candidate.viable ? `${candidate.matchingTileIds.length}/14` : 'Blocked' : hand.exposure === 'concealed' ? 'Concealed' : 'Exposed'}</small></div>
           <p>{hand.description}</p>
-          <div className="card-groups">{hand.groups.map((required) => <div className="card-group" aria-label={`${required.count} ${required.tileKey}, ${groupLabel(required)}`} key={required.id}>{Array.from({ length: required.count }, (_, index) => <span className={`mini-tile ${trainingTileClass(required.tileKey)}`} key={index}>{trainingTileLabel(required.tileKey)}</span>)}{required.jokerAllowed ? <i title="Jokers allowed">★</i> : null}</div>)}</div>
+          <div className="card-groups">{hand.groups.map((required) => <div className="card-group" aria-label={`${required.count} ${required.tileKey}, ${groupLabel(required)}`} key={required.id}>{Array.from({ length: required.count }, (_, index) => <span className={`mini-tile ${trainingTileClass(required.tileKey)}`} key={index}>{sampleTiles.get(required.tileKey) ? <TileFace tile={sampleTiles.get(required.tileKey)!} compact /> : trainingTileLabel(required.tileKey)}</span>)}{required.jokerAllowed ? <i title="Jokers allowed">★</i> : null}</div>)}</div>
           <small className="teaching-point">{hand.teachingPoint}</small>
         </article>;
       })}</div>

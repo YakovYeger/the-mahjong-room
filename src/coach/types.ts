@@ -11,6 +11,7 @@ export type CoachReasonCode =
   | 'WAIT_FOR_DRAW';
 
 export interface CoachVisibleContext {
+  cardId?: string;
   playerId: string;
   rack: Tile[];
   ownExposures: Exposure[];

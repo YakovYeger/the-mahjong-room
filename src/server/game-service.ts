@@ -12,6 +12,7 @@ import { ApiError } from './http';
 import { recordOperationalEvent } from './observability';
 
 interface DbGame {
+  training_card_version?: string;
   id: string;
   owner_id: string;
   status: GameStatus;
@@ -98,6 +99,7 @@ function roomDetails(record: CanonicalRecord): RoomDetails {
   return {
     id: record.game.id,
     ownerId: record.game.owner_id,
+    cardId: record.game.training_card_version === 'photo-2025-v1' ? 'photo-2025' : 'training-card',
     status: record.game.status,
     mode: record.game.mode,
     turnSeconds: record.game.turn_seconds,
@@ -207,7 +209,7 @@ export async function getEntitlement() {
   return { planId: data.plan_id, name: plan?.name ?? 'Free', activeGameLimit: plan?.active_game_limit ?? 1, validUntil: data.valid_until };
 }
 
-export async function createRoom(user: Parameters<typeof displayNameForUser>[0], input: { mode: GameMode; turnSeconds?: number; responseSeconds?: number }) {
+export async function createRoom(user: Parameters<typeof displayNameForUser>[0], input: { mode: GameMode; turnSeconds?: number; responseSeconds?: number; cardId?: 'training-card' | 'photo-2025' }) {
   const admin = adminClient();
   const mode = input.mode;
   const turnSeconds = mode === 'async' ? 86_400 : Math.max(15, Math.min(input.turnSeconds ?? 300, 3600));
@@ -231,7 +233,15 @@ export async function createRoom(user: Parameters<typeof displayNameForUser>[0],
     if (error.message.includes('ACTIVE_GAME_LIMIT_REACHED')) throw new ApiError(403, 'ACTIVE_GAME_LIMIT_REACHED', 'Your plan has reached its active-game limit.');
     throw new ApiError(500, 'ROOM_CREATE_FAILED', 'The room could not be created.');
   }
-  return { game: data as unknown as DbGame, inviteCode };
+  const game = data as unknown as DbGame;
+  if (input.cardId === 'photo-2025') {
+    const { data: configured, error: cardError } = await admin.from('games')
+      .update({ training_card_version: 'photo-2025-v1' }).eq('id', game.id).eq('owner_id', user.id).eq('status', 'lobby')
+      .select('id').single();
+    if (cardError || !configured) throw new ApiError(503, 'CARD_SELECTION_FAILED', 'The room was created, but its card could not be selected. Return to your games before retrying.');
+    game.training_card_version = 'photo-2025-v1';
+  }
+  return { game, inviteCode };
 }
 
 export async function joinRoom(user: Parameters<typeof displayNameForUser>[0], inviteCode: string) {
@@ -318,6 +328,7 @@ export async function startRoom(gameId: string, userId: string): Promise<GameSna
   const seed = randomSeed();
   const initial = createGame({
     id: gameId,
+    cardId: record.game.training_card_version === 'photo-2025-v1' ? 'photo-2025' : 'training-card',
     seed,
     players: roster.map((player) => ({
       id: player.playerKey,

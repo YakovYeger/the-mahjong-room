@@ -1,10 +1,11 @@
+import { getCardProvider } from './cards';
 import { applyGameAction, getLegalJokerExchangeOptions, totalPlayerTiles } from './engine';
-import { getLegalCallOptions, TrainingCardProvider } from './training-card';
+import { getLegalCallOptions } from './training-card';
 import type { GameState, Player } from './types';
 
-function leastUsefulTileIds(player: Player, count: number, excludeJokers = false): string[] {
+function leastUsefulTileIds(player: Player, count: number, excludeJokers = false, cardId?: string): string[] {
   const allTiles = [...player.rack, ...player.exposures.flatMap((exposure) => exposure.tiles)];
-  const best = TrainingCardProvider.analyzeCandidates(allTiles, player.exposures)[0];
+  const best = getCardProvider(cardId).analyzeCandidates(allTiles, player.exposures)[0];
   const useful = new Set(best?.matchingTileIds ?? []);
   const eligible = player.rack.filter((tile) => !excludeJokers || tile.type.kind !== 'joker');
   const nonJokers = eligible.filter((tile) => tile.type.kind !== 'joker');
@@ -30,10 +31,10 @@ export function runBotAction(state: GameState, playerId: string): GameState {
     if (state.players[state.charlestonRound % 4].id !== playerId) return state;
     if (state.charlestonCourtesy) {
       const count = botCourtesyCount(state, player);
-      const result = applyGameAction(state, playerId, { type: 'COURTESY_PASS', tileIds: leastUsefulTileIds(player, count, true) });
+      const result = applyGameAction(state, playerId, { type: 'COURTESY_PASS', tileIds: leastUsefulTileIds(player, count, true, state.cardId) });
       return result.ok ? result.state : state;
     }
-    const result = applyGameAction(state, playerId, { type: 'PASS_TILES', tileIds: leastUsefulTileIds(player, 3, true) });
+    const result = applyGameAction(state, playerId, { type: 'PASS_TILES', tileIds: leastUsefulTileIds(player, 3, true, state.cardId) });
     return result.ok ? result.state : state;
   }
 
@@ -42,11 +43,11 @@ export function runBotAction(state: GameState, playerId: string): GameState {
   if (state.callWindow) {
     if (state.callWindow.discardedByPlayerId === playerId || state.callWindow.responses[playerId]) return state;
     const mahjongTiles = [...player.rack, ...player.exposures.flatMap((exposure) => exposure.tiles), state.callWindow.discard];
-    if (TrainingCardProvider.validateMahjong(mahjongTiles, player.exposures).valid) {
+    if (getCardProvider(state.cardId).validateMahjong(mahjongTiles, player.exposures).valid) {
       const result = applyGameAction(state, playerId, { type: 'DECLARE_MAHJONG', useDiscard: true });
       return result.ok ? result.state : state;
     }
-    const option = getLegalCallOptions(player.rack, player.exposures, state.callWindow.discard)[0];
+    const option = getLegalCallOptions(player.rack, player.exposures, state.callWindow.discard, getCardProvider(state.cardId).getHands())[0];
     const result = option
       ? applyGameAction(state, playerId, { type: 'CALL_TILE', rackTileIds: option.rackTileIds })
       : applyGameAction(state, playerId, { type: 'PASS_ON_DISCARD' });
@@ -82,12 +83,12 @@ export function runBotAction(state: GameState, playerId: string): GameState {
   }
 
   const tiles = [...active.rack, ...active.exposures.flatMap((exposure) => exposure.tiles)];
-  if (TrainingCardProvider.validateMahjong(tiles, active.exposures).valid) {
+  if (getCardProvider(state.cardId).validateMahjong(tiles, active.exposures).valid) {
     const mahjong = applyGameAction(current, playerId, { type: 'DECLARE_MAHJONG' });
     if (mahjong.ok) return mahjong.state;
   }
 
-  const discardId = leastUsefulTileIds(active, 1)[0];
+  const discardId = leastUsefulTileIds(active, 1, false, current.cardId)[0];
   const discard = applyGameAction(current, playerId, { type: 'DISCARD_TILE', tileId: discardId });
   return discard.ok ? discard.state : current;
 }
