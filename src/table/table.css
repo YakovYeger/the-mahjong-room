@@ -422,3 +422,54 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
   .companion-drawer .card-legend { margin: 6px 0 0; }
   .companion-drawer .card-results { margin: 4px 0 8px; }
 }
+
+/* One play workspace: decision → actions → rack → compact card reference. */
+.shared-table-page .game-table { padding-top: 12px; }
+.shared-table-page .play-workspace { margin-top: 8px; padding: 12px 16px; }
+.shared-table-page .play-workspace > .table-prompt { margin: 0; padding: 0 0 6px; border: 0; width: 100%; }
+.play-workspace .table-prompt h1 { font-size: 20px; }
+.play-workspace .table-prompt p { margin-top: 2px; font-size: 11px; }
+.shared-table-page .play-workspace .player-controls { grid-template-columns: minmax(0,1fr) auto; gap: 8px; margin: 0; }
+.shared-table-page .play-workspace .player-controls > p { margin: 0; gap: 8px; }
+.shared-table-page .play-workspace .action-group, .shared-table-page .play-workspace .cloud-actions { margin: 0; padding: 0; border: 0; justify-content: flex-end; }
+.shared-table-page .play-workspace .action-group { grid-column: auto; justify-self: end; }
+.shared-table-page .play-workspace .cloud-actions { min-height: 44px; margin-bottom: 4px; }
+.shared-table-page .play-workspace .rack, .shared-table-page .play-workspace .cloud-rack { margin-top: 4px; padding-block: 7px; }
+.play-workspace > .reorder-hint { display: block; margin: 0; font-size: 9px; text-align: right; color: #7e8273; }
+.shared-table-page .play-workspace .table-coach { margin: 6px 0 0; padding: 8px 0 0; border: 0; border-top: 1px solid #e4ddce; border-radius: 0; background: none; }
+.play-workspace .card-companion { margin: 8px 0 0; padding: 8px 0 0; border: 0; border-top: 1px solid #e4ddce; border-radius: 0; background: none; }
+.play-workspace .companion-heading { flex-wrap: wrap; justify-content: flex-start; gap: 6px 10px; }
+.play-workspace .companion-heading > div:first-child { flex: 1; min-width: 150px; }
+.play-workspace .companion-heading .kicker { display: none; }
+.play-workspace .companion-heading h3 { font-size: 17px; }
+.play-workspace .companion-actions { margin: 0; }
+.play-workspace .companion-actions > button:first-child { background: transparent; color: #244e41; }
+.play-workspace .companion-browse { background: transparent; color: #244e41; }
+.play-workspace .hand-comparison-status { padding: 4px 0 6px; gap: 8px; font-size: 11px; }
+.play-workspace .hand-comparison-status > span { display: none; }
+.play-workspace .card-companion .alignment-group { gap: 3px; padding: 0; }
+.play-workspace .card-companion .alignment-extras { margin-top: 6px; padding-top: 5px; border: 0; }
+.play-workspace .card-companion .alignment-explanation { margin-top: 3px; font-size: 10px; }
+.play-workspace .hand-comparison > .alignment-key { display: none; }
+.play-workspace .companion-options[open] { position: absolute; z-index: 15; right: 0; width: min(320px,80vw); padding: 10px; border: 1px solid #d2c6af; border-radius: 12px; background: #fcfaf4; box-shadow: 0 10px 26px #173e3420; }
+.play-workspace .companion-options[open] .alignment-key { margin-top: 8px; line-height: 1.5; }
+.play-workspace .companion-suggestions { margin-top: 6px; }
+.play-workspace .companion-intro { margin: 5px 0; font-size: 11px; }
+@media (max-width: 700px) {
+  .shared-table-page .play-workspace { margin: 6px 10px 10px; padding: 10px 12px; }
+  .shared-table-page .play-workspace .player-controls { grid-template-columns: minmax(0,1fr) auto; }
+  .shared-table-page .play-workspace .player-controls > p { display: grid; gap: 2px; font-size: 11px; }
+  .shared-table-page .play-workspace .player-controls > p span { font-size: 10px; }
+  .shared-table-page .play-workspace .action-group { flex-direction: row; flex-wrap: wrap; max-width: 230px; }
+  .shared-table-page .play-workspace .action-group button { padding-inline: 12px; font-size: 11px; }
+  .shared-table-page .play-workspace .cloud-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+  .shared-table-page .play-workspace .cloud-actions button { width: auto; min-height: 44px; font-size: 11px; }
+  .play-workspace .companion-heading > div:first-child { flex-basis: 100%; }
+  .play-workspace .companion-actions { flex: 1; }
+  .play-workspace .companion-heading button, .play-workspace .companion-options summary { font-size: 10px; padding: 7px 9px; }
+  .play-workspace .hand-alignment { gap: 6px; }
+}
+.play-workspace .cloud-actions .cloud-rack-heading { flex: 1; min-width: 100px; padding: 0; }
+.play-workspace .cloud-rack-help { display: block; margin: 0; font-size: 9px; color: #7e8273; }
+.play-workspace > .cloud-rack-order-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px; }
+.play-workspace > .cloud-rack-order-actions button { min-height: 36px; padding: 6px 10px; border: 1px solid #ddd5c5; border-radius: 8px; color: #244e41; background: transparent; font-size: 10px; }

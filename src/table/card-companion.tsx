@@ -78,6 +78,7 @@ export function CardCompanion({ cardId = 'training-card', rack, exposures, stora
   const closest = candidates.filter(candidate => candidate.viable).slice(0, 3);
   const id = useId();
   const panelRef = useRef<HTMLElement>(null);
+  const optionsRef = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     if (!open) return;
     const trigger = document.activeElement as HTMLElement | null;
@@ -86,7 +87,7 @@ export function CardCompanion({ cardId = 'training-card', rack, exposures, stora
     document.addEventListener('keydown', escape);
     return () => { document.removeEventListener('keydown', escape); if (trigger?.isConnected) trigger.focus(); };
   }, [open, onOpenChange]);
-  const pick = (handId: string) => { follow(handId); onOpenChange(false); };
+  const pick = (handId: string) => { follow(handId); onOpenChange(false); if (optionsRef.current) optionsRef.current.open = false; };
   const arrange = () => {
     if (!hand) return;
     const layout = arrangeHand([...rack, ...exposures.flatMap(exposure => exposure.tiles)], exposures, hand);
@@ -95,9 +96,9 @@ export function CardCompanion({ cardId = 'training-card', rack, exposures, stora
   };
   const suggestions = closest.length ? <div className="companion-suggestions" aria-label="Closest hands"><span>{hand ? 'Other directions' : 'Closest hands'}</span>{closest.map(candidate => <button aria-pressed={followedId === candidate.handId} key={candidate.handId} onClick={() => pick(candidate.handId)}>{candidate.name}<b>{candidate.matchingTileIds.length}/14</b></button>)}</div> : <p>No hand fits the current exposed sets.</p>;
   return <section className="card-companion" aria-label="Your card companion">
-    <div className="companion-heading"><div><p className="kicker">{hand ? 'Following this hand' : 'Find your direction'}</p><h3>{hand?.name ?? 'Your rack, meet your card.'}</h3></div><button className="companion-browse" aria-expanded={open} aria-controls={id} onClick={() => onOpenChange(!open)}>{open ? 'Close card' : hand ? 'Change hand' : 'Browse card'} ↗</button></div>
-    {hand ? <><HandComparison hand={hand} rack={rack} exposures={exposures} /><div className="companion-actions"><button onClick={arrange}>Arrange rack by this hand</button><details className="companion-options"><summary>Hand options</summary><button onClick={() => { const fit = candidates.find(candidate => candidate.name === hand.name); if (fit) follow(fit.handId); }}>Update suit / number fit</button><button onClick={() => follow(null)}>Unpin</button></details></div></> : <p className="companion-intro">Pin a pattern to see what fits and what is missing. Your rack stays yours to arrange.</p>}
-    {hand ? <details className="companion-alternatives"><summary>Compare other directions</summary>{suggestions}</details> : suggestions}
+    <div className="companion-heading"><div><p className="kicker">{hand ? 'Following this hand' : 'Find your direction'}</p><h3>{hand?.name ?? 'Your rack, meet your card.'}</h3></div>{hand ? <div className="companion-actions"><button onClick={arrange} aria-label="Arrange rack by this hand">Arrange rack</button><details className="companion-options" ref={optionsRef}><summary>Options</summary><button onClick={() => { const fit = candidates.find(candidate => candidate.name === hand.name); if (fit) follow(fit.handId); }}>Update suit / number fit</button><button onClick={() => follow(null)}>Unpin</button>{suggestions}<p className="alignment-key">Top: card pattern · Bottom: your tiles · Outline: missing · ★: Jokers allowed. Singles and pairs stay natural.</p></details></div> : null}<button className="companion-browse" aria-expanded={open} aria-controls={id} onClick={() => onOpenChange(!open)}>{open ? 'Close card' : hand ? 'Change hand' : 'Browse card'} ↗</button></div>
+    {hand ? <><HandComparison hand={hand} rack={rack} exposures={exposures} /></> : <p className="companion-intro">Pin a pattern to see what fits and what is missing. Your rack stays yours to arrange.</p>}
+    {!hand ? suggestions : null}
     {open ? <aside className="companion-drawer" id={id} ref={panelRef} tabIndex={-1} aria-label="Choose a hand to follow"><header><div><p className="kicker">Keep your rack in view</p><h2>{cardId === 'photo-2025' ? 'Your 2025 Card' : 'Training Card'}</h2><p>Tap a hand to pin its closest suit and number arrangement.</p></div><button aria-label="Close card browser" onClick={() => onOpenChange(false)}>×</button></header>{cardId === 'photo-2025' ? <ReferenceHands candidates={candidates} onFollow={pick} /> : <TrainingHands candidates={candidates} onFollow={pick} />}</aside> : null}
   </section>;
 }
