@@ -1,0 +1,28 @@
+app/games/[id]/page.tsx
+  s_35d506958491c4::t_cc0f8c01183186 250,266-271,273,275,277
+  s_35d506958491c4::t_3f1e68232cbeed 256,265,272,274
+src/table/table.css
+  s_35d506958491c4::t_5ab49b31e1cbbd 425-471
+  s_35d506958491c4::t_3f1e68232cbeed 472-475
+app/game-experience.tsx
+  s_35d506958491c4::t_cc0f8c01183186 487,491-499,549-551
+src/table/card-companion.tsx
+  s_35d506958491c4::t_3f1e68232cbeed 81,90,99
+  s_35d506958491c4::t_5ab49b31e1cbbd 100-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8f1f7d918832f135f8cb466b6a7e9ff7139b67cf",
+  "prompts": {},
+  "sessions": {
+    "s_35d506958491c4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12ad7-ec16-78c1-bbb9-b788fbf64014",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
