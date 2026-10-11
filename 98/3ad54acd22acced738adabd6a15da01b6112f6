@@ -1,0 +1,23 @@
+AGENTS.md
+  s_9b6fd03f9b2609::t_05afc9204223e6 1-8
+README.md
+  s_9b6fd03f9b2609::t_05afc9204223e6 5-8
+docs/IMPLEMENTATION_STATUS.md
+  s_9b6fd03f9b2609::t_05afc9204223e6 119-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "983ad54acd22acced738adabd6a15da01b6112f6",
+  "prompts": {},
+  "sessions": {
+    "s_9b6fd03f9b2609": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a11d33-2145-78e2-84d8-4d1c8f51bdac",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
