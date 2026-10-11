@@ -1,0 +1,24 @@
+src/table/table.css
+  s_35d506958491c4::t_a6800f69e4965b 570-588
+app/games/[id]/page.tsx
+  s_35d506958491c4::t_62049d6f1819e5 296
+  s_35d506958491c4::t_a6800f69e4965b 25-26,167-181,283
+app/game-experience.tsx
+  s_35d506958491c4::t_6fb515244af753 500
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "797592c805c2ff6342b2f3192b41fcd22b57ef06",
+  "prompts": {},
+  "sessions": {
+    "s_35d506958491c4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12ad7-ec16-78c1-bbb9-b788fbf64014",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
