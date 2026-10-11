@@ -1,7 +1,7 @@
+/* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { createTablePreview, type TablePreviewState } from '../../src/table/design-fixtures';
 import { tileLabel } from '../../src/game/tiles';
 import { DiscardPool, RackPanel, TableHeader, TablePrompt, TableSurface } from '../../src/table/table-surface';
@@ -18,7 +18,7 @@ export default function TablePreview() {
   const game = createTablePreview(state);
   const viewer = game.players[0];
   return <main className="shell game-shell shared-table-page">
-    <TableHeader brand={<Link className="brand" href="/">The Mahjong Room</Link>} context="Design preview"><Link className="table-tool-button" href="/">Back to game</Link></TableHeader>
+    <TableHeader brand={<a className="brand" href="/">The Mahjong Room</a>} context="Design preview"><a className="table-tool-button" href="/">Back to game</a></TableHeader>
     <section className="game-table" aria-label="Read-only table design preview">
       <nav className="table-preview-controls" aria-label="Preview states">
         {previews.map((preview) => <button key={preview.id} aria-pressed={preview.id === state} onClick={() => setState(preview.id)}>{preview.label}</button>)}
