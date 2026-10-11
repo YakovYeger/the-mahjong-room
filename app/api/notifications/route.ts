@@ -10,9 +10,12 @@ export async function GET() {
     await requireUser();
     const supabase = await createSupabaseServerClient();
     if (!supabase) throw new ApiError(503, 'BACKEND_NOT_CONFIGURED', 'Notifications are not configured.');
-    const { data, error } = await supabase.from('player_notifications').select('id,game_id,kind,payload,read_at,created_at').order('created_at', { ascending: false }).limit(30);
+    const { data, error } = await supabase.from('player_notifications')
+      .select('id,game_id,kind,payload,read_at,created_at,games!inner(status)')
+      .eq('games.status', 'active').order('created_at', { ascending: false }).limit(30);
     if (error) throw new ApiError(500, 'NOTIFICATIONS_UNAVAILABLE', 'Notifications could not be loaded.');
-    return noStoreJson({ notifications: data ?? [] });
+    return noStoreJson({ notifications: (data ?? []).map((row) => ({ id: row.id, game_id: row.game_id,
+      kind: row.kind, payload: row.payload, read_at: row.read_at, created_at: row.created_at })) });
   } catch (error) { return handleApiError(error); }
 }
 

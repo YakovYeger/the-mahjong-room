@@ -17,21 +17,13 @@ import { applyGameAction, createGame, getLegalJokerExchangeOptions, totalPlayerT
 import { moveTileId, normalizeTileOrder, tileLabel } from '../src/game/tiles';
 import { SortableRackItem } from '../src/game/sortable-rack-item';
 import { analyzeDiscardDeadHand, cardTileKey, getLegalCallOptions, TrainingCardProvider } from '../src/game/training-card';
-import type { GameState, HandCandidate, HandGroup, Player, Suit, Tile } from '../src/game/types';
+import type { GameState, HandCandidate, HandGroup, Player, Tile } from '../src/game/types';
+
+import { shortTile, SuitIcon, TileFace } from '../src/table/tile-face';
+import { trainingTileLabel } from '../src/table/tile-presentation';
 
 const trainingHands = TrainingCardProvider.getHands();
 const charlestonDirections = ['Right', 'Across', 'Left', 'Left', 'Across', 'Right'];
-
-function trainingTileLabel(key: string) {
-  if (key === 'flower-any') return 'F';
-  const [kind, value] = key.split('-');
-  if (kind === 'bamboo') return `${value}B`;
-  if (kind === 'characters') return `${value}C`;
-  if (kind === 'dots') return `${value}D`;
-  if (kind === 'wind') return value[0].toUpperCase();
-  if (kind === 'dragon') return value === 'red' ? 'RD' : value === 'green' ? 'GD' : 'WD';
-  return key;
-}
 
 function trainingTileClass(key: string) {
   if (key.startsWith('bamboo')) return 'bam';
@@ -43,29 +35,6 @@ function trainingTileClass(key: string) {
 
 function groupLabel(group: HandGroup) {
   return group.kind === 'single' ? 'single' : group.kind;
-}
-
-function shortTile(tile: Tile) {
-  if (tile.type.kind === 'number') return { top: String(tile.type.rank), bottom: tile.type.suit === 'bamboo' ? 'BAM' : tile.type.suit === 'characters' ? 'CRAK' : 'DOT' };
-  if (tile.type.kind === 'wind') return { top: tile.type.wind[0].toUpperCase(), bottom: 'WIND' };
-  if (tile.type.kind === 'dragon') return { top: tile.type.dragon[0].toUpperCase(), bottom: 'DRAGON' };
-  if (tile.type.kind === 'flower') return { top: 'F', bottom: 'FLOWER' };
-  return { top: '★', bottom: 'JOKER' };
-}
-
-function SuitIcon({ suit }: { suit: Suit }) {
-  if (suit === 'bamboo') return <span className="suit-icon suit-bamboo" aria-hidden="true"><i /><i /><i /></span>;
-  if (suit === 'characters') return <span className="suit-icon suit-characters" aria-hidden="true">萬</span>;
-  return <span className="suit-icon suit-dots" aria-hidden="true"><i /></span>;
-}
-
-function TileFace({ tile, compact = false }: { tile: Tile; compact?: boolean }) {
-  const label = shortTile(tile);
-  return <span className={`tile-face ${compact ? 'compact' : ''}`}>
-    <strong>{label.top}</strong>
-    {tile.type.kind === 'number' ? <SuitIcon suit={tile.type.suit} /> : <span className={`honor-icon honor-${tile.type.kind}`} aria-hidden="true">{tile.type.kind === 'wind' ? '風' : tile.type.kind === 'dragon' ? '龍' : tile.type.kind === 'flower' ? '✿' : '★'}</span>}
-    <small>{label.bottom}</small>
-  </span>;
 }
 
 function allTiles(player: Player) {

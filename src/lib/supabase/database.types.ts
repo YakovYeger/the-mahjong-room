@@ -432,6 +432,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      load_player_action_context: {
+        Args: { requested_game_id: string; requested_action_id: string; requesting_user_id: string; request_hash_value: string }
+        Returns: Json
+      }
+      get_game_action_receipt: {
+        Args: {
+          requested_game_id: string
+          requested_action_id: string
+          requesting_user_id: string
+          request_hash_value: string
+        }
+        Returns: Json
+      }
       cast_pause_vote: {
         Args: {
           requested_game_id: string
@@ -465,6 +478,28 @@ export type Database = {
         }
       }
       commit_game_action: {
+        Args: {
+          acting_player_key: string
+          acting_user_id: string
+          action_type_value: string
+          emitted_events: Json
+          expected_version: number
+          next_deadline: string
+          next_phase: string
+          next_public_state: Json
+          next_state: Json
+          next_status: Database["public"]["Enums"]["game_status"]
+          replacement_player_keys?: Json
+          request_hash_value: string
+          requested_action_id: string
+          requested_game_id: string
+          response_status_value?: number
+          response_value: Json
+          timeout_player_keys?: Json
+        }
+        Returns: Json
+      }
+      commit_player_action: {
         Args: {
           acting_player_key: string
           acting_user_id: string

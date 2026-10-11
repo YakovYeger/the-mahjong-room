@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
+
 import { useSearchParams } from 'next/navigation';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { createSupabaseBrowserClient } from '../../src/lib/supabase/client';
@@ -68,6 +70,10 @@ export default function AccountPage() {
       } else {
         await postJson('/api/auth/login', { identifier, password });
         const { data } = await supabase?.auth.getUser() ?? { data: { user: null } };
+        if (data.user && supabase) {
+          const { data: profile } = await supabase.from('profiles').select('username').eq('user_id', data.user.id).maybeSingle();
+          setProfileUsername(profile?.username ?? null);
+        }
         setUserEmail(data.user?.email ?? identifier);
         setMessage('Welcome back.');
       }

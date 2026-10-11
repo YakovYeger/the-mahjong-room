@@ -108,27 +108,7 @@ function roomDetails(record: CanonicalRecord): RoomDetails {
   };
 }
 
-export function isActionEnvelope(value: unknown): value is ActionEnvelope {
-  if (!value || typeof value !== 'object') return false;
-  const envelope = value as Record<string, unknown>;
-  if (typeof envelope.actionId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(envelope.actionId)) return false;
-  if (!Number.isInteger(envelope.expectedStateVersion) || Number(envelope.expectedStateVersion) < 1) return false;
-  if (!envelope.action || typeof envelope.action !== 'object') return false;
-  const action = envelope.action as Record<string, unknown>;
-  const stringArray = (candidate: unknown, max: number) => Array.isArray(candidate) && candidate.length <= max && candidate.every((item) => typeof item === 'string' && item.length <= 120);
-  switch (action.type) {
-    case 'PASS_TILES': return stringArray(action.tileIds, 3) && (action.blindCount === undefined || (Number.isInteger(action.blindCount) && Number(action.blindCount) >= 0 && Number(action.blindCount) <= 2));
-    case 'COURTESY_PASS': return stringArray(action.tileIds, 3);
-    case 'CHOOSE_SECOND_CHARLESTON': return typeof action.continue === 'boolean';
-    case 'DRAW_TILE':
-    case 'PASS_ON_DISCARD': return true;
-    case 'DISCARD_TILE': return typeof action.tileId === 'string' && action.tileId.length <= 120;
-    case 'CALL_TILE': return stringArray(action.rackTileIds, 5);
-    case 'EXCHANGE_JOKER': return ['exposureOwnerId', 'exposureId', 'rackTileId', 'jokerTileId'].every((key) => typeof action[key] === 'string' && String(action[key]).length <= 120);
-    case 'DECLARE_MAHJONG': return action.useDiscard === undefined || typeof action.useDiscard === 'boolean';
-    default: return false;
-  }
-}
+export { isActionEnvelope } from '../multiplayer/action-schema';
 
 export async function loadCanonicalGame(gameId: string): Promise<CanonicalRecord> {
   const { data, error } = await adminClient().rpc('load_canonical_game', { requested_game_id: gameId });
@@ -206,7 +186,7 @@ export async function endGame(gameId: string, userId: string) {
     next_state: toJson(state),
     next_public_state: toJson(getPublicGameState(state)),
     emitted_events: toJson([event]),
-    next_deadline: null,
+    next_deadline: null as unknown as string,
     next_status: 'abandoned',
     next_phase: state.phase,
     response_value: toJson(response),
@@ -332,6 +312,7 @@ export async function startRoom(gameId: string, userId: string): Promise<GameSna
       displayName: ['Mara', 'June', 'Theo', 'Sage'][index],
       joinStatus: 'joined',
       timeoutCount: 0,
+      lastActivityAt: new Date().toISOString(),
     };
   });
   const seed = randomSeed();
@@ -372,22 +353,31 @@ export async function startRoom(gameId: string, userId: string): Promise<GameSna
   return snapshotForPlayer(state, player.playerKey, 'active', record.game.mode, deadlineAt, state.events.map(sanitizePublicEvent))!;
 }
 
-export async function getSnapshot(gameId: string, userId: string) {
+export async function getTableData(gameId: string, userId: string) {
   const startedAt = Date.now();
   let record = await loadCanonicalGame(gameId);
   let player = playerForUser(record, userId);
+  if (record.game.status === 'lobby') return { room: roomDetails(record), snapshot: null, updatedAt: record.game.updated_at, stateVersion: record.game.state_version };
   if (!record.state) throw new ApiError(409, 'GAME_NOT_STARTED', 'The room is waiting for the host to start.');
+  const now = Date.now();
+  const expired = record.game.status === 'active' && (
+    (record.state.phase !== 'charleston' && record.game.deadline_at !== null && Date.parse(record.game.deadline_at) <= now)
+    || record.players.some((item) => item.controller_type === 'human' && item.join_status !== 'replaced' && now - Date.parse(item.last_activity_at) >= 120000));
+  if (expired) {
+    await submitTimeoutAction(gameId, record.game.state_version);
+    record = await loadCanonicalGame(gameId);
+    player = playerForUser(record, userId);
+  }
 
   // A replaced final human leaves no player who can trigger another decision.
   // Retire legacy all-bot tables on reconnect so they stop consuming an active slot.
   if (record.game.status === 'active' && !record.players.some((item) => item.controller_type === 'human' && item.join_status !== 'replaced')) {
-    const { data, error } = await adminClient().from('games')
+    const { error } = await adminClient().from('games')
       .update({ status: 'abandoned', deadline_at: null })
       .eq('id', gameId).eq('status', 'active').eq('state_version', record.game.state_version)
       .select('id').maybeSingle();
     if (error) throw new ApiError(503, 'GAME_RECOVERY_FAILED', 'The abandoned table could not be stopped.');
-    if (data) record = { ...record, game: { ...record.game, status: 'abandoned', deadline_at: null } };
-    else record = await loadCanonicalGame(gameId);
+    record = await loadCanonicalGame(gameId);
   }
 
   // Older timeout handling could persist the next bot's turn without advancing
@@ -430,12 +420,8 @@ export async function getSnapshot(gameId: string, userId: string) {
       continue;
     }
 
-    record = {
-      ...record,
-      game: { ...record.game, status, state_version: advanced.state.stateVersion, deadline_at: deadlineAt },
-      state: advanced.state,
-    };
-    await createTurnNotification({ ...record, game: { ...record.game, deadline_at: deadlineAt } }, advanced.state);
+    record = await loadCanonicalGame(gameId);
+    if (!(data as { duplicate?: boolean } | null)?.duplicate) await createTurnNotification(record, advanced.state);
     break;
   }
 
@@ -448,7 +434,13 @@ export async function getSnapshot(gameId: string, userId: string) {
     snapshot.privateState.pendingAction = 'wait';
   }
   void recordOperationalEvent({ eventType: 'snapshot.fetch', gameId, userId, stateVersion: record.game.state_version, durationMs: Date.now() - startedAt });
-  return snapshot;
+  return { room: roomDetails(record), snapshot, updatedAt: record.game.updated_at, stateVersion: record.game.state_version };
+}
+
+export async function getSnapshot(gameId: string, userId: string) {
+  const data = await getTableData(gameId, userId);
+  if (!data.snapshot) throw new ApiError(409, 'GAME_NOT_STARTED', 'The room is waiting for the host to start.');
+  return data.snapshot;
 }
 
 async function createTurnNotification(record: CanonicalRecord, state: GameState) {
@@ -474,8 +466,19 @@ async function createTurnNotification(record: CanonicalRecord, state: GameState)
 export async function submitAction(gameId: string, userId: string, envelope: ActionEnvelope) {
   const startedAt = Date.now();
   const admin = adminClient();
-  const record = await loadCanonicalGame(gameId);
+  const requestHash = await sha256(JSON.stringify({ gameId, userId, envelope }));
+  const { data: context, error: contextError } = await admin.rpc('load_player_action_context', {
+    requested_game_id: gameId, requested_action_id: envelope.actionId, requesting_user_id: userId, request_hash_value: requestHash,
+  });
+  if (contextError || !context) {
+    if (contextError?.message.includes('ACTION_ID_REUSED')) throw new ApiError(409, 'ACTION_ID_REUSED', 'That action ID was already used for a different request.');
+    if (contextError?.message.includes('NOT_A_PARTICIPANT')) throw new ApiError(403, 'NOT_A_PARTICIPANT', 'You are not a player at this table.');
+    if (contextError?.message.includes('GAME_NOT_FOUND')) throw new ApiError(404, 'GAME_NOT_FOUND', 'That game was not found.');
+    throw new ApiError(503, 'ACTION_CONTEXT_FAILED', 'The saved table could not be checked.');
+  }
+  const { record, receipt } = context as unknown as { record: CanonicalRecord; receipt: { response: GameSnapshot } | null };
   const player = playerForUser(record, userId);
+  if (receipt) return receipt.response;
   if (record.game.status !== 'active') throw new ApiError(409, 'GAME_NOT_ACTIVE', 'This game is not currently active.');
   if (!record.state) throw new ApiError(409, 'GAME_NOT_STARTED', 'This game has not started.');
   if (player.controller_type !== 'human') throw new ApiError(403, 'SEAT_CONTROLLED_BY_BOT', 'This seat is now controlled by a bot.');
@@ -491,8 +494,7 @@ export async function submitAction(gameId: string, userId: string, envelope: Act
   const status: GameStatus = result.state.phase === 'completed' ? 'completed' : 'active';
   const deadlineAt = deadlineForState(result.state, record.game.mode, record.game.turn_seconds, record.game.response_seconds);
   const snapshot = snapshotForPlayer(result.state, player.player_key, status, record.game.mode, deadlineAt, result.events);
-  const requestHash = await sha256(JSON.stringify({ gameId, userId, envelope }));
-  const { data, error } = await admin.rpc('commit_game_action', {
+  const { data, error } = await admin.rpc('commit_player_action', {
     requested_game_id: gameId,
     requested_action_id: envelope.actionId,
     acting_user_id: userId,
@@ -511,11 +513,20 @@ export async function submitAction(gameId: string, userId: string, envelope: Act
   });
   if (error) {
     if (error.message.includes('ACTION_ID_REUSED')) throw new ApiError(409, 'ACTION_ID_REUSED', 'That action ID was already used for a different request.');
+    const guards: Record<string, [number, string]> = {
+      GAME_NOT_ACTIVE: [409, 'The table was paused or ended. Refresh before making another move.'],
+      SEAT_CONTROLLED_BY_BOT: [403, 'This seat is now controlled by a bot.'],
+      NOT_A_PARTICIPANT: [403, 'You are not a player at this table.'],
+      GRACE_EXPIRED: [409, 'Your reconnect window has expired. The table is restoring this seat.'],
+      DEADLINE_EXPIRED: [409, 'The decision timed out. Refresh to see the next move.'],
+    };
+    const guard = Object.keys(guards).find((code) => error.message.includes(code));
+    if (guard) throw new ApiError(guards[guard][0], guard, guards[guard][1]);
     throw new ApiError(500, 'ACTION_COMMIT_FAILED', 'The action could not be saved.');
   }
-  const committed = data as unknown as { conflict?: boolean; latestVersion?: number; response?: GameSnapshot } | null;
+  const committed = data as unknown as { conflict?: boolean; latestVersion?: number; response?: GameSnapshot; duplicate?: boolean } | null;
   if (committed?.conflict) throw new ApiError(409, 'STATE_CONFLICT', `The game advanced to version ${committed.latestVersion}. Refresh the snapshot.`);
-  await createTurnNotification({ ...record, game: { ...record.game, deadline_at: deadlineAt } }, result.state);
+  if (!committed?.duplicate) await createTurnNotification({ ...record, game: { ...record.game, deadline_at: deadlineAt } }, result.state);
   void recordOperationalEvent({ eventType: 'action.accepted', gameId, userId, stateVersion: result.state.stateVersion, durationMs: Date.now() - startedAt, metadata: { actionType: envelope.action.type, botEvents: Math.max(0, result.events.length - 1) } });
   return committed?.response ?? snapshot;
 }

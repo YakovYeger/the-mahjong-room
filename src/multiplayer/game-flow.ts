@@ -24,9 +24,10 @@ export function advanceBotsUntilHumanDecision(initialState: GameState, maxSteps 
       }
       const actor = state.players[state.charlestonRound % state.players.length];
       if (actor.type === 'human') break;
+      const beforeVersion = state.stateVersion;
       const beforeSequence = state.eventSequence;
       state = runBotAction(state, actor.id);
-      if (state.eventSequence === beforeSequence) break;
+      if (state.stateVersion === beforeVersion) break;
       events.push(...state.events.filter((event) => event.sequence > beforeSequence));
       continue;
     }
@@ -34,18 +35,20 @@ export function advanceBotsUntilHumanDecision(initialState: GameState, maxSteps 
     if (state.callWindow) {
       const pending = state.players.find((player) => player.id !== state.callWindow!.discardedByPlayerId && !state.callWindow!.responses[player.id]);
       if (!pending || pending.type === 'human') break;
+      const beforeVersion = state.stateVersion;
       const beforeSequence = state.eventSequence;
       state = runBotAction(state, pending.id);
-      if (state.eventSequence === beforeSequence) break;
+      if (state.stateVersion === beforeVersion) break;
       events.push(...state.events.filter((event) => event.sequence > beforeSequence));
       continue;
     }
 
     const actor = state.players[state.turnIndex];
     if (actor.type === 'human') break;
+    const beforeVersion = state.stateVersion;
     const beforeSequence = state.eventSequence;
     state = runBotAction(state, actor.id);
-    if (state.eventSequence === beforeSequence) break;
+    if (state.stateVersion === beforeVersion) break;
     events.push(...state.events.filter((event) => event.sequence > beforeSequence));
   }
   return { state, events };

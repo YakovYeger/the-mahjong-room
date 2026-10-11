@@ -32,9 +32,25 @@ describe('multiplayer game foundation', () => {
     expect(requiredHumanPlayers(advanced.state)).toEqual(['alice']);
   });
 
+  it('advances through courtesy submissions that emit no event', () => {
+    const game = createGame({ seed: 73, players: [fourHumans[0], ...fourHumans.slice(1).map((player) => ({ ...player, type: 'bot' as const }))] });
+    game.charlestonCourtesy = true;
+    const pass = applyGameAction(game, 'alice', { type: 'COURTESY_PASS', tileIds: [] });
+    expect(pass.ok).toBe(true);
+    if (!pass.ok) return;
+    expect(pass.events).toEqual([]);
+    const advanced = advanceBotsUntilHumanDecision(pass.state);
+    expect(advanced.state.phase).toBe('playing');
+    expect(requiredHumanPlayers(advanced.state)).toEqual(['alice']);
+    expect(advanced.events.map((event) => event.type)).toContain('COURTESY_PASS_COMPLETED');
+    expect(advanced.state.players.reduce((sum, player) => sum + player.rack.length, advanced.state.wall.length)).toBe(152);
+  });
+
   it('uses response clocks and async minimums', () => {
     const game = createGame({ seed: 9, players: fourHumans });
     const now = new Date('2026-09-11T12:00:00.000Z');
+    expect(deadlineForState(game, 'live', 60, 15, now)).toBeNull();
+    game.phase = 'playing';
     expect(deadlineForState(game, 'live', 60, 15, now)).toBe('2026-09-11T12:01:00.000Z');
     expect(deadlineForState(game, 'async', 60, 15, now)).toBe('2026-09-12T12:00:00.000Z');
   });
