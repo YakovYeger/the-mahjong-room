@@ -1,0 +1,19 @@
+src/table/table.css
+  s_35d506958491c4::t_f4429cb74298ea 365
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "48d1a6133dbd4bb879a2e8219f026e00f014067b",
+  "prompts": {},
+  "sessions": {
+    "s_35d506958491c4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12ad7-ec16-78c1-bbb9-b788fbf64014",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
