@@ -393,8 +393,8 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
 .alignment-extras summary { min-height: 24px; font-size: 10px; color: #99664d; cursor: pointer; }
 .alignment-extras[open] > div { margin-top: 8px; }
 @media (max-width: 1199px) {
-  /* A shallow sheet occupies the table area; the rack can still be used beneath it. */
-  .companion-drawer { position: fixed; top: 74px; right: 12px; left: 12px; bottom: auto; width: auto; margin: 0; padding: 14px; max-height: 40svh; box-shadow: 0 12px 42px #173e342d; }
+  /* Give the hand picker the full available height, including on phones. */
+  .companion-drawer { position: fixed; top: 74px; right: 12px; left: 12px; bottom: 12px; width: auto; margin: 0; padding: 14px; max-height: none; box-shadow: 0 12px 42px #173e342d; }
 }
 .companion-options { position: relative; }
 .companion-options summary { min-height: 36px; padding: 9px 12px; border: 1px solid #cec7b6; border-radius: 8px; font-size: 11px; font-weight: 650; cursor: pointer; }
@@ -473,3 +473,11 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
 .play-workspace .cloud-rack-help { display: block; margin: 0; font-size: 9px; color: #7e8273; }
 .play-workspace > .cloud-rack-order-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px; }
 .play-workspace > .cloud-rack-order-actions button { min-height: 36px; padding: 6px 10px; border: 1px solid #ddd5c5; border-radius: 8px; color: #244e41; background: transparent; font-size: 10px; }
+
+/* Actions were moved off the green felt: use colors suited to the ivory panel. */
+.shared-table-page .play-workspace .finish-button { color: #244e41; background: #ebe6da; border-color: #b7bdac; font-weight: 700; }
+.shared-table-page .play-workspace .finish-button:hover:not(:disabled) { background: #dce8df; border-color: #53806b; }
+.shared-table-page .play-workspace .action-group button:disabled,
+.shared-table-page .play-workspace .cloud-actions button:disabled { opacity: 1; background: #e5dfd3; color: #68665e; box-shadow: none; cursor: not-allowed; }
+.companion-drawer > header { position: sticky; top: -20px; z-index: 2; padding-block: 8px; background: #fcfaf4; }
+@media (max-width: 1199px) { .companion-drawer > header { top: -14px; } }
