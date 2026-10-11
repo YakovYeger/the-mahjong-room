@@ -2,6 +2,10 @@
 
 Learn American Mahjong by playing a guided first game against three deterministic bots.
 
+## Source and deployment
+
+[GitHub](https://github.com/YakovYeger/the-mahjong-room) is the application source of truth. Use `origin/main` for integration and release history. Sites hosts deployment artifacts; its internal repository is a publishing transport, not the canonical development repository. Push reviewed, tested source to GitHub before publishing the matching build to Sites. Keep the existing Site project identity in `.openai/hosting.json`.
+
 ## Development
 
 ```bash

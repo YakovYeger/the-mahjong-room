@@ -116,3 +116,9 @@ Frontend/server application changes are included in the October 11 Sites release
 - Preserved offline rejection, bounded retries, receipt recovery, and reconnect coverage for real connectivity interruptions.
 - Release validation after removal: 115 tests across 17 files, typecheck, and lint pass. The release workflow also builds the deployment artifact.
 - Dependency audit after removal still reports 23 advisories in the retained dependency tree; removing the experiment does not resolve all existing dependency maintenance work.
+
+## Canonical repository — October 11
+
+- GitHub `YakovYeger/the-mahjong-room` is the application source of truth; Sites handles deployment.
+- Integrated existing GitHub main history with the tested version 37 source without force-pushing. The current TanStack transport, dnd-kit interactions, mobile navigation, and transactional action guards supersede older implementations of the same features.
+- Retained the migration timestamps already applied to production and omitted byte-identical copies under older GitHub filenames to avoid duplicate migrations.
