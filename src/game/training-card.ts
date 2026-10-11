@@ -211,13 +211,22 @@ export function analyzeDiscardDeadHand(exposures: Exposure[], discards: Tile[], 
   };
 }
 
-function scoreHand(tiles: Tile[], exposures: Exposure[], hand: HandDefinition): HandCandidate {
-  const usedGroups = matchExposureGroups(exposures, hand);
-  if (!usedGroups) {
-    return { handId: hand.id, name: hand.name, completionDistance: 14, matchingTileIds: [], recommendationScore: -1000, reasonCodes: ['EXPOSURE_CONFLICT'], viable: false };
-  }
+export interface HandLayoutGroup {
+  required: HandGroup;
+  slots: (Tile | null)[];
+  exposed: boolean;
+}
 
+/** Uses the same allocation as validation: lock exposures, then protect natural singles/pairs. */
+export function arrangeHand(tiles: Tile[], exposures: Exposure[], hand: HandDefinition) {
+  const usedGroups = matchExposureGroups(exposures, hand);
+  const groups: HandLayoutGroup[] = hand.groups.map(required => ({ required, slots: Array.from({ length: required.count }, () => null), exposed: false }));
+  if (!usedGroups) return { groups, extras: [...tiles], matchingTileIds: [] as string[], viable: false };
   const exposedIds = new Set(exposures.flatMap(exposure => exposure.tiles.map(tile => tile.id)));
+  exposures.forEach((exposure, index) => {
+    groups[usedGroups[index]].slots = [...exposure.tiles];
+    groups[usedGroups[index]].exposed = true;
+  });
   const naturals = new Map<string, Tile[]>();
   const jokers: Tile[] = [];
   for (const tile of tiles) {
@@ -228,26 +237,26 @@ function scoreHand(tiles: Tile[], exposures: Exposure[], hand: HandDefinition): 
       naturals.set(key, [...(naturals.get(key) ?? []), tile]);
     }
   }
-
-  const matchingTileIds: string[] = [...exposedIds];
   let jokerIndex = 0;
-  for (const required of hand.groups.filter((_, index) => !usedGroups.includes(index)).sort((a, b) => Number(a.jokerAllowed) - Number(b.jokerAllowed))) {
-    const available = naturals.get(required.tileKey) ?? [];
-    const matches = available.splice(0, required.count);
-    matchingTileIds.push(...matches.map((tile) => tile.id));
-    let remaining = required.count - matches.length;
-    while (remaining > 0 && required.jokerAllowed && jokerIndex < jokers.length) {
-      matchingTileIds.push(jokers[jokerIndex].id);
-      jokerIndex += 1;
-      remaining -= 1;
+  for (const target of groups.filter(g => !g.exposed).sort((a, b) => Number(a.required.jokerAllowed) - Number(b.required.jokerAllowed))) {
+    const available = naturals.get(target.required.tileKey) ?? [];
+    for (let index = 0; index < target.required.count; index += 1) {
+      target.slots[index] = available.shift() ?? (target.required.jokerAllowed ? jokers[jokerIndex++] ?? null : null);
     }
   }
+  const matchingTileIds = groups.flatMap(g => g.slots.flatMap(tile => tile ? [tile.id] : []));
+  const matched = new Set(matchingTileIds);
+  return { groups, extras: tiles.filter(tile => !matched.has(tile.id)), matchingTileIds, viable: true };
+}
 
-  const completionDistance = Math.max(0, 14 - matchingTileIds.length);
+function scoreHand(tiles: Tile[], exposures: Exposure[], hand: HandDefinition): HandCandidate {
+  const layout = arrangeHand(tiles, exposures, hand);
+  if (!layout.viable) return { handId: hand.id, name: hand.name, completionDistance: 14, matchingTileIds: [], recommendationScore: -1000, reasonCodes: ['EXPOSURE_CONFLICT'], viable: false };
+  const completionDistance = Math.max(0, 14 - layout.matchingTileIds.length);
   return {
-    handId: hand.id, name: hand.name, completionDistance, matchingTileIds,
-    recommendationScore: matchingTileIds.length * 10 - completionDistance + (hand.exposure === 'concealed' ? 1 : 0),
-    reasonCodes: matchingTileIds.length >= 6 ? ['STRONG_EXISTING_SHAPE'] : ['FLEXIBLE_START'], viable: true,
+    handId: hand.id, name: hand.name, completionDistance, matchingTileIds: layout.matchingTileIds,
+    recommendationScore: layout.matchingTileIds.length * 10 - completionDistance + (hand.exposure === 'concealed' ? 1 : 0),
+    reasonCodes: layout.matchingTileIds.length >= 6 ? ['STRONG_EXISTING_SHAPE'] : ['FLEXIBLE_START'], viable: true,
   };
 }
 

@@ -316,3 +316,109 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
   .reference-patterns > div { gap: 2px 5px; }
   .reference-patterns p { font-size: 6.5px; line-height: 1.25; margin-top: 2px; }
 }
+
+/* A card pattern stays beside the player's rack rather than beneath the whole table. */
+.card-companion { margin: 0 0 12px; padding: 16px; border: 1px solid #d5cdbb; border-radius: 16px; background: #fcfaf4; color: #244e41; }
+.companion-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.companion-heading .kicker, .final-check-heading .kicker { margin: 0 0 4px; font-size: 9px; letter-spacing: .13em; }
+.companion-heading h3, .final-check-heading h3 { margin: 0; font-family: Georgia,serif; font-size: 20px; font-weight: 500; }
+.card-companion button, .final-hand-check button, .companion-drawer button { min-height: 36px; border: 1px solid #cec7b6; border-radius: 8px; padding: 8px 12px; background: #f5f1e6; color: #244e41; font-size: 11px; font-weight: 650; cursor: pointer; }
+.card-companion button:hover, .final-hand-check button:hover { background: #e9eee5; border-color: #7e9d83; }
+.card-companion button:focus-visible, .final-hand-check button:focus-visible, .companion-drawer button:focus-visible { outline: 3px solid #d8876b; outline-offset: 3px; }
+.card-companion .companion-browse { flex-shrink: 0; background: #244e41; color: #fcfaf4; }
+.companion-intro { margin: 8px 0 0; font-size: 12px; line-height: 1.5; }
+.hand-comparison-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 0; font-size: 12px; }
+.hand-comparison-status span { color: #746f61; font-size: 10px; }
+.hand-valid .hand-comparison-status strong { color: #23754e; }
+.hand-alignment { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+.alignment-group { display: flex; flex-direction: column; gap: 5px; padding-bottom: 4px; }
+.alignment-pattern, .alignment-actual { display: flex; gap: 3px; }
+.comparison-tile { display: grid; place-items: center; flex: 0 0 29px; width: 29px; height: 40px; border: 1px solid #cfc5ac; border-radius: 4px; background: #fffdf4; box-shadow: 0 2px 0 #dfd6be; overflow: hidden; }
+.comparison-tile .tile-face { width: 100%; height: 100%; }
+.pattern-tile { background: #f0ebdf; box-shadow: none; opacity: .76; }
+.matched-tile { border-color: #839b78; background: #fffdf4; }
+.missing-tile { border: 1px dashed #b49e85; background: #efe9dd; color: #a58f73; box-shadow: none; font-size: 24px; }
+.alignment-group > small { font-size: 9px; color: #756f60; text-transform: capitalize; }
+.alignment-exposed .alignment-actual { border-bottom: 2px solid #c88569; padding-bottom: 4px; }
+.alignment-exposed > small { color: #905e47; }
+.alignment-extras { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e5dac7; }
+.alignment-extras > small { font-size: 10px; color: #99664d; }
+.alignment-extras > div { display: flex; flex-wrap: wrap; gap: 4px; }
+.alignment-explanation { margin: 10px 0 0; font-size: 11px; line-height: 1.6; color: #835941; }
+.alignment-key { margin: 8px 0 0; font-size: 9px; color: #827b69; }
+.companion-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+.companion-actions button:first-child { background: #244e41; color: #fffdf4; }
+.companion-suggestions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.companion-suggestions > span { font-size: 10px; margin-right: 4px; color: #746f61; }
+.companion-suggestions button { display: flex; align-items: center; gap: 10px; }
+.companion-suggestions b { font-size: 10px; color: #796d53; }
+.companion-suggestions button[aria-pressed="true"] { border-color: #53806b; background: #e5ecdf; }
+.companion-drawer { position: fixed; z-index: 30; top: 76px; right: 16px; bottom: 16px; width: 420px; padding: 20px; border: 1px solid #d2c6af; border-radius: 20px; background: #fcfaf4; box-shadow: 0 16px 64px #173e342d; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.companion-drawer > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.companion-drawer h2 { margin: 4px 0; font-family: Georgia,serif; font-weight: 500; font-size: 27px; }
+.companion-drawer > header p:not(.kicker) { font-size: 11px; line-height: 1.5; }
+.companion-drawer > header button { font-size: 24px; padding: 0 10px; }
+.companion-drawer .reference-sections { columns: 1; }
+.companion-drawer .reference-hand { flex-wrap: wrap; }
+.companion-drawer .reference-patterns { flex: 1; min-width: 240px; }
+.companion-drawer .follow-hand-button { margin-top: 8px; width: 100%; border-color: #8ba18d; }
+.companion-drawer .training-hand-list { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.companion-drawer .training-hand-list article { padding: 14px; background: #f2eee4; border-radius: 12px; }
+.companion-drawer .training-hand-list h3 { font-size: 17px; }
+.companion-drawer .card-key { line-height: 1.8; }
+.final-hand-check { margin-top: 12px; padding: 14px; border: 1px solid #d7cdbb; border-radius: 14px; background: #fcfaf4; color: #244e41; min-width: 0; }
+.final-check-heading > p:not(.kicker) { font-size: 11px; line-height: 1.5; margin-bottom: 2px; }
+.table-reveal .reveal-grid, .cloud-game-review .review-racks { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.table-reveal .reveal-grid > article, .cloud-game-review .review-racks > article { min-width: 0; }
+@media (min-width: 1200px) {
+  .shared-table-page.card-is-open { padding-right: 452px; }
+  .shared-table-page.card-is-open > header { padding-right: 24px; }
+}
+@media (max-width: 640px) {
+  .card-companion { padding: 12px; margin-bottom: 8px; }
+  .companion-heading h3 { font-size: 17px; }
+  .companion-heading .companion-browse { min-height: 40px; font-size: 10px; padding: 8px; }
+  .card-companion button, .final-hand-check button, .companion-drawer button { min-height: 40px; }
+  .hand-alignment { gap: 9px; }
+  .comparison-tile { width: 25px; flex-basis: 25px; height: 35px; }
+  .alignment-pattern, .alignment-actual { gap: 2px; }
+  .companion-actions button { font-size: 10px; }
+  .companion-suggestions { gap: 5px; }
+  .companion-suggestions > span { width: 100%; }
+  .companion-suggestions button { font-size: 10px; padding: 7px; }
+  .table-reveal .reveal-grid, .cloud-game-review .review-racks { grid-template-columns: 1fr; }
+  .final-hand-check { padding: 12px; }
+}
+.alignment-extras { display: block; }
+.alignment-extras summary { min-height: 24px; font-size: 10px; color: #99664d; cursor: pointer; }
+.alignment-extras[open] > div { margin-top: 8px; }
+@media (max-width: 1199px) {
+  /* A shallow sheet occupies the table area; the rack can still be used beneath it. */
+  .companion-drawer { position: fixed; top: 74px; right: 12px; left: 12px; bottom: auto; width: auto; margin: 0; padding: 14px; max-height: 40svh; box-shadow: 0 12px 42px #173e342d; }
+}
+.companion-options { position: relative; }
+.companion-options summary { min-height: 36px; padding: 9px 12px; border: 1px solid #cec7b6; border-radius: 8px; font-size: 11px; font-weight: 650; cursor: pointer; }
+.companion-options[open] { display: flex; flex-wrap: wrap; gap: 6px; }
+.companion-options[open] button { margin: 6px 4px 0 0; }
+.companion-alternatives { margin-top: 12px; }
+.companion-alternatives > summary { font-size: 11px; min-height: 24px; cursor: pointer; color: #756f60; }
+@media (max-width: 640px) {
+  .companion-options summary { min-height: 40px; }
+  .companion-actions { align-items: start; }
+}
+.companion-drawer .follow-hand-button { grid-column: 1 / -1; }
+.card-legend { margin: 10px 0; font-size: 10px; color: #687363; }
+.card-legend summary { min-height: 24px; cursor: pointer; }
+@media (max-width: 700px) {
+  .companion-drawer > header { margin-bottom: 8px; }
+  .companion-drawer > header .kicker { font-size: 8px; margin: 0; }
+  .companion-drawer > header h2 { font-size: 22px; }
+  .companion-drawer > header p:not(.kicker) { font-size: 10px; margin: 4px 0; }
+  .companion-drawer .card-browser-controls { gap: 8px; padding: 8px; }
+  .companion-drawer .card-browser-controls label:first-child { flex-basis: 0; }
+  .companion-drawer .card-browser-controls label span { font-size: 8px; }
+  .companion-drawer .card-browser-controls input, .companion-drawer .card-browser-controls select { font-size: 11px; padding: 6px; min-height: 38px; }
+  .companion-drawer .card-print-link { width: 100%; padding: 0; min-height: 20px; font-size: 10px; background: none; color: #244e41; }
+  .companion-drawer .card-legend { margin: 6px 0 0; }
+  .companion-drawer .card-results { margin: 4px 0 8px; }
+}

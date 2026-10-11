@@ -1,6 +1,6 @@
 'use client';
 import { getCardProvider, type CardId } from '../src/game/cards';
-import { ReferenceHands } from '../src/table/reference-hands';
+import { CardCompanion, HandCheck } from '../src/table/card-companion';
 
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
 
@@ -19,10 +19,9 @@ import { applyGameAction, createGame, getLegalJokerExchangeOptions, totalPlayerT
 import { moveTileId, normalizeTileOrder, tileLabel } from '../src/game/tiles';
 import { SortableRackItem } from '../src/game/sortable-rack-item';
 import { analyzeDiscardDeadHand, cardTileKey, getLegalCallOptions } from '../src/game/training-card';
-import type { GameState, HandCandidate, Player } from '../src/game/types';
+import type { GameState, Player } from '../src/game/types';
 
 import { TileFace } from '../src/table/tile-face';
-import { TrainingHands } from '../src/table/training-hands';
 import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../src/table/table-surface';
 
 
@@ -161,30 +160,16 @@ function DealingScreen({ gameNumber, resuming }: { gameNumber: number; resuming:
   );
 }
 
-function TrainingCardPanel({ candidates, onClose, cardId }: { candidates: HandCandidate[]; onClose: () => void; cardId?: CardId }) {
-  return (
-    <motion.aside className={`training-card-panel player-card-position ${cardId === 'photo-2025' ? 'photo-card-panel' : ''}`} id="training-card" aria-label={cardId === 'photo-2025' ? 'Your 2025 Card' : 'Training Card'} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="training-card-heading"><div><p className="kicker">{cardId === 'photo-2025' ? 'Your collection · 2025' : 'Original · Player reference'}</p><h2>{cardId === 'photo-2025' ? 'Your 2025 Card' : 'Training Card'}</h2><small>{cardId === 'photo-2025' ? '55 hands · your photographed card' : 'Ten rules-aware teaching hands'} · <a href="/cards" target="_blank" rel="noreferrer">Open full card ↗</a></small></div><button aria-label="Hide game card" onClick={onClose}>×</button></div>
-      {cardId === 'photo-2025' ? <ReferenceHands candidates={candidates} /> : <TrainingHands candidates={candidates} />}
-    </motion.aside>
-  );
-}
-
 export function TableReveal({ game }: { game: GameState }) {
   return (
     <section className="table-reveal" aria-labelledby="table-reveal-title">
-      <header><div><p className="kicker">Everyone turns their rack</p><h2 id="table-reveal-title">The table at Mahjong</h2></div><p>Compare each direction and see how close every player was.</p></header>
+      <header><div><p className="kicker">Everyone turns their rack</p><h2 id="table-reveal-title">{game.winnerId ? 'The table at Mahjong' : 'The final hands'}</h2></div><p>Compare each direction and see how close every player was.</p></header>
       <div className="reveal-grid">{game.players.map((player) => {
         const tiles = allTiles(player);
         const winner = player.id === game.winnerId;
-        const best = getCardProvider(game.cardId).analyzeCandidates(tiles, player.exposures).find((candidate) => candidate.viable);
-        const winningHandId = winner ? getCardProvider(game.cardId).validateMahjong(tiles, player.exposures).handId : undefined;
-        const winningHand = getCardProvider(game.cardId).getHands().find((hand) => hand.id === winningHandId);
         return <article className={winner ? 'winner' : ''} key={player.id}>
           <div className="reveal-player"><div><strong>{player.name}</strong><small>{player.seat} seat · {tiles.length} tiles</small></div>{winner ? <b>Mahjong</b> : null}</div>
-          <div className="revealed-rack" aria-label={`${player.name}'s concealed tiles`}>{player.rack.map((tile) => <span className="revealed-tile" title={tileLabel(tile)} key={tile.id}><TileFace tile={tile} compact /></span>)}</div>
-          {player.exposures.length ? <div className="revealed-exposures">{player.exposures.map((exposure) => <div key={exposure.id}><small>{exposure.kind}</small>{exposure.tiles.map((tile) => <span className="revealed-tile exposed" title={tileLabel(tile)} key={tile.id}><TileFace tile={tile} compact /></span>)}</div>)}</div> : null}
-          <p>{winner ? `Completed ${winningHand?.name ?? 'a Training Card hand'}.` : best ? `${best.matchingTileIds.length} of 14 tiles supported ${best.name}.` : 'No exposure-compatible line remained.'}</p>
+          <HandCheck cardId={game.cardId} rack={player.rack} exposures={player.exposures} storageKey={`${game.id}:${player.id}`} />
         </article>;
       })}</div>
     </section>
@@ -204,7 +189,6 @@ export function GameExperience() {
   const [manualTurns, setManualTurns] = useState(0);
   const [hintsRequested, setHintsRequested] = useState(0);
   const [cardOpen, setCardOpen] = useState(false);
-  useEffect(() => { if (cardOpen) { const frame = requestAnimationFrame(() => document.getElementById('training-card')?.scrollIntoView({block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'})); return () => cancelAnimationFrame(frame); } }, [cardOpen]);
   const [rackOrder, setRackOrder] = useState(() => game.players[0].rack.map((tile) => tile.id));
   const [draggingTileId, setDraggingTileId] = useState<string | null>(null);
   const suppressTileClickRef = useRef(false);
@@ -475,7 +459,7 @@ export function GameExperience() {
       <main className="review-page">
         <header><span className="brand">The Mahjong Room</span><span>Game review</span></header>
         <section className="review-hero"><p className="kicker">Game {gameNumber} complete</p><h1>{game.winnerId === 'human' ? 'Mahjong—beautifully played.' : game.winnerId ? `${game.players.find((player) => player.id === game.winnerId)?.name} called Mahjong.` : 'The wall is complete.'}</h1><p>{gameReview.summary}</p></section>
-        {game.winnerId ? <TableReveal game={game} /> : null}
+        <TableReveal game={game} />
         <section className="review-grid">
           {gameReview.cards.map((card) => <article key={card.id}><span className={`review-icon ${card.tone === 'strong' ? '' : 'coral'}`}>{card.tone === 'strong' ? '✓' : '↗'}</span><p className="kicker">{card.eyebrow}</p><h2>{card.title}</h2><p>{card.body}</p></article>)}
           <article className="skill-card"><p className="kicker">Skills practiced</p>{gameReview.skills.map(({ name, score }) => <div className="skill" key={name}><span>{name}</span><i><b style={{ width: `${score}%` }} /></i></div>)}</article>
@@ -493,7 +477,7 @@ export function GameExperience() {
   return (
     <main className={`shell game-shell shared-table-page ${cardOpen ? 'card-is-open' : ''}`}>
       <TableHeader brand={<button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={`Practice · Game ${gameNumber}`}>
-        <button className="table-tool-button" aria-label={`${cardOpen ? 'Hide' : 'Show'} ${game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}`} aria-expanded={cardOpen} aria-controls="training-card" onClick={() => setCardOpen((open) => !open)}>{game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button>
+        <button className="table-tool-button" aria-label={`${cardOpen ? 'Hide' : 'Show'} ${game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}`} aria-expanded={cardOpen} onClick={() => setCardOpen((open) => !open)}>{game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button>
         <details className="table-menu"><summary>Table</summary><div><span>Saved on this device</span><a href="/account">Save progress</a><button onClick={() => setStarted(false)}>Leave table</button></div></details>
       </TableHeader>
       <section className="game-table" aria-label="Guided American Mahjong table">
@@ -505,6 +489,7 @@ export function GameExperience() {
         </TablePrompt>
         <details className="table-coach"><summary>Coach · {coachRecommendation.headline}</summary><div><p>{coachHint}</p><div className="candidate-list">{candidates.map((candidate, index) => <div key={candidate.handId}><span>{index === 0 ? 'Best match' : 'Alternative'}</span><strong>{candidate.name}</strong><small>{candidate.matchingTileIds.length} / 14 useful</small></div>)}</div><button onClick={requestHint}>{hintLevel < 2 ? 'Show me what to notice' : 'Why these tiles?'}</button></div></details>
         <RackPanel className="player-area">
+          <CardCompanion key={game.id} cardId={game.cardId} rack={human.rack} exposures={human.exposures} storageKey={`${game.id}:${human.id}`} candidates={coachContext.candidates} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); setNotice('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
           <MotionConfig reducedMotion="user" transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.7 }}>
             <DragDropProvider
               sensors={(defaults) => [
@@ -565,7 +550,6 @@ export function GameExperience() {
           </div>
         </RackPanel>
       </section>
-      {cardOpen ? <TrainingCardPanel cardId={game.cardId} candidates={coachContext.candidates} onClose={() => setCardOpen(false)} /> : null}
     </main>
   );
 }

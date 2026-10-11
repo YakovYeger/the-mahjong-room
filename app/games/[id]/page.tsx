@@ -20,8 +20,7 @@ import { EndGameDialog } from '../../../src/table/end-game-dialog';
 import { compactTile } from '../../../src/table/tile-presentation';
 import { TileFace } from '../../../src/table/tile-face';
 import { getCardProvider } from '../../../src/game/cards';
-import { ReferenceHands } from '../../../src/table/reference-hands';
-import { TrainingHands } from '../../../src/table/training-hands';
+import { CardCompanion, HandCheck } from '../../../src/table/card-companion';
 import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../../../src/table/table-surface';
 
 
@@ -43,6 +42,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
   const busy = cloud.busy;
   const online = cloud.online;
   const previousSnapshot = useRef<GameSnapshot | null>(null);
+  const [cardOpen, setCardOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [rackOrder, setRackOrder] = useState<string[]>([]);
   const [discardDropActive, setDiscardDropActive] = useState(false);
@@ -176,8 +176,9 @@ function CloudGameTable({ gameId }: { gameId: string }) {
   };
 
   return (
-    <main className="cloud-game-page shared-table-page">
+    <main className={`cloud-game-page shared-table-page ${cardOpen && !isTerminal ? 'card-is-open' : ''}`}>
       <TableHeader brand={<a className="brand" href="/">The Mahjong Room</a>} context={snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}>
+        {!isTerminal ? <button className="table-tool-button" aria-expanded={cardOpen} onClick={() => setCardOpen(open => !open)}>{snapshot.publicState.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button> : null}
         <details className="table-menu"><summary>Table</summary><div><span>{online} online</span>{isHost && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button onClick={() => setEndDialogOpen(true)} disabled={busy}>End game</button> : null}<button onClick={requestLeaveTable}>Leave table</button></div></details>
       </TableHeader>
       {endDialogOpen ? <EndGameDialog busy={busy} onCancel={() => setEndDialogOpen(false)} onConfirm={() => void endGameForEveryone()} /> : null}
@@ -197,7 +198,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
       {isTerminal ? <section className="cloud-game-review" id="game-review" aria-labelledby="cloud-review-title">
         <div className="cloud-review-heading"><div><p className="kicker">Final table</p><h2 id="cloud-review-title">Game review</h2></div><p>{terminalOutcome}</p></div>
         {winningLine ? <article className="winning-line-card"><p className="kicker">Winning line · Selected game card</p><h3>{winningLine.name}</h3><p>{winningLine.section} · {winningLine.exposure === 'concealed' ? 'Concealed' : 'Exposed'}</p><small>{winningLine.description}</small></article> : winner ? <p className="review-note">The winner was confirmed by the game rules. A matching Training Card line was not included in this saved result.</p> : null}
-        <div className="review-racks">{finalRacks.map(({ player, tiles }) => <article key={player.id} className={player.id === winner?.id ? 'review-winner' : ''}><div><strong>{player.name}{player.id === winner?.id ? ' · Winner' : ''}</strong><small>{tiles ? `${tiles.length} tiles in final rack` : 'Concealed rack'}</small></div>{tiles ? <div className="review-tile-row">{tiles.map((tile) => <span key={tile.id} title={tileLabel(tile)}>{compactTile(tile)}</span>)}</div> : <p className="review-note">This rack remains concealed because the table ended before the hand was completed.</p>}{player.exposures.length ? <div className="review-exposures"><strong>Exposures</strong>{player.exposures.map((exposure) => <p key={exposure.id}>{exposure.kind}: {exposure.tiles.map(compactTile).join(' ')}</p>)}</div> : null}</article>)}</div>
+        <div className="review-racks">{finalRacks.map(({ player, tiles }) => <article key={player.id} className={player.id === winner?.id ? 'review-winner' : ''}><div><strong>{player.name}{player.id === winner?.id ? ' · Winner' : ''}</strong><small>{tiles ? `${tiles.length + player.exposures.reduce((count, exposure) => count + exposure.tiles.length, 0)} final tiles` : 'Concealed rack'}</small></div>{tiles ? <HandCheck cardId={snapshot.publicState.cardId} rack={tiles} exposures={player.exposures} storageKey={`${gameId}:${player.id}`} /> : <p className="review-note">This rack remains concealed because the table ended before the hand was completed.</p>}</article>)}</div>
         <article className="review-discard-record"><div><strong>Discarded tiles</strong><small>{snapshot.publicState.discards.length} total</small></div>{snapshot.publicState.discards.length ? <div className="review-tile-row">{snapshot.publicState.discards.map((tile) => <span key={tile.id} title={tileLabel(tile)}>{compactTile(tile)}</span>)}</div> : <p className="review-note">No tiles were discarded.</p>}</article>
         <div className="review-next-actions"><a href="/games">Return to My Games</a><a className="primary" href="/games">Start another game</a></div>
       </section> : null}
@@ -250,7 +251,9 @@ function CloudGameTable({ gameId }: { gameId: string }) {
         {!isTerminal ? <TurnClock deadlineAt={snapshot.deadlineAt} charleston={snapshot.publicState.phase === 'charleston'} /> : null}
         {snapshot.mode === 'live' && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button disabled={busy} onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}
       </TablePrompt>
-      <RackPanel className="cloud-rack-section"><div className="cloud-rack-heading"><strong>Your rack</strong><span>{isTerminal ? 'Final rack' : selected.length ? `${selected.length} selected` : 'Select tiles to act'}</span></div><small className="cloud-rack-help" id="cloud-rack-help">Drag to arrange · Alt + arrow keys. Hold a tile to drag on touch.</small><div className="cloud-rack" role="group" aria-label="Your rack">{orderedRack.map((tile, index) => {
+      <RackPanel className="cloud-rack-section">
+        {!isTerminal ? <CardCompanion cardId={snapshot.publicState.cardId} rack={snapshot.privateState.rack} exposures={snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? []} storageKey={`${gameId}:${snapshot.privateState.playerId}`} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory order still works. */ } setMessage('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} /> : null}
+        <div className="cloud-rack-heading"><strong>Your rack</strong><span>{isTerminal ? 'Final rack' : selected.length ? `${selected.length} selected` : 'Select tiles to act'}</span></div><small className="cloud-rack-help" id="cloud-rack-help">Drag to arrange · Alt + arrow keys. Hold a tile to drag on touch.</small><div className="cloud-rack" role="group" aria-label="Your rack">{orderedRack.map((tile, index) => {
           return <SortableRackItem id={tile.id} index={index} disabled={busy || isTerminal} className="cloud-tile-slot" key={tile.id}>
             {({ isDragging, handleRef }) => <>
               <button ref={handleRef} data-drag-handle className={`cloud-tile ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''}`} disabled={busy || isTerminal} aria-describedby="cloud-rack-help" aria-pressed={selected.includes(tile.id)} aria-label={`${tileLabel(tile)}. Hold and drag to reorder.`} title={tileLabel(tile)} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); moveTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); moveTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; toggle(tile.id); }}><TileFace tile={tile} /></button>
@@ -269,7 +272,6 @@ function CloudGameTable({ gameId }: { gameId: string }) {
           {pending === 'wait' ? <span>Waiting for the next move.</span> : null}
         </div>
         {message ? <p className="cloud-message" role="status" aria-live="polite">{cloud.uncertain ? 'Reconnecting to confirm your saved move…' : cloud.error?.message ?? message}</p> : null}
-        <details className="table-training-card"><summary>{snapshot.publicState.cardId === 'photo-2025' ? 'Your 2025 Card · 55 hands' : 'Training Card · 10 original hands'}</summary>{snapshot.publicState.cardId === 'photo-2025' ? <ReferenceHands /> : <TrainingHands />}</details>
       </RackPanel>
       </DragDropProvider>
     </main>
