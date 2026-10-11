@@ -108,7 +108,7 @@ export default function GamesPage() {
 
   return (
     <main className="games-page">
-      <header><a className="brand" href="/">The Mahjong Room</a><nav><a href="/account">Account</a><a href="/">Guest table</a></nav></header>
+      <header><a className="brand" href="/">The Mahjong Room</a><nav><a href="/learn">How to play</a><a href="/rules">Rules</a><a href="/account">Account</a><a href="/">Guest table</a></nav></header>
       <section className="games-hero"><div><p className="kicker">Private tables</p><h1>Your games</h1><p>Every accepted move autosaves. Rejoin on any device and continue from the canonical server snapshot.</p></div><div className="tier-chip"><strong>{entitlement.name}</strong><span>{entitlement.activeGameLimit} active cloud game{entitlement.activeGameLimit === 1 ? '' : 's'}</span></div></section>
       <section className="games-layout">
         <div className="games-list-panel">{notifications.some((item) => !item.read_at) ? <div className="turn-inbox"><div className="section-heading"><h2>Your turn</h2><span>{notifications.filter((item) => !item.read_at).length}</span></div>{notifications.filter((item) => !item.read_at).slice(0, 3).map((item) => <button onClick={() => void openNotification(item)} key={item.id}><strong>A table is waiting</strong><small>{new Date(item.created_at).toLocaleString()}</small><span>Play now →</span></button>)}</div> : null}<div className="section-heading"><h2>Active and recent</h2><button onClick={() => void loadGames()}>Refresh</button></div>

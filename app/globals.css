@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '../src/learn/guide.css';
 
 :root { --ink: #173630; --cream: #f5f0e5; --paper: #fffdf7; --coral: #db684f; --felt: #285f51; --gold: #f0c86a; }
 * { box-sizing: border-box; }
