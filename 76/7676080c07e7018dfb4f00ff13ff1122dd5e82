@@ -1,0 +1,23 @@
+app/table-preview/table-preview.tsx
+  s_35d506958491c4::t_87f231cd9e0394 1,21
+AGENTS.md
+  s_35d506958491c4::t_87f231cd9e0394 9-14
+app/cards/page.tsx
+  s_35d506958491c4::t_87f231cd9e0394 1,4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "767676080c07e7018dfb4f00ff13ff1122dd5e82",
+  "prompts": {},
+  "sessions": {
+    "s_35d506958491c4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12ad7-ec16-78c1-bbb9-b788fbf64014",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
