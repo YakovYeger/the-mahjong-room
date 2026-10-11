@@ -17,25 +17,14 @@ import { applyGameAction, createGame, getLegalJokerExchangeOptions, totalPlayerT
 import { moveTileId, normalizeTileOrder, tileLabel } from '../src/game/tiles';
 import { SortableRackItem } from '../src/game/sortable-rack-item';
 import { analyzeDiscardDeadHand, cardTileKey, getLegalCallOptions, TrainingCardProvider } from '../src/game/training-card';
-import type { GameState, HandCandidate, HandGroup, Player, Tile } from '../src/game/types';
+import type { GameState, HandCandidate, Player } from '../src/game/types';
 
-import { shortTile, SuitIcon, TileFace } from '../src/table/tile-face';
-import { trainingTileLabel } from '../src/table/tile-presentation';
+import { shortTile, TileFace } from '../src/table/tile-face';
+import { TrainingHands } from '../src/table/training-hands';
+import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../src/table/table-surface';
 
 const trainingHands = TrainingCardProvider.getHands();
 const charlestonDirections = ['Right', 'Across', 'Left', 'Left', 'Across', 'Right'];
-
-function trainingTileClass(key: string) {
-  if (key.startsWith('bamboo')) return 'bam';
-  if (key.startsWith('characters')) return 'crak';
-  if (key.startsWith('dots')) return 'dot';
-  if (key.startsWith('dragon')) return 'dragon';
-  return 'honor';
-}
-
-function groupLabel(group: HandGroup) {
-  return group.kind === 'single' ? 'single' : group.kind;
-}
 
 function allTiles(player: Player) {
   return [...player.rack, ...player.exposures.flatMap((exposure) => exposure.tiles)];
@@ -174,31 +163,8 @@ function TrainingCardPanel({ candidates, onClose }: { candidates: HandCandidate[
   return (
     <motion.aside className="training-card-panel player-card-position" id="training-card" aria-label="Training Card" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
       <div className="training-card-heading"><div><p className="kicker">Original · Player reference</p><h2>Training Card</h2><small>Swipe or scroll through ten rules-aware teaching hands.</small></div><button aria-label="Hide Training Card" onClick={onClose}>×</button></div>
-      <div className="training-hand-list">{trainingHands.map((hand) => {
-        const candidate = candidates.find((item) => item.handId === hand.id);
-        const rank = candidates.filter((item) => item.viable).findIndex((item) => item.handId === hand.id);
-        return <article className={rank === 0 ? 'leading' : candidate?.viable === false ? 'unavailable' : ''} key={hand.id}>
-          <div className="hand-meta"><span>{hand.section}</span><b>{hand.exposure === 'concealed' ? 'C' : 'X'}</b></div>
-          <div className="hand-title"><h3>{hand.name}</h3><small>{candidate?.viable ? `${candidate.matchingTileIds.length}/14` : 'Blocked'}</small></div>
-          <p>{hand.description}</p>
-          <div className="card-groups">{hand.groups.map((required) => <div className="card-group" aria-label={`${required.count} ${required.tileKey}, ${groupLabel(required)}`} key={required.id}>{Array.from({ length: required.count }, (_, index) => <span className={`mini-tile ${trainingTileClass(required.tileKey)}`} key={index}>{trainingTileLabel(required.tileKey)}</span>)}{required.jokerAllowed ? <i title="Jokers allowed">★</i> : null}</div>)}</div>
-          <small className="teaching-point">{hand.teachingPoint}</small>
-        </article>;
-      })}</div>
-      <footer><span><b>C</b> Concealed</span><span><b>X</b> Exposed</span><span><b>★</b> Jokers allowed</span></footer>
+      <TrainingHands candidates={candidates} />
     </motion.aside>
-  );
-}
-
-function ExposureTray({ players }: { players: Player[] }) {
-  const exposedPlayers = players.filter((player) => player.exposures.length > 0);
-  return (
-    <div className={`exposure-row ${exposedPlayers.length === 0 ? 'empty' : ''}`} aria-label="Called tile groups">
-      {exposedPlayers.map((player) => <section className="exposure-player" key={player.id}>
-        <header><strong>{player.id === 'human' ? 'Your calls' : `${player.name}’s calls`}</strong><span>{player.exposures.length} set{player.exposures.length === 1 ? '' : 's'}</span></header>
-        <div className="exposure-groups">{player.exposures.map((exposure) => <div className="called-set" key={exposure.id}><small>{exposure.kind}</small>{exposure.tiles.map((tile) => <span className="exposure-tile" title={tileLabel(tile)} key={tile.id}><TileFace tile={tile} compact /></span>)}</div>)}</div>
-      </section>)}
-    </div>
   );
 }
 
@@ -235,11 +201,10 @@ export function GameExperience() {
   const [review, setReview] = useState(false);
   const [manualTurns, setManualTurns] = useState(0);
   const [hintsRequested, setHintsRequested] = useState(0);
-  const [cardOpen, setCardOpen] = useState(true);
+  const [cardOpen, setCardOpen] = useState(false);
   const [rackOrder, setRackOrder] = useState(() => game.players[0].rack.map((tile) => tile.id));
   const [draggingTileId, setDraggingTileId] = useState<string | null>(null);
   const suppressTileClickRef = useRef(false);
-  const [discardQueue, setDiscardQueue] = useState<Tile[]>([]);
   const [gameNumber, setGameNumber] = useState(1);
   const [sessionReady, setSessionReady] = useState(false);
   const [hasSavedSession, setHasSavedSession] = useState(false);
@@ -278,8 +243,7 @@ export function GameExperience() {
   }, [coachContext, game.phase, needsDraw, respondingToDiscard]);
   const coachHint = getProgressiveHint(coachRecommendation, hintLevel, human.rack);
   const gameReview = useMemo(() => generateGameReview(game, 'human', { hintsRequested, manualTurns }), [game, hintsRequested, manualTurns]);
-  const queuedDiscardIds = useMemo(() => new Set(discardQueue.map((tile) => tile.id)), [discardQueue]);
-  const visibleDiscards = game.discards.filter((tile) => !queuedDiscardIds.has(tile.id));
+  const visibleDiscards = game.discards;
 
   useEffect(() => {
     let cancelled = false;
@@ -333,23 +297,12 @@ export function GameExperience() {
     return () => window.clearTimeout(timer);
   }, [dealing]);
 
-  useEffect(() => {
-    if (discardQueue.length === 0) return;
-    const timer = window.setTimeout(() => setDiscardQueue((current) => current.slice(1)), 1200);
-    return () => window.clearTimeout(timer);
-  }, [discardQueue]);
-
   const resetSelection = () => {
     setSelected([]);
     setBlindCount(0);
   };
 
-  const setGameWithDiscardSequence = (next: GameState) => {
-    const existingDiscardIds = new Set(game.discards.map((tile) => tile.id));
-    const added = next.discards.filter((tile) => !existingDiscardIds.has(tile.id));
-    if (added.length > 0) setDiscardQueue((current) => [...current, ...added]);
-    setGame(next);
-  };
+  const setGameWithDiscardSequence = (next: GameState) => setGame(next);
 
   const toggleTile = (id: string) => {
     setNotice('');
@@ -535,30 +488,20 @@ export function GameExperience() {
     : respondingToDiscard ? 'Call, Mahjong, or pass?' : needsDraw ? 'Draw a tile' : 'Choose a discard';
 
   return (
-    <main className={`shell game-shell ${cardOpen ? 'card-is-open' : ''}`}>
-      <header className="topbar"><button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button><span className="game-label">Game {gameNumber} · Full guidance · Saved locally</span><span className="table-links"><button className="toolbar-action" aria-label={cardOpen ? 'Hide Training Card' : 'Show Training Card'} aria-expanded={cardOpen} aria-controls="training-card" onClick={() => setCardOpen((open) => !open)}><span aria-hidden="true">▤</span><b>{cardOpen ? 'Hide card' : 'Show card'}</b></button><a className="toolbar-action" aria-label="Save progress" href="/account"><span aria-hidden="true">↗</span><b>Save progress</b></a><button className="toolbar-action leave-action" aria-label="Leave table" onClick={() => setStarted(false)}><span aria-hidden="true">×</span><b>Leave table</b></button></span></header>
+    <main className={`shell game-shell shared-table-page ${cardOpen ? 'card-is-open' : ''}`}>
+      <TableHeader brand={<button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={`Practice · Game ${gameNumber}`}>
+        <button className="table-tool-button" aria-label={cardOpen ? 'Hide Training Card' : 'Show Training Card'} aria-expanded={cardOpen} aria-controls="training-card" onClick={() => setCardOpen((open) => !open)}>Training Card</button>
+        <details className="table-menu"><summary>Table</summary><div><span>Saved on this device</span><a href="/account">Save progress</a><button onClick={() => setStarted(false)}>Leave table</button></div></details>
+      </TableHeader>
       <section className="game-table" aria-label="Guided American Mahjong table">
-        <MotionConfig reducedMotion="user">
-          <AnimatePresence mode="wait">
-            {discardQueue[0] ? <motion.div className="discard-cinematic" key={discardQueue[0].id} role="status" aria-live="polite" aria-label={`${tileLabel(discardQueue[0])} discarded`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <motion.div className="discard-spotlight" initial={{ y: 260, scale: .52, rotate: -8 }} animate={{ y: 0, scale: 1, rotate: 0 }} exit={{ y: -90, scale: .58, rotate: 4, opacity: 0 }} transition={{ duration: .36, ease: [0.22, 1, 0.36, 1] }}>
-                <span className="discard-spotlight-tile"><TileFace tile={discardQueue[0]} /></span>
-                <small>{tileLabel(discardQueue[0])}</small>
-              </motion.div>
-            </motion.div> : null}
-          </AnimatePresence>
-        </MotionConfig>
-        <div className="opponent opponent-top"><span>June</span><small>{totalPlayerTiles(game.players[2])} tiles</small></div><div className="opponent opponent-left"><span>Mara</span><small>{totalPlayerTiles(game.players[1])} tiles</small></div><div className="opponent opponent-right"><span>Theo</span><small>{totalPlayerTiles(game.players[3])} tiles</small></div>
-        <div className="table-center">
-          <div className="round-status"><span className="round">East</span><div><p>{stageTitle}</p><strong>{actionTitle}</strong></div>{game.phase === 'playing' && deadHand.dead ? <div className="dead-hand-badge" role="status" title={deadHand.message}><span aria-hidden="true">×</span><div><strong>Dead hand</strong><small>Proven by discards</small></div></div> : null}</div>
-          <section className="discard-board" aria-label={`Discard pool, ${visibleDiscards.length} visible tiles`}>
-            <header><div><strong>Discard pool</strong><small>{game.discards.length ? `${visibleDiscards.length} placed · oldest to newest` : 'All discards will remain visible here'}</small></div><div className="suit-legend" aria-label="Number tile suits"><span><SuitIcon suit="bamboo" />Bams</span><span><SuitIcon suit="characters" />Craks</span><span><SuitIcon suit="dots" />Dots</span></div></header>
-            <div className={`discard-grid ${visibleDiscards.length > 70 ? 'dense' : ''}`}>{visibleDiscards.length ? visibleDiscards.map((tile, index) => <motion.span layout className={`board-tile ${index === visibleDiscards.length - 1 ? 'latest' : ''}`} initial={{ opacity: 0, scale: .7, y: -12 }} animate={{ opacity: 1, scale: 1, y: 0 }} title={tileLabel(tile)} key={tile.id}><TileFace tile={tile} compact /></motion.span>) : <p>{game.discards.length ? 'Discard incoming…' : 'No tiles discarded yet'}</p>}</div>
-          </section>
-        </div>
-        <aside className="coach-card"><div className="coach-eyebrow"><span>Coach</span><span>{hintLevel + 1} of 3</span></div><h1>{coachRecommendation.headline}</h1><p>{notice || coachHint}</p><div className="candidate-list">{candidates.map((candidate, index) => <div key={candidate.handId}><span>{index === 0 ? 'Best match' : 'Alternative'}</span><strong>{candidate.name}</strong><small>{candidate.matchingTileIds.length} / 14 useful</small></div>)}</div><button onClick={requestHint}>{hintLevel < 2 ? 'Show me what to notice' : 'Why these tiles?'}</button></aside>
-        <div className="player-area">
-          <ExposureTray players={game.players} />
+        <TableSurface players={game.players.map(({ rack, ...player }) => ({ ...player, rackCount: rack.length }))} viewerId={human.id} activePlayerIds={game.phase === 'charleston' || respondingToDiscard ? [human.id] : [game.players[game.turnIndex].id]} wallCount={game.wall.length} discardCount={visibleDiscards.length}>
+          <DiscardPool tiles={visibleDiscards} latestTileId={game.callWindow?.discard.id} />
+        </TableSurface>
+        <TablePrompt title={actionTitle} detail={notice || stageTitle} active={game.phase === 'charleston' || respondingToDiscard || needsDraw || canDiscard}>
+          {game.phase === 'playing' && deadHand.dead ? <span className="table-dead-hand" title={deadHand.message}>Dead hand</span> : null}
+        </TablePrompt>
+        <details className="table-coach"><summary>Coach · {coachRecommendation.headline}</summary><div><p>{coachHint}</p><div className="candidate-list">{candidates.map((candidate, index) => <div key={candidate.handId}><span>{index === 0 ? 'Best match' : 'Alternative'}</span><strong>{candidate.name}</strong><small>{candidate.matchingTileIds.length} / 14 useful</small></div>)}</div><button onClick={requestHint}>{hintLevel < 2 ? 'Show me what to notice' : 'Why these tiles?'}</button></div></details>
+        <RackPanel className="player-area">
           <MotionConfig reducedMotion="user" transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.7 }}>
             <DragDropProvider
               sensors={(defaults) => [
@@ -617,7 +560,7 @@ export function GameExperience() {
                       : <>{exchangeOption ? <button className="finish-button" onClick={exchangeJoker}>Exchange for Joker</button> : null}{manualTurns >= 4 ? <button className="finish-button" onClick={finishGame}>Complete with coach</button> : null}{selfMahjong ? <button className="mahjong-button" onClick={() => declareMahjong(false)}>Declare Mahjong</button> : null}<button className="primary" disabled={!canDiscard || selected.length !== 1} onClick={discardTile}>Discard tile</button></>}
             </div>
           </div>
-        </div>
+        </RackPanel>
       </section>
       {cardOpen ? <TrainingCardPanel candidates={coachContext.candidates} onClose={() => setCardOpen(false)} /> : null}
     </main>
