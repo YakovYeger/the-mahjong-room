@@ -478,7 +478,7 @@ export function GameExperience() {
     <main className={`shell game-shell shared-table-page unified-game ${cardOpen ? 'card-is-open' : ''}`}>
       <TableHeader brand={<button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={`Practice · Game ${gameNumber}`}>
         <button className="table-tool-button" aria-label={`${cardOpen ? 'Hide' : 'Show'} ${game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}`} aria-expanded={cardOpen} onClick={() => setCardOpen((open) => !open)}>{game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button>
-        <details className="table-menu"><summary>Table</summary><div><span>Saved on this device</span><a href="/account">Save progress</a><button onClick={() => setStarted(false)}>Leave table</button></div></details>
+        <details className="table-menu"><summary>Table</summary><div><span>Saved on this device</span><a href="/learn" target="_blank" rel="noreferrer">Tutorial ↗</a><a href="/rules" target="_blank" rel="noreferrer">Rules ↗</a><a href="/account">Save progress</a><button onClick={() => setStarted(false)}>Leave table</button></div></details>
       </TableHeader>
       <section className="game-table" aria-label="Guided American Mahjong table">
         <TableSurface players={game.players.map(({ rack, ...player }) => ({ ...player, rackCount: rack.length }))} viewerId={human.id} activePlayerIds={game.phase === 'charleston' || respondingToDiscard ? [human.id] : [game.players[game.turnIndex].id]} wallCount={game.wall.length} discardCount={visibleDiscards.length}>

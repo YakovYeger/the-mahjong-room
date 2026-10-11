@@ -55,7 +55,6 @@
 .guide-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; padding: 36px 0; margin-top: 50px; border-top: 1px solid #d9d5c9; font-size: 14px; }
 .welcome-learn-link { display: block; max-width: 400px; padding: 15px 18px; margin: 20px 0; color: #285f51; border: 1px solid #bac8b4; border-radius: 12px; background: #fffdf7; text-decoration: none; line-height: 1.5; }
 .welcome-learn-link strong { display: block; }
-.guide-table-link { text-decoration: none; display: inline-flex; align-items: center; }
 @media (max-width: 760px) {
   .guide-page { padding: 0 20px; }
   .guide-header { flex-direction: column; align-items: flex-start; gap: 18px; }
@@ -68,5 +67,4 @@
   .tile-family-grid { grid-template-columns: 1fr; }
   .lesson-controls { flex-wrap: wrap; }
   .lesson-controls button { font-size: 13px; padding: 10px; }
-  .guide-table-link { font-size: 10px; padding: 6px; }
 }

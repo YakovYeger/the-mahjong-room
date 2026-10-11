@@ -79,5 +79,5 @@ export function RackPanel({ children, className = '' }: { children: ReactNode; c
 }
 
 export function TableHeader({ brand, context, children }: { brand: ReactNode; context: string; children: ReactNode }) {
-  return <header className="table-header">{brand}<span className="table-context">{context}</span><div className="table-tools"><a className="table-tool-button guide-table-link" href="/learn" target="_blank" rel="noreferrer">Tutorial ↗</a><a className="table-tool-button guide-table-link" href="/rules" target="_blank" rel="noreferrer">Rules ↗</a>{children}</div></header>;
+  return <header className="table-header">{brand}<span className="table-context">{context}</span><div className="table-tools">{children}</div></header>;
 }
