@@ -20,7 +20,7 @@ function groupLabel(group: HandGroup) {
   return group.kind === 'single' ? 'single' : group.kind;
 }
 
-export function TrainingHands({ candidates = [] }: { candidates?: HandCandidate[] }) {
+export function TrainingHands({ candidates = [], onFollow }: { candidates?: HandCandidate[]; onFollow?: (handId: string) => void }) {
   return <>
       <div className="training-hand-list">{trainingHands.map((hand) => {
         const candidate = candidates.find((item) => item.handId === hand.id);
@@ -31,6 +31,7 @@ export function TrainingHands({ candidates = [] }: { candidates?: HandCandidate[
           <p>{hand.description}</p>
           <div className="card-groups">{hand.groups.map((required) => <div className="card-group" aria-label={`${required.count} ${required.tileKey}, ${groupLabel(required)}`} key={required.id}>{Array.from({ length: required.count }, (_, index) => <span className={`mini-tile ${trainingTileClass(required.tileKey)}`} key={index}>{sampleTiles.get(required.tileKey) ? <TileFace tile={sampleTiles.get(required.tileKey)!} compact /> : trainingTileLabel(required.tileKey)}</span>)}{required.jokerAllowed ? <i title="Jokers allowed">★</i> : null}</div>)}</div>
           <small className="teaching-point">{hand.teachingPoint}</small>
+          {onFollow ? <button className="follow-hand-button" onClick={() => onFollow(hand.id)}>Follow this hand →</button> : null}
         </article>;
       })}</div>
       <footer><span><b>C</b> Concealed</span><span><b>X</b> Exposed</span><span><b>★</b> Jokers allowed</span></footer>

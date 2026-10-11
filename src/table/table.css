@@ -316,3 +316,273 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
   .reference-patterns > div { gap: 2px 5px; }
   .reference-patterns p { font-size: 6.5px; line-height: 1.25; margin-top: 2px; }
 }
+
+/* A card pattern stays beside the player's rack rather than beneath the whole table. */
+.card-companion { margin: 0 0 12px; padding: 16px; border: 1px solid #d5cdbb; border-radius: 16px; background: #fcfaf4; color: #244e41; }
+.companion-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.companion-heading .kicker, .final-check-heading .kicker { margin: 0 0 4px; font-size: 9px; letter-spacing: .13em; }
+.companion-heading h3, .final-check-heading h3 { margin: 0; font-family: Georgia,serif; font-size: 20px; font-weight: 500; }
+.card-companion button, .final-hand-check button, .companion-drawer button { min-height: 36px; border: 1px solid #cec7b6; border-radius: 8px; padding: 8px 12px; background: #f5f1e6; color: #244e41; font-size: 11px; font-weight: 650; cursor: pointer; }
+.card-companion button:hover, .final-hand-check button:hover { background: #e9eee5; border-color: #7e9d83; }
+.card-companion button:focus-visible, .final-hand-check button:focus-visible, .companion-drawer button:focus-visible { outline: 3px solid #d8876b; outline-offset: 3px; }
+.card-companion .companion-browse { flex-shrink: 0; background: #244e41; color: #fcfaf4; }
+.companion-intro { margin: 8px 0 0; font-size: 12px; line-height: 1.5; }
+.hand-comparison-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 0; font-size: 12px; }
+.hand-comparison-status span { color: #746f61; font-size: 10px; }
+.hand-valid .hand-comparison-status strong { color: #23754e; }
+.hand-alignment { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+.alignment-group { display: flex; flex-direction: column; gap: 5px; padding-bottom: 4px; }
+.alignment-pattern, .alignment-actual { display: flex; gap: 3px; }
+.comparison-tile { display: grid; place-items: center; flex: 0 0 29px; width: 29px; height: 40px; border: 1px solid #cfc5ac; border-radius: 4px; background: #fffdf4; box-shadow: 0 2px 0 #dfd6be; overflow: hidden; }
+.comparison-tile .tile-face { width: 100%; height: 100%; }
+.pattern-tile { background: #f0ebdf; box-shadow: none; opacity: .76; }
+.matched-tile { border-color: #839b78; background: #fffdf4; }
+.missing-tile { border: 1px dashed #b49e85; background: #efe9dd; color: #a58f73; box-shadow: none; font-size: 24px; }
+.alignment-group > small { font-size: 9px; color: #756f60; text-transform: capitalize; }
+.alignment-exposed .alignment-actual { border-bottom: 2px solid #c88569; padding-bottom: 4px; }
+.alignment-exposed > small { color: #905e47; }
+.alignment-extras { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e5dac7; }
+.alignment-extras > small { font-size: 10px; color: #99664d; }
+.alignment-extras > div { display: flex; flex-wrap: wrap; gap: 4px; }
+.alignment-explanation { margin: 10px 0 0; font-size: 11px; line-height: 1.6; color: #835941; }
+.alignment-key { margin: 8px 0 0; font-size: 9px; color: #827b69; }
+.companion-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+.companion-actions button:first-child { background: #244e41; color: #fffdf4; }
+.companion-suggestions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.companion-suggestions > span { font-size: 10px; margin-right: 4px; color: #746f61; }
+.companion-suggestions button { display: flex; align-items: center; gap: 10px; }
+.companion-suggestions b { font-size: 10px; color: #796d53; }
+.companion-suggestions button[aria-pressed="true"] { border-color: #53806b; background: #e5ecdf; }
+.companion-drawer { position: fixed; z-index: 30; top: 76px; right: 16px; bottom: 16px; width: 420px; padding: 20px; border: 1px solid #d2c6af; border-radius: 20px; background: #fcfaf4; box-shadow: 0 16px 64px #173e342d; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.companion-drawer > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.companion-drawer h2 { margin: 4px 0; font-family: Georgia,serif; font-weight: 500; font-size: 27px; }
+.companion-drawer > header p:not(.kicker) { font-size: 11px; line-height: 1.5; }
+.companion-drawer > header button { font-size: 24px; padding: 0 10px; }
+.companion-drawer .reference-sections { columns: 1; }
+.companion-drawer .reference-hand { flex-wrap: wrap; }
+.companion-drawer .reference-patterns { flex: 1; min-width: 240px; }
+.companion-drawer .follow-hand-button { margin-top: 8px; width: 100%; border-color: #8ba18d; }
+.shared-table-page .companion-drawer .training-hand-list { display: grid; grid-template-columns: 1fr; gap: 12px; max-height: none; overflow: visible; }
+.companion-drawer .training-hand-list article { padding: 14px; background: #f2eee4; border-radius: 12px; }
+.companion-drawer .training-hand-list h3 { font-size: 17px; }
+.companion-drawer .card-key { line-height: 1.8; }
+.final-hand-check { margin-top: 12px; padding: 14px; border: 1px solid #d7cdbb; border-radius: 14px; background: #fcfaf4; color: #244e41; min-width: 0; }
+.final-check-heading > p:not(.kicker) { font-size: 11px; line-height: 1.5; margin-bottom: 2px; }
+.table-reveal .reveal-grid, .cloud-game-review .review-racks { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.table-reveal .reveal-grid > article, .cloud-game-review .review-racks > article { min-width: 0; }
+@media (min-width: 1200px) {
+  .shared-table-page.card-is-open { padding-right: 452px; }
+  .shared-table-page.card-is-open > header { padding-right: 24px; }
+}
+@media (max-width: 640px) {
+  .card-companion { padding: 12px; margin-bottom: 8px; }
+  .companion-heading h3 { font-size: 17px; }
+  .companion-heading .companion-browse { min-height: 40px; font-size: 10px; padding: 8px; }
+  .card-companion button, .final-hand-check button, .companion-drawer button { min-height: 40px; }
+  .hand-alignment { gap: 9px; }
+  .comparison-tile { width: 25px; flex-basis: 25px; height: 35px; }
+  .alignment-pattern, .alignment-actual { gap: 2px; }
+  .companion-actions button { font-size: 10px; }
+  .companion-suggestions { gap: 5px; }
+  .companion-suggestions > span { width: 100%; }
+  .companion-suggestions button { font-size: 10px; padding: 7px; }
+  .table-reveal .reveal-grid, .cloud-game-review .review-racks { grid-template-columns: 1fr; }
+  .final-hand-check { padding: 12px; }
+}
+.alignment-extras { display: block; }
+.alignment-extras summary { min-height: 24px; font-size: 10px; color: #99664d; cursor: pointer; }
+.alignment-extras[open] > div { margin-top: 8px; }
+@media (max-width: 1199px) {
+  /* Give the hand picker the full available height, including on phones. */
+  .companion-drawer { position: fixed; top: 74px; right: 12px; left: 12px; bottom: 12px; width: auto; margin: 0; padding: 14px; max-height: none; box-shadow: 0 12px 42px #173e342d; }
+}
+.companion-options { position: relative; }
+.companion-options summary { min-height: 36px; padding: 9px 12px; border: 1px solid #cec7b6; border-radius: 8px; font-size: 11px; font-weight: 650; cursor: pointer; }
+.companion-options[open] { display: flex; flex-wrap: wrap; gap: 6px; }
+.companion-options[open] button { margin: 6px 4px 0 0; }
+.companion-alternatives { margin-top: 12px; }
+.companion-alternatives > summary { font-size: 11px; min-height: 24px; cursor: pointer; color: #756f60; }
+@media (max-width: 640px) {
+  .companion-options summary { min-height: 40px; }
+  .companion-actions { align-items: start; }
+}
+.companion-drawer .follow-hand-button { grid-column: 1 / -1; }
+.card-legend { margin: 10px 0; font-size: 10px; color: #687363; }
+.card-legend summary { min-height: 24px; cursor: pointer; }
+@media (max-width: 700px) {
+  .companion-drawer > header { margin-bottom: 8px; }
+  .companion-drawer > header .kicker { font-size: 8px; margin: 0; }
+  .companion-drawer > header h2 { font-size: 22px; }
+  .companion-drawer > header p:not(.kicker) { font-size: 10px; margin: 4px 0; }
+  .companion-drawer .card-browser-controls { gap: 8px; padding: 8px; }
+  .companion-drawer .card-browser-controls label:first-child { flex-basis: 0; }
+  .companion-drawer .card-browser-controls label span { font-size: 8px; }
+  .companion-drawer .card-browser-controls input, .companion-drawer .card-browser-controls select { font-size: 11px; padding: 6px; min-height: 38px; }
+  .companion-drawer .card-print-link { width: 100%; padding: 0; min-height: 20px; font-size: 10px; background: none; color: #244e41; }
+  .companion-drawer .card-legend { margin: 6px 0 0; }
+  .companion-drawer .card-results { margin: 4px 0 8px; }
+}
+
+/* One play workspace: decision → actions → rack → compact card reference. */
+.shared-table-page .game-table { padding-top: 12px; }
+.shared-table-page .play-workspace { margin-top: 8px; padding: 12px 16px; }
+.shared-table-page .play-workspace > .table-prompt { margin: 0; padding: 0 0 6px; border: 0; width: 100%; }
+.play-workspace .table-prompt h1 { font-size: 20px; }
+.play-workspace .table-prompt p { margin-top: 2px; font-size: 11px; }
+.shared-table-page .play-workspace .player-controls { grid-template-columns: minmax(0,1fr) auto; gap: 8px; margin: 0; }
+.shared-table-page .play-workspace .player-controls > p { margin: 0; gap: 8px; }
+.shared-table-page .play-workspace .action-group, .shared-table-page .play-workspace .cloud-actions { margin: 0; padding: 0; border: 0; justify-content: flex-end; }
+.shared-table-page .play-workspace .action-group { grid-column: auto; justify-self: end; }
+.shared-table-page .play-workspace .cloud-actions { min-height: 44px; margin-bottom: 4px; }
+.shared-table-page .play-workspace .rack, .shared-table-page .play-workspace .cloud-rack { margin-top: 4px; padding-block: 7px; }
+.play-workspace > .reorder-hint { display: block; margin: 0; font-size: 9px; text-align: right; color: #7e8273; }
+.shared-table-page .play-workspace .table-coach { margin: 6px 0 0; padding: 8px 0 0; border: 0; border-top: 1px solid #e4ddce; border-radius: 0; background: none; }
+.play-workspace .card-companion { margin: 8px 0 0; padding: 8px 0 0; border: 0; border-top: 1px solid #e4ddce; border-radius: 0; background: none; }
+.play-workspace .companion-heading { flex-wrap: wrap; justify-content: flex-start; gap: 6px 10px; }
+.play-workspace .companion-heading > div:first-child { flex: 1; min-width: 150px; }
+.play-workspace .companion-heading .kicker { display: none; }
+.play-workspace .companion-heading h3 { font-size: 17px; }
+.play-workspace .companion-actions { margin: 0; }
+.play-workspace .companion-actions > button:first-child { background: transparent; color: #244e41; }
+.play-workspace .companion-browse { background: transparent; color: #244e41; }
+.play-workspace .hand-comparison-status { padding: 4px 0 6px; gap: 8px; font-size: 11px; }
+.play-workspace .hand-comparison-status > span { display: none; }
+.play-workspace .card-companion .alignment-group { gap: 3px; padding: 0; }
+.play-workspace .card-companion .alignment-extras { margin-top: 6px; padding-top: 5px; border: 0; }
+.play-workspace .card-companion .alignment-explanation { margin-top: 3px; font-size: 10px; }
+.play-workspace .hand-comparison > .alignment-key { display: none; }
+.play-workspace .companion-options[open] { position: absolute; z-index: 15; right: 0; width: min(320px,80vw); padding: 10px; border: 1px solid #d2c6af; border-radius: 12px; background: #fcfaf4; box-shadow: 0 10px 26px #173e3420; }
+.play-workspace .companion-options[open] .alignment-key { margin-top: 8px; line-height: 1.5; }
+.play-workspace .companion-suggestions { margin-top: 6px; }
+.play-workspace .companion-intro { margin: 5px 0; font-size: 11px; }
+@media (max-width: 700px) {
+  .shared-table-page .play-workspace { margin: 6px 10px 10px; padding: 10px 12px; }
+  .shared-table-page .play-workspace .player-controls { grid-template-columns: minmax(0,1fr) auto; }
+  .shared-table-page .play-workspace .player-controls > p { display: grid; gap: 2px; font-size: 11px; }
+  .shared-table-page .play-workspace .player-controls > p span { font-size: 10px; }
+  .shared-table-page .play-workspace .action-group { flex-direction: row; flex-wrap: wrap; max-width: 230px; }
+  .shared-table-page .play-workspace .action-group button { padding-inline: 12px; font-size: 11px; }
+  .shared-table-page .play-workspace .cloud-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+  .shared-table-page .play-workspace .cloud-actions button { width: auto; min-height: 44px; font-size: 11px; }
+  .play-workspace .companion-heading > div:first-child { flex-basis: 100%; }
+  .play-workspace .companion-actions { flex: 1; }
+  .play-workspace .companion-heading button, .play-workspace .companion-options summary { font-size: 10px; padding: 7px 9px; }
+  .play-workspace .hand-alignment { gap: 6px; }
+}
+.play-workspace .cloud-actions .cloud-rack-heading { flex: 1; min-width: 100px; padding: 0; }
+.play-workspace .cloud-rack-help { display: block; margin: 0; font-size: 9px; color: #7e8273; }
+.play-workspace > .cloud-rack-order-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px; }
+.play-workspace > .cloud-rack-order-actions button { min-height: 36px; padding: 6px 10px; border: 1px solid #ddd5c5; border-radius: 8px; color: #244e41; background: transparent; font-size: 10px; }
+
+/* Actions were moved off the green felt: use colors suited to the ivory panel. */
+.shared-table-page .play-workspace .finish-button { color: #244e41; background: #ebe6da; border-color: #b7bdac; font-weight: 700; }
+.shared-table-page .play-workspace .finish-button:hover:not(:disabled) { background: #dce8df; border-color: #53806b; }
+.shared-table-page .play-workspace .action-group button:disabled,
+.shared-table-page .play-workspace .cloud-actions button:disabled { opacity: 1; background: #e5dfd3; color: #68665e; box-shadow: none; cursor: not-allowed; }
+.companion-drawer > header { position: sticky; top: -20px; z-index: 2; padding-block: 8px; background: #fcfaf4; }
+@media (max-width: 1199px) { .companion-drawer > header { top: -14px; } }
+
+/* One continuous playing surface. Rule engines and action handlers stay shared. */
+.shared-table-page.unified-game { background: #ece8dd; }
+.unified-game > .table-header { background: #f7f4ec; border: 0; }
+.shared-table-page.unified-game .game-table { display: flex; flex-direction: column; flex: none; width: calc(100% - 40px); max-width: 1120px; margin: 24px auto; padding: 0; border: 7px solid #8f7958; border-radius: 26px; background: radial-gradient(ellipse at 50% 25%,#396d58,#224d40 85%); box-shadow: 0 18px 50px #203f3420; overflow: visible; }
+.shared-table-page.unified-game .table-surface { flex: none; --table-min-height: 310px; width: 100%; margin: 0; border: 0; border-radius: 19px 19px 0 0; background: transparent; box-shadow: none; }
+.unified-game .table-seat-bottom { bottom: 8px; }
+.unified-game .table-discards { inset: 65px 110px 40px; display: grid; grid-template-columns: minmax(0,1fr) 100px; grid-template-rows: auto minmax(0,1fr); gap: 12px 28px; padding: 8px; background: none; border: 0; }
+.unified-game .table-discards > header { grid-column: 1; padding: 0; }
+.unified-game .table-discard-grid { grid-column: 1; grid-row: 2; grid-template-columns: repeat(auto-fill,32px); gap: 6px; padding: 3px; }
+.unified-game .table-discard-tile { width: 32px; height: auto; aspect-ratio: 2 / 3; }
+.unified-game .table-latest-discard { grid-column: 2; grid-row: 1 / 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; color: #e9eddc; font-size: 11px; }
+.unified-game .table-latest-discard > span:first-child { font-size: 10px; color: #c2d0ba; }
+.unified-game .table-latest-tile { display: block; width: 58px; aspect-ratio: 2 / 3; border: 1px solid #e8cf9a; border-bottom: 5px solid #b7aa8e; border-radius: 6px; background: #fffdf4; box-shadow: 0 0 0 5px #e8cf9a14,0 8px 15px #14392c55; }
+.unified-game .table-drop-hint { grid-column: 1 / -1; margin: 0; }
+.unified-game .table-melds { margin: 0; padding: 10px 24px; border-top: 1px solid #ced9bb33; background: #143c2e44; }
+.unified-game .table-melds > article { background: none; border-color: #ced9bb22; color: #e0e6d6; }
+.unified-game .table-melds strong small { color: #c2d0ba; }
+.shared-table-page.unified-game .play-workspace { width: 100%; max-width: none; margin: 0; padding: 18px 28px 0; border: 0; border-top: 1px solid #ced9bb33; border-radius: 0 0 18px 18px; background: #143c2e55; color: #e8eddc; }
+.shared-table-page.unified-game .play-workspace .table-prompt { color: #f9f5e8; }
+.unified-game .play-workspace .table-prompt h1 { font: 400 28px/1.2 Georgia,serif; }
+.unified-game .play-workspace .table-prompt p { color: #c1ccbd; }
+.unified-game .play-workspace .table-prompt button { color: #e8eddc; border-color: #75917b; }
+.unified-game .play-workspace .table-prompt .turn-clock strong { color: #f0dfb8; }
+.shared-table-page.unified-game .player-controls { color: #dbe5cf; }
+.shared-table-page.unified-game .player-controls p span, .unified-game .cloud-rack-heading > span { color: #b7c8b8; }
+.unified-game .cloud-rack-heading > strong { color: #dbe5cf; }
+.shared-table-page.unified-game .action-group .primary, .shared-table-page.unified-game .cloud-actions > button:not(.secondary):not(.mahjong) { color: #234a3a; background: #eedab4; box-shadow: none; border-radius: 8px; }
+.shared-table-page.unified-game .play-workspace .finish-button, .shared-table-page.unified-game .cloud-actions > .secondary { color: #e0e6d6; background: #355b46; border: 1px solid #7c9678; border-radius: 8px; }
+.shared-table-page.unified-game .play-workspace .action-group button:disabled, .shared-table-page.unified-game .play-workspace .cloud-actions button:disabled { color: #d8dfce; background: #486955; border-color: #75917b; opacity: 1; }
+.shared-table-page.unified-game .play-workspace .rack, .shared-table-page.unified-game .play-workspace .cloud-rack { padding: 7px 0 8px; border-bottom: 5px solid #967d58; box-shadow: 0 5px 0 #392f2566; gap: 6px; }
+.shared-table-page.unified-game .tile, .shared-table-page.unified-game .cloud-tile { width: 100%; height: auto; aspect-ratio: 2 / 3; background: #fffcf1; }
+.unified-game .play-workspace > .reorder-hint, .unified-game .play-workspace > .cloud-rack-help { color: #b7c8b8; margin-top: 10px; }
+.shared-table-page.unified-game .play-workspace .table-coach { margin: 4px 0 12px; padding: 0; border: 0; background: none; color: #c8d6bd; }
+.unified-game .table-coach summary { min-height: 32px; padding-block: 7px; font-size: 11px; font-weight: 400; }
+.unified-game .table-coach p { color: #c8d6bd; }
+.unified-game .table-coach button { color: #eef3df; background: #466650; border-color: #7e9b7f; }
+.unified-game .table-coach .candidate-list div { border-color: #7e9b7f; }
+.unified-game .play-workspace .card-companion { margin: 16px -28px 0; padding: 16px 28px 20px; background: #efe9db; border: 0; border-radius: 0 0 18px 18px; color: #244e41; }
+.unified-game .companion-heading .companion-actions { margin-left: auto; }
+.unified-game .companion-pattern { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.unified-game .companion-pattern > div { display: flex; gap: 2px; }
+.unified-game .comparison-tile { width: 28px; flex-basis: 28px; height: auto; aspect-ratio: 2 / 3; }
+.unified-game .companion-fit { margin-top: 8px; }
+.unified-game .companion-fit > summary { min-height: 36px; padding: 10px 0; font-size: 11px; cursor: pointer; color: #58704e; }
+.unified-game .companion-suggestions { margin-top: 10px; padding-top: 10px; border-top: 1px solid #d5d3c1; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.unified-game .companion-suggestions > span { grid-column: 1 / -1; font-size: 9px; }
+.unified-game .companion-suggestions button { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; text-align: left; background: #e4e3d5; border-color: transparent; }
+.unified-game .companion-suggestions button[aria-pressed="true"] { background: #dce4d3; border-color: #91a38b; }
+.unified-game .companion-suggestions b { white-space: nowrap; }
+.unified-game .cloud-message { color: #e8d5bc; }
+.unified-game .cloud-exchange-row { color: #c2d0ba; }
+.unified-game .table-dead-hand { color: #ffc7af; }
+.unified-game .play-workspace > .cloud-rack-order-actions button { color: #e0e6d6; border-color: #75917b; }
+.unified-game .blind-controls { background: #375b48; border-color: #75917b; }
+.unified-game .blind-controls button { color: #e0e6d6; }
+/* Full-height card browsing, with one scroll area and persistent context. */
+.companion-backdrop { position: fixed; z-index: 29; inset: 0; background: #0d302bcc; backdrop-filter: blur(3px); }
+.unified-game.card-is-open { padding-right: 0; }
+.unified-game .companion-drawer { position: fixed; inset: 16px 0; width: min(760px,94vw); max-height: none; margin: auto; padding: 20px; transform: none; }
+.companion-card-legend { display: flex; flex-wrap: wrap; gap: 10px 18px; padding: 5px 0; }
+.companion-card-legend > span { font-size: 11px; color: #6e7a65; }
+.companion-drawer .training-hand-list .mini-tile { width: 36px; height: auto; aspect-ratio: 2 / 3; }
+.companion-drawer .card-groups { gap: 10px; margin-block: 12px; }
+.companion-drawer .follow-hand-button { width: auto; justify-self: start; min-height: 36px; padding: 7px 12px; font-size: 11px; }
+.companion-drawer .training-hand-list + footer { display: none; }
+.unified-game .table-exposed-set > span { height: auto; aspect-ratio: 2 / 3; }
+@media(max-width:700px) {
+ .shared-table-page.unified-game .game-table { width: calc(100% - 16px); margin: 10px auto; border-width: 4px; border-radius: 18px; }
+ .shared-table-page.unified-game .table-surface { --table-min-height: 290px; border-radius: 14px 14px 0 0; }
+ .unified-game .table-seat-left, .unified-game .table-seat-right { top: 68px; }
+ .unified-game .table-discards { inset: 100px 12px 38px; grid-template-columns: minmax(0,1fr) 70px; gap: 8px 12px; padding: 0; }
+ .unified-game .table-discard-grid { grid-template-columns: repeat(auto-fill,27px); gap: 5px; }
+ .unified-game .table-discard-tile { width: 27px; height: auto; }
+ .unified-game .table-latest-tile { width: 48px; }
+ .shared-table-page.unified-game .play-workspace { padding: 14px 12px 0; }
+ .unified-game .play-workspace .table-prompt h1 { font-size: 23px; }
+ .unified-game .play-workspace .card-companion { margin: 14px -12px 0; padding: 12px; border-radius: 0 0 14px 14px; }
+ .unified-game .companion-pattern { gap: 7px; }
+ .unified-game .comparison-tile { width: 24px; flex-basis: 24px; height: auto; }
+ .unified-game .companion-suggestions button { display: grid; justify-content: start; font-size: 10px; padding: 8px 6px; }
+ .unified-game .companion-drawer { padding: 14px; }
+ .unified-game .companion-drawer > header { top: -14px; }
+ .companion-drawer .training-hand-list .mini-tile { width: 30px; }
+ .unified-game .table-melds { padding: 8px; }
+}
+
+/* Full-width play, with the current coach hint visible rather than folded away. */
+.shared-table-page.unified-game .game-table { width: 100%; max-width: none; margin: 0; border: 0; border-radius: 0; box-shadow: none; min-height: calc(100svh - 62px); }
+.shared-table-page.unified-game .table-surface { max-width: none; border-radius: 0; flex: 1 0 290px; }
+.shared-table-page.unified-game .play-workspace { border-radius: 0; }
+.unified-game .play-workspace .card-companion { border-radius: 0; }
+.shared-table-page.unified-game .play-workspace .table-coach { padding: 9px 12px; margin: 8px 0 14px; border-left: 2px solid #d7b985; background: #d7e3c609; }
+.coach-visible-hint { display: flex; align-items: baseline; gap: 12px; }
+.coach-visible-hint > strong { flex-shrink: 0; font: 700 13px Georgia,serif; color: #f0dfb8; }
+.unified-game .table-coach .coach-visible-hint p { margin: 0; font-size: 12px; line-height: 1.5; color: #e1e9d8; }
+.unified-game .table-coach details { margin-top: 3px; }
+.unified-game .table-coach summary { color: #bfceb6; font-size: 10px; }
+@media(max-width:700px) {
+ .shared-table-page.unified-game .game-table { width: 100%; margin: 0; border: 0; min-height: calc(100svh - 56px); }
+ .shared-table-page.unified-game .table-surface { border-radius: 0; }
+ .unified-game .play-workspace .card-companion { border-radius: 0; }
+ .coach-visible-hint { gap: 8px; }
+ .unified-game .table-coach .coach-visible-hint p { font-size: 11px; }
+}

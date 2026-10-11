@@ -12,10 +12,12 @@ describe('completed-game table reveal', () => {
     const markup = renderToStaticMarkup(createElement(TableReveal, { game: completedGame }));
 
     for (const player of game.players) {
-      expect(markup).toContain(`${player.name}&#x27;s concealed tiles`);
+      expect(markup).toContain(`${player.seat} seat`);
       expect(markup).toContain(player.name);
     }
     expect(markup).toContain('The table at Mahjong');
     expect(markup).toContain('Mahjong');
+    expect(markup.match(/aria-label="Final hand check"/g)).toHaveLength(4);
+    expect(markup).toContain('Automatically arranged');
   });
 });
