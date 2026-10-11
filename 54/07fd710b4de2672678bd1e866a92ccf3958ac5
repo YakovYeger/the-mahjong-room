@@ -1,0 +1,188 @@
+app/games/[id]/page.tsx
+  s_9b6fd03f9b2609::t_2e6e031d7a2135 19,48,105,108,184-185
+  s_9b6fd03f9b2609::t_24c88493a01e30 32-35,98,100-101,191
+  s_9b6fd03f9b2609::t_bf58d66974725a 13,21
+  s_9b6fd03f9b2609::t_bd9721c2721c37 52,70-74
+  s_9b6fd03f9b2609::t_d7195b28cacd99 5,14-17,36-41,53-54,57-59,61-63,65-69,88-89,91-93,97,99,106-107,124,173,239,274
+  s_9b6fd03f9b2609::t_8803e128e9e4a8 18
+  s_9b6fd03f9b2609::t_9366b2e5146d75 20
+src/multiplayer/cloud-api.ts
+  s_9b6fd03f9b2609::t_430acb898c5380 1-4,6-18,23-32
+  s_9b6fd03f9b2609::t_1767449391bb9f 5
+  s_9b6fd03f9b2609::t_288baa1eb000d3 19-22
+src/multiplayer/snapshot-sync.ts
+  s_9b6fd03f9b2609::t_2e03a63086843a 1-5,8,10-19,22-35,37-38,43-44,46,48-52
+  s_9b6fd03f9b2609::t_24c88493a01e30 7,9
+  s_9b6fd03f9b2609::t_8c988fb5da7bd8 6
+  s_9b6fd03f9b2609::t_88add9ab542d66 20-21,36,39-42,45,47
+src/server/auth.ts
+  s_9b6fd03f9b2609::t_dcedb7db3464e7 2,6-10,13-18,30
+docs/AUTHENTICATED_TEST_RESULTS.md
+  s_9b6fd03f9b2609::t_a64d113e531825 1-17,22-23,25-33,35,38-39,41
+  s_9b6fd03f9b2609::t_378f741873056c 18-20,24
+  s_9b6fd03f9b2609::t_1265e14864c121 34,37
+  s_9b6fd03f9b2609::t_80e15ac30282f1 36,40
+  s_9b6fd03f9b2609::t_04cfdde6496de1 21
+  s_9b6fd03f9b2609::t_1f1f7049c2fdc1 42
+eslint.config.mjs
+  s_9b6fd03f9b2609::t_80e15ac30282f1 8
+tests/action-schema.test.ts
+  s_9b6fd03f9b2609::t_bb2a080aaba258 1-30
+tests/account-login.test.ts
+  s_9b6fd03f9b2609::t_c89f8411b665ec 24
+  s_9b6fd03f9b2609::t_1bfc6eda55a0bb 1-23,25-28
+app/account/page.tsx
+  s_9b6fd03f9b2609::t_ea13535e9d97ef 3-4
+  s_9b6fd03f9b2609::t_27e339e96f5847 73-76
+tests/cloud-api.test.ts
+  s_9b6fd03f9b2609::t_22f0990fd477fe 1-53
+src/multiplayer/game-flow.ts
+  s_9b6fd03f9b2609::t_95a6ed86f96e2d 27,30,38,41,48,51
+src/multiplayer/cloud-query-provider.tsx
+  s_9b6fd03f9b2609::t_b4b60a9be6bc7d 1-35
+app/games/layout.tsx
+  s_9b6fd03f9b2609::t_b4b60a9be6bc7d 1-6
+src/table/tile-face.tsx
+  s_9b6fd03f9b2609::t_7a06dceb5755d9 3,11
+  s_9b6fd03f9b2609::t_bf58d66974725a 1-2,4-10,12-25
+src/multiplayer/action-schema.ts
+  s_9b6fd03f9b2609::t_bfa79a51a61f8c 1-33
+src/server/game-service.ts
+  s_9b6fd03f9b2609::t_0fe26c51abc839 375
+  s_9b6fd03f9b2609::t_95a6ed86f96e2d 111,189,315
+  s_9b6fd03f9b2609::t_8bb2032765c8c2 356,360,380,423-424,437-443,497,516-524
+  s_9b6fd03f9b2609::t_3c08fc37f27b85 469,472,478,527,529
+  s_9b6fd03f9b2609::t_7a014c0cbc0d94 362-370,470-471,473-477,479,481
+scripts/verify-authenticated-journey.ts
+  s_9b6fd03f9b2609::t_a2066ff553f250 101-104
+  s_9b6fd03f9b2609::t_bbd1a1eb913411 59-63
+  s_9b6fd03f9b2609::t_8ea4d441671b97 1-5,7-12,15,20-21,29-34,37-44,47-58,64-68,70-71,73-92,96,98-100,105-106,108,110-117,119-120
+  s_9b6fd03f9b2609::t_e0fa0900bc458e 69,93-95,107,118
+  s_9b6fd03f9b2609::t_c89f8411b665ec 6,13,28,35-36,45-46,97
+  s_9b6fd03f9b2609::t_90121b87235bf6 16-19,22-27,72
+  s_9b6fd03f9b2609::t_87e4212cdb6d76 14,109
+tests/table-query.test.ts
+  s_9b6fd03f9b2609::t_289a0a7c40e867 165
+  s_9b6fd03f9b2609::t_22f0990fd477fe 19-39,41-44,47-50
+  s_9b6fd03f9b2609::t_b7940f5ebd49b2 2-3,5-18,51-164,166-170
+  s_9b6fd03f9b2609::t_f62a9b08954efc 1,4,40
+  s_9b6fd03f9b2609::t_bd9721c2721c37 45-46
+tests/notifications.test.ts
+  s_9b6fd03f9b2609::t_73fa757f4ca469 1-14
+src/multiplayer/use-cloud-games.ts
+  s_9b6fd03f9b2609::t_12410b704cbdf4 1-10,12-49
+  s_9b6fd03f9b2609::t_9b685b62711855 11
+src/game/sortable-rack-item.tsx
+  s_9b6fd03f9b2609::t_ea13535e9d97ef 15,22
+  s_9b6fd03f9b2609::t_149b7bb30dd5d2 23
+supabase/tests/atomic-actions.sql
+  s_9b6fd03f9b2609::t_756acf4a94f8cf 1-86
+tests/action-request.test.ts
+  s_9b6fd03f9b2609::t_5e51493ca461bd 1-23
+src/table/end-game-dialog.tsx
+  s_9b6fd03f9b2609::t_f56bd6eeabdb24 1-19
+tests/end-game-dialog.test.ts
+  s_9b6fd03f9b2609::t_f56bd6eeabdb24 1-20
+src/multiplayer/table-query.ts
+  s_9b6fd03f9b2609::t_f42e55c020c3ed 73-74
+  s_9b6fd03f9b2609::t_1767449391bb9f 34,182
+  s_9b6fd03f9b2609::t_64114ef9f14cd1 29,40,133,135,140,163-164,194
+  s_9b6fd03f9b2609::t_b4b60a9be6bc7d 2-4,7-28,30-33,36-38,45-72,75-79,81-83,85,87-103,141-162,165-181,183-193,195-202
+  s_9b6fd03f9b2609::t_75ed054019c941 1,5-6,35,39,41-44,80,84,86,104-132,134,136-139
+docs/STACK_RESEARCH.md
+  s_9b6fd03f9b2609::t_80e15ac30282f1 36,100,104,118
+  s_9b6fd03f9b2609::t_8abfb1aa0ed41d 130
+  s_9b6fd03f9b2609::t_2a3acb9b9e9db7 1-35,37-99,101-103,105-117,119-129
+src/table/tile-presentation.ts
+  s_9b6fd03f9b2609::t_bf58d66974725a 1-19
+docs/IMPLEMENTATION_STATUS.md
+  s_9b6fd03f9b2609::t_80e15ac30282f1 53,56,59,112-116
+  s_9b6fd03f9b2609::t_04cfdde6496de1 75-79,81
+  s_9b6fd03f9b2609::t_8abfb1aa0ed41d 62-72
+  s_9b6fd03f9b2609::t_a1815e4631f3f4 50-52,54-55,57-58,60-61,74
+  s_9b6fd03f9b2609::t_9c99e0d7aba6aa 73,80,117-118
+src/table/cloud-status.tsx
+  s_9b6fd03f9b2609::t_2e03a63086843a 1-34
+tests/helpers/cloud-table.ts
+  s_9b6fd03f9b2609::t_b7940f5ebd49b2 1-61
+app/games/page.tsx
+  s_9b6fd03f9b2609::t_0fe26c51abc839 6,13-15,19-25,32,34,36-38,40-41,43-44,51,54-55,65,67-68,77-80,90,99-100,117,121
+app/game-experience.tsx
+  s_9b6fd03f9b2609::t_bf58d66974725a 20,23
+  s_9b6fd03f9b2609::t_7a06dceb5755d9 22
+  s_9b6fd03f9b2609::t_9c251b9c904b88 21
+tests/snapshot-sync.test.ts
+  s_9b6fd03f9b2609::t_bb2a080aaba258 1-57,69-76
+  s_9b6fd03f9b2609::t_88add9ab542d66 58-68
+tests/cloud-hooks.test.ts
+  s_9b6fd03f9b2609::t_ab6abb1385b4f9 1-7,9-21,23-41,71-77,79-133
+  s_9b6fd03f9b2609::t_1a9ef91da4740c 78
+  s_9b6fd03f9b2609::t_22f0990fd477fe 8,42-70
+  s_9b6fd03f9b2609::t_288baa1eb000d3 22
+tests/action-receipts.test.ts
+  s_9b6fd03f9b2609::t_7a014c0cbc0d94 29,31-32,38,40,45,53,60-64,69,72-73
+  s_9b6fd03f9b2609::t_288baa1eb000d3 37
+  s_9b6fd03f9b2609::t_1d35793d93a29d 71
+  s_9b6fd03f9b2609::t_bb2a080aaba258 1-28,30,33-36,39,41-44,46-52,54-56,65,67-68,70,74-75
+  s_9b6fd03f9b2609::t_e6ca4a7c4fc5c1 57-59,66
+docs/BACKEND_RELIABILITY.md
+  s_9b6fd03f9b2609::t_378f741873056c 22
+  s_9b6fd03f9b2609::t_8abfb1aa0ed41d 1-19,23-31,35-37,39-40
+  s_9b6fd03f9b2609::t_80e15ac30282f1 32
+  s_9b6fd03f9b2609::t_585bafc1622f73 20,33-34
+  s_9b6fd03f9b2609::t_1265e14864c121 21
+  s_9b6fd03f9b2609::t_2a4b190bcb4299 38
+app/api/games/[id]/snapshot/route.ts
+  s_9b6fd03f9b2609::t_8bb2032765c8c2 2,11
+src/multiplayer/table-schema.ts
+  s_9b6fd03f9b2609::t_9b685b62711855 70
+  s_9b6fd03f9b2609::t_2391c2cb35e110 1-69,71-75,77-84
+  s_9b6fd03f9b2609::t_64114ef9f14cd1 76
+src/multiplayer/action-request.ts
+  s_9b6fd03f9b2609::t_5e51493ca461bd 1-13
+src/multiplayer/use-cloud-table.ts
+  s_9b6fd03f9b2609::t_0fe26c51abc839 15
+  s_9b6fd03f9b2609::t_75ed054019c941 1-14,16-21,23-35,37-40,42,44-47
+  s_9b6fd03f9b2609::t_64114ef9f14cd1 36,41
+  s_9b6fd03f9b2609::t_1767449391bb9f 22,43
+src/multiplayer/use-game-channel.ts
+  s_9b6fd03f9b2609::t_2e03a63086843a 1-15,18-39
+  s_9b6fd03f9b2609::t_88add9ab542d66 16-17
+app/api/notifications/route.ts
+  s_9b6fd03f9b2609::t_73fa757f4ca469 13-15,17-18
+src/lib/supabase/database.types.ts
+  s_9b6fd03f9b2609::t_7a014c0cbc0d94 435-438
+  s_9b6fd03f9b2609::t_8bb2032765c8c2 502-523
+  s_9b6fd03f9b2609::t_3c08fc37f27b85 439-447
+tests/multiplayer.test.ts
+  s_9b6fd03f9b2609::t_3c08fc37f27b85 35-48,52-53
+tests/auth-identity.test.ts
+  s_9b6fd03f9b2609::t_dcedb7db3464e7 1-18
+tests/cloud-routes.test.ts
+  s_9b6fd03f9b2609::t_f42e55c020c3ed 89
+  s_9b6fd03f9b2609::t_2f85b24903db79 1-88,90-110
+package-lock.json
+  s_9b6fd03f9b2609::t_1aa646bc9445c9 15,19-20,27,35,63-113,306-315,364-376,537-676,1383-1400,3182-3267,3279-3286,4493-4503,4789-4798,5122-5135,5150-5163,5236-5242,5286-5296,5320-5327,5399-5411,6663-6675,7046-7052,7313-7373,7809-7819,7840-7846,8435-8447,8564-8601,8938-8950,9558-9564,9688-9707,9721-9746,11154-11166,11188-11197,11252-11276,11487-11503,11557-11559
+package.json
+  s_9b6fd03f9b2609::t_66731158a5469b 22,26-27,34,42
+supabase/migrations/20261008210557_get_game_action_receipt.sql
+  s_9b6fd03f9b2609::t_9fe034c5843050 1-27
+supabase/migrations/20261009095331_atomic_player_action_guards.sql
+  s_9b6fd03f9b2609::t_ede0b2b916e61e 1-328
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5407fd710b4de2672678bd1e866a92ccf3958ac5",
+  "prompts": {},
+  "sessions": {
+    "s_9b6fd03f9b2609": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a11d33-2145-78e2-84d8-4d1c8f51bdac",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
