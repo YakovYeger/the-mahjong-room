@@ -1,0 +1,25 @@
+app/games/page.tsx
+  s_07e3dfef08585e::t_5f05ea2d3c9327 111
+app/game-experience.tsx
+  s_07e3dfef08585e::t_adb6cbb40253f6 481
+app/games/[id]/page.tsx
+  s_07e3dfef08585e::t_64e0652be53944 199
+src/table/table-surface.tsx
+  s_07e3dfef08585e::t_da7172a84563c7 82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ff50d51674eb221cdb92e4d31c9d51b0b53f9087",
+  "prompts": {},
+  "sessions": {
+    "s_07e3dfef08585e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12c5f-d6e6-7c41-a7e3-c1aa253840f8",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
