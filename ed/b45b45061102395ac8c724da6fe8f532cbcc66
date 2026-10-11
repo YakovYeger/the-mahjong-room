@@ -1,0 +1,21 @@
+src/table/table.css
+  s_35d506958491c4::t_ffe45838bc1f0c 396-397,476-483
+src/table/card-companion.tsx
+  s_35d506958491c4::t_691accb08e2055 102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "edb45b45061102395ac8c724da6fe8f532cbcc66",
+  "prompts": {},
+  "sessions": {
+    "s_35d506958491c4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12ad7-ec16-78c1-bbb9-b788fbf64014",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
