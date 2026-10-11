@@ -567,3 +567,22 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
  .companion-drawer .training-hand-list .mini-tile { width: 30px; }
  .unified-game .table-melds { padding: 8px; }
 }
+
+/* Full-width play, with the current coach hint visible rather than folded away. */
+.shared-table-page.unified-game .game-table { width: 100%; max-width: none; margin: 0; border: 0; border-radius: 0; box-shadow: none; min-height: calc(100svh - 62px); }
+.shared-table-page.unified-game .table-surface { max-width: none; border-radius: 0; flex: 1 0 290px; }
+.shared-table-page.unified-game .play-workspace { border-radius: 0; }
+.unified-game .play-workspace .card-companion { border-radius: 0; }
+.shared-table-page.unified-game .play-workspace .table-coach { padding: 9px 12px; margin: 8px 0 14px; border-left: 2px solid #d7b985; background: #d7e3c609; }
+.coach-visible-hint { display: flex; align-items: baseline; gap: 12px; }
+.coach-visible-hint > strong { flex-shrink: 0; font: 700 13px Georgia,serif; color: #f0dfb8; }
+.unified-game .table-coach .coach-visible-hint p { margin: 0; font-size: 12px; line-height: 1.5; color: #e1e9d8; }
+.unified-game .table-coach details { margin-top: 3px; }
+.unified-game .table-coach summary { color: #bfceb6; font-size: 10px; }
+@media(max-width:700px) {
+ .shared-table-page.unified-game .game-table { width: 100%; margin: 0; border: 0; min-height: calc(100svh - 56px); }
+ .shared-table-page.unified-game .table-surface { border-radius: 0; }
+ .unified-game .play-workspace .card-companion { border-radius: 0; }
+ .coach-visible-hint { gap: 8px; }
+ .unified-game .table-coach .coach-visible-hint p { font-size: 11px; }
+}

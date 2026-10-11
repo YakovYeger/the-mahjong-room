@@ -22,6 +22,8 @@ import { TileFace } from '../../../src/table/tile-face';
 import { getCardProvider } from '../../../src/game/cards';
 import { CardCompanion, HandCheck } from '../../../src/table/card-companion';
 import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../../../src/table/table-surface';
+import { recommendCharlestonPass, recommendDiscard, recommendDraw, recommendCall } from '../../../src/coach/recommend';
+import type { CoachVisibleContext } from '../../../src/coach/types';
 
 
 
@@ -162,6 +164,21 @@ function CloudGameTable({ gameId }: { gameId: string }) {
     const rackTile = snapshot.privateState.rack.find((tile) => tile.type.kind !== 'joker' && cardTileKey(tile) === cardTileKey(natural));
     return rackTile ? [{ owner, exposure, joker, rackTile }] : [];
   })) : [];
+  const ownExposures = snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? [];
+  const coachContext: CoachVisibleContext = {
+    playerId: snapshot.privateState.playerId, cardId: snapshot.publicState.cardId,
+    rack: snapshot.privateState.rack, ownExposures,
+    visibleExposures: snapshot.publicState.players.flatMap(player => player.exposures.map(exposure => ({ playerId: player.id, exposure }))),
+    discards: snapshot.publicState.discards,
+    callWindow: snapshot.publicState.callWindow ? { ...snapshot.publicState.callWindow, responses: {} } : null,
+    wallCount: snapshot.publicState.wallCount,
+    candidates: getCardProvider(snapshot.publicState.cardId).analyzeCandidates([...snapshot.privateState.rack, ...ownExposures.flatMap(exposure => exposure.tiles)], ownExposures),
+  };
+  const coachRecommendation = pending === 'draw' ? recommendDraw()
+    : pending === 'discard_response' ? recommendCall(coachContext)
+    : pending === 'charleston_pass' || pending === 'courtesy_pass' ? recommendCharlestonPass(coachContext)
+    : pending === 'discard' ? recommendDiscard(coachContext) : null;
+  const coachHeadline = coachRecommendation?.headline ?? (pending === 'charleston_decision' ? 'Continue only if another Charleston helps your direction.' : snapshot.status === 'paused' ? 'The table is paused. You can still study your hand.' : 'Compare your closest hands while the table plays.');
   const toggle = (tileId: string) => { setMessage(''); setSelected((values) => values.includes(tileId) ? values.filter((id) => id !== tileId) : [...values, tileId].slice(-5)); };
   const moveTile = (tileId: string, offset: -1 | 1) => {
     const next = moveTileId(normalizeTileOrder(rackOrder, snapshot.privateState.rack), tileId, offset);
@@ -263,6 +280,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
           {pending === 'discard_response' ? <><button disabled={busy || selected.length < 2} onClick={() => void act({ type: 'CALL_TILE', rackTileIds: selected })}>Call with selected tiles</button><button className="secondary" disabled={busy} onClick={() => void act({ type: 'PASS_ON_DISCARD' })}>Pass</button><button className="mahjong" disabled={busy} onClick={() => void act({ type: 'DECLARE_MAHJONG', useDiscard: true })}>Mahjong</button></> : null}
           {pending === 'wait' ? <span>Waiting for the next move.</span> : null}
         </div>
+{!isTerminal ? <section className="table-coach" aria-label="Coach"><div className="coach-visible-hint"><strong>Coach</strong><p>{coachHeadline}</p></div>{coachRecommendation ? <details><summary>More guidance</summary><p>{coachRecommendation.explanation}</p></details> : null}</section> : null}
 <div className="cloud-rack" role="group" aria-label="Your rack">{orderedRack.map((tile, index) => {
           return <SortableRackItem id={tile.id} index={index} disabled={busy || isTerminal} className="cloud-tile-slot" key={tile.id}>
             {({ isDragging, handleRef }) => <>
@@ -275,7 +293,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
         {selected.length === 1 ? <div className="cloud-rack-order-actions" role="group" aria-label="Reorder selected tile"><button className="secondary" aria-label="Move selected tile left" disabled={busy || orderedRack.findIndex((tile) => tile.id === selected[0]) <= 0} onClick={() => moveTile(selected[0], -1)}><span aria-hidden="true">←</span> Move left</button><button className="secondary" aria-label="Move selected tile right" disabled={busy || orderedRack.findIndex((tile) => tile.id === selected[0]) === orderedRack.length - 1} onClick={() => moveTile(selected[0], 1)}>Move right <span aria-hidden="true">→</span></button></div> : null}
 
         {message ? <p className="cloud-message" role="status" aria-live="polite">{cloud.uncertain ? 'Reconnecting to confirm your saved move…' : cloud.error?.message ?? message}</p> : null}
-        {!isTerminal ? <CardCompanion cardId={snapshot.publicState.cardId} rack={snapshot.privateState.rack} exposures={snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? []} storageKey={`${gameId}:${snapshot.privateState.playerId}`} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory order still works. */ } setMessage('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} /> : null}
+        {!isTerminal ? <CardCompanion candidates={coachContext.candidates} cardId={snapshot.publicState.cardId} rack={snapshot.privateState.rack} exposures={snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? []} storageKey={`${gameId}:${snapshot.privateState.playerId}`} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory order still works. */ } setMessage('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} /> : null}
       </RackPanel>
       </DragDropProvider>
       </section>
