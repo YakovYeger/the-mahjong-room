@@ -362,7 +362,7 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
 .companion-drawer .reference-hand { flex-wrap: wrap; }
 .companion-drawer .reference-patterns { flex: 1; min-width: 240px; }
 .companion-drawer .follow-hand-button { margin-top: 8px; width: 100%; border-color: #8ba18d; }
-.companion-drawer .training-hand-list { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.shared-table-page .companion-drawer .training-hand-list { display: grid; grid-template-columns: 1fr; gap: 12px; max-height: none; overflow: visible; }
 .companion-drawer .training-hand-list article { padding: 14px; background: #f2eee4; border-radius: 12px; }
 .companion-drawer .training-hand-list h3 { font-size: 17px; }
 .companion-drawer .card-key { line-height: 1.8; }
