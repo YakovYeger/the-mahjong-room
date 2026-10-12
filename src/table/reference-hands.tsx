@@ -1,4 +1,5 @@
 'use client';
+import { Select } from '../ui/select';
 import type { HandCandidate } from '../game/types';
 import { useState } from 'react';
 import { patternTokens, referenceHands, referenceSections } from '../game/reference-card';
@@ -8,7 +9,7 @@ export function ReferenceHands({ printable = false, candidates = [], onFollow }:
   const [search, setSearch] = useState('');
   const visible = referenceHands.filter(hand => (section === 'All hands' || section === hand.section) && `${hand.section} ${hand.note} ${hand.patterns.join(' ')}`.toLowerCase().includes(search.toLowerCase()));
   return <div className="reference-card">
-    <div className="card-browser-controls"><label><span>Find a hand</span><input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Try dragons, pairs, 2025…" /></label><label><span>Section</span><select value={section} onChange={e => setSection(e.target.value)}>{['All hands', ...referenceSections].map(s => <option key={s}>{s}</option>)}</select></label>{printable ? <button type="button" onClick={() => window.print()}>Print card ↗</button> : <a className="card-print-link" href="/cards" target="_blank" rel="noreferrer">Full card / Print ↗</a>}</div>
+    <div className="card-browser-controls"><label><span>Find a hand</span><input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Try dragons, pairs, 2025…" /></label><Select label="Section" value={section} onValueChange={setSection} options={['All hands', ...referenceSections].map(value => ({ value, label: value }))} />{printable ? <button type="button" onClick={() => window.print()}>Print card ↗</button> : <a className="card-print-link" href="/cards" target="_blank" rel="noreferrer">Full card / Print ↗</a>}</div>
     {onFollow ? <details className="card-legend"><summary>Symbols & suit colors</summary><div className="card-key"><span><b className="card-ink-jade">Green</b>, <b className="card-ink-red">red</b> & <b>black</b> = different suits</span><span><b>0</b> White Dragon · any suit</span><span><b>X</b> Exposed · <b>C</b> Concealed</span><span>F Flowers · D Dragons · N/E/W/S Winds</span></div></details> : <div className="card-key"><span><b className="card-ink-jade">Green</b>, <b className="card-ink-red">red</b> & <b>black</b> = different suits</span><span><b>0</b> White Dragon · any suit</span><span><b>X</b> Exposed · <b>C</b> Concealed</span><span>F Flowers · D Dragons · N/E/W/S Winds</span></div>}
     <p className="card-results" role="status">{visible.length} of {referenceHands.length} hands</p>
     <div className="reference-sections">{referenceSections.map(name => {

@@ -1,4 +1,5 @@
 'use client';
+import { Menu } from '../../../src/ui/menu';
 
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
 
@@ -196,7 +197,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
     <main className={`cloud-game-page shared-table-page unified-game ${cardOpen && !isTerminal ? 'card-is-open' : ''}`}>
       <TableHeader brand={<a className="brand" href="/">The Mahjong Room</a>} context={snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}>
         {!isTerminal ? <button className="table-tool-button" aria-expanded={cardOpen} onClick={() => setCardOpen(open => !open)}>{snapshot.publicState.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button> : null}
-        <details className="table-menu"><summary>Table</summary><div><span>{online} online</span><a href="/learn" target="_blank" rel="noreferrer">Tutorial ↗</a><a href="/rules" target="_blank" rel="noreferrer">Rules ↗</a>{isHost && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button onClick={() => setEndDialogOpen(true)} disabled={busy}>End game</button> : null}<button onClick={requestLeaveTable}>Leave table</button></div></details>
+        <Menu label="Table" note={`${online} online`} items={[{ label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, ...(isHost && (snapshot.status === 'active' || snapshot.status === 'paused') ? [{ label: 'End game', onClick: () => setEndDialogOpen(true), disabled: busy }] : []), { label: 'Leave table', onClick: requestLeaveTable }]} />
       </TableHeader>
       {endDialogOpen ? <EndGameDialog busy={busy} onCancel={() => setEndDialogOpen(false)} onConfirm={() => void endGameForEveryone()} /> : null}
       {leaveDialogOpen ? <dialog ref={leaveDialogRef} className="leave-dialog" aria-labelledby="leave-dialog-title" aria-describedby="leave-dialog-description" onCancel={(event) => { event.preventDefault(); setLeaveDialogOpen(false); }} onClick={(event) => { if (event.target === event.currentTarget) setLeaveDialogOpen(false); }}>
