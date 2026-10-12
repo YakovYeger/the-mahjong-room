@@ -1,0 +1,33 @@
+tests/coach-integration.test.ts
+  s_007e0a905cfb60::t_118f0e20ddde52 57-71
+tests/card-companion.test.ts
+  s_007e0a905cfb60::t_b4fb217d2b0a42 82,84
+  s_007e0a905cfb60::t_e82b4acbf73b78 77-81,83,85
+src/table/card-companion.tsx
+  s_007e0a905cfb60::t_b4fb217d2b0a42 67
+  s_007e0a905cfb60::t_06b0b7e6fb894f 64,88
+docs/COACH_AUDIT_AND_DESIGN.md
+  s_007e0a905cfb60::t_7084f82278dbe6 28,44,117
+src/coach/coach-panel.tsx
+  s_007e0a905cfb60::t_9e9be5970f81cc 2,18-20,24-27,47
+src/coach/coach.css
+  s_007e0a905cfb60::t_b041aefb909cf1 49-57
+src/table/table.css
+  s_007e0a905cfb60::t_1b8ae432117f96 589-596
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ec79541613d480818f68a2bc2241b8f6ce63ac20",
+  "prompts": {},
+  "sessions": {
+    "s_007e0a905cfb60": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1304b-a62c-7853-9c0d-dc401c73e2c4",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
