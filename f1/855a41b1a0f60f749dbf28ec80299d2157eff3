@@ -1,0 +1,52 @@
+tests/ui-components.test.ts
+  s_cfde2c582148f8::t_df469daa925c7b 1-2,4-16,19-31,33-41,43-61
+  s_cfde2c582148f8::t_7338dddc977d1a 3,17-18,32,42
+app/account/page.tsx
+  s_cfde2c582148f8::t_650ac5047cfced 2,137,149
+app/game-experience.tsx
+  s_cfde2c582148f8::t_a71b288a376bf4 2,483
+app/games/[id]/page.tsx
+  s_cfde2c582148f8::t_b7d3ac0ec3f1ac 2,200
+app/games/page.tsx
+  s_cfde2c582148f8::t_c4d950bbe4b6c3 5,121
+app/layout.tsx
+  s_cfde2c582148f8::t_a437efa9631467 4
+docs/UI_COMPONENTS.md
+  s_cfde2c582148f8::t_87d80d5a574e6c 17-19,28-44
+package-lock.json
+  s_cfde2c582148f8::t_f6142b6783e209 29,3367-3380
+package.json
+  s_cfde2c582148f8::t_698fd70703c599 36
+src/table/card-companion.tsx
+  s_cfde2c582148f8::t_95a686bde5726a 3,10-11,81,91,94-97
+src/ui/components.css
+  s_cfde2c582148f8::t_34ffd3a3914533 1-20
+src/ui/dialog.tsx
+  s_cfde2c582148f8::t_36aa09b9c102c9 1-19
+src/ui/menu.tsx
+  s_cfde2c582148f8::t_7e48ffd62568e6 1-25
+src/ui/radio-group.tsx
+  s_cfde2c582148f8::t_e738c02c28b983 1-10
+src/ui/tabs.tsx
+  s_cfde2c582148f8::t_4cf102cebc5d5f 1-13
+tests/account-login.test.ts
+  s_cfde2c582148f8::t_a06c0d7e1b19fa 5,30-45
+tests/card-companion.test.ts
+  s_cfde2c582148f8::t_a62fd696930980 3-5,13-15,24,44,47-50,52-53,57-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f1855a41b1a0f60f749dbf28ec80299d2157eff3",
+  "prompts": {},
+  "sessions": {
+    "s_cfde2c582148f8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12ece-44c0-7a50-a95a-5e8f9933c647",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
