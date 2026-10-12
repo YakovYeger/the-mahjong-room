@@ -25,7 +25,7 @@ Help a player answer four questions at the table: **Which hand am I working towa
 
 ## Interaction design
 
-The new coach sits **after the rack**, before the card companion. Opening detailed help therefore does not move the rack or game-action controls. The default surface is compact: next-step headline, a concrete explanation, and “Show on table.” Two independent disclosures provide depth without making every turn an essay.
+The new coach sits **after the rack**, before the card companion. Opening detailed help therefore does not move the rack or game-action controls. The default surface is compact: next-step headline, a concrete explanation, and “Show on table.” Two independent disclosures provide depth without making every turn an essay. “Shrink coach” keeps only the headline and controls; “Expand coach” restores the details. “Hide coach” clears table annotations and leaves a small “Show coach” control. These presentation choices stay local to the mounted table.
 
 ### 1. Next step
 
@@ -41,7 +41,7 @@ The new coach sits **after the rack**, before the card companion. Opening detail
 - One group button shows required tile, group type, matched/required count, and natural-only/Joker eligibility.
 - Tapping a group toggles its focus. The note explains what is missing and how many natural copies are unseen.
 - Compare up to two **different named lines**, rather than filling the alternatives with suit permutations of one printed line. “Follow” changes the shared plan; “Explore freely” clears it; the full card remains available.
-- Following never rearranges the rack automatically. “Arrange rack” remains a separate card action.
+- The card’s closest-hand choices show Concealed · C or Exposed allowed · X before selection. The followed hand repeats that badge with a short exposure rule, including the final-tile Mahjong exception for concealed hands. Following never rearranges the rack automatically. “Arrange rack” remains a separate card action.
 
 ### 3. Why this advice?
 
@@ -114,4 +114,4 @@ Local browser QA covers desktop and narrow layouts, follow/change/unpin, group f
 
 The advisor evaluates current fit and compared alternatives. It is not an exhaustive three-tile pass optimizer, a calibrated probability model, a defensive discard predictor, or a solver for all visible dead-hand cases. All move execution still goes through the existing authoritative game/Supabase flow.
 
-Validated on 12 October 2026: **162 tests across 26 files passed**, typecheck passed, lint passed, and production build passed. Browser checks confirmed 1280px desktop and 360px mobile reflow without horizontal overflow, exact 2025 following, refresh persistence, group/card/public highlights, drawer opening and Escape dismissal, blocked-pin handling, exploration, and native back navigation. The real practice table displayed tentative-selection feedback; the test selection was cleared without submitting a move. A fresh preview run produced no new browser errors. Build emitted the existing Vinext route-classification notice.
+Validated on 12 October 2026: **164 tests across 26 files passed**, typecheck passed, lint passed, and production build passed. Browser checks confirmed 1280px desktop and 360px mobile reflow without horizontal overflow, exact 2025 following, refresh persistence, group/card/public highlights, drawer opening and Escape dismissal, blocked-pin handling, exploration, and native back navigation. The real practice table displayed tentative-selection feedback; the test selection was cleared without submitting a move. A fresh preview run produced no new browser errors. Build emitted the existing Vinext route-classification notice.

@@ -1,4 +1,5 @@
 'use client';
+import { useId, useState } from 'react';
 import type { CoachSession } from './types';
 
 export interface CoachPanelProps {
@@ -14,11 +15,16 @@ export interface CoachPanelProps {
 
 /** UI consumes an advisory session; it has no game actions or backend access. */
 export function CoachPanel({ session, show, onShowChange, focusGroupId, onFocusGroup, onFollow, onBrowse, onHint }: CoachPanelProps) {
+  const [view, setView] = useState<'expanded' | 'compact' | 'hidden'>('expanded');
+  const bodyId = useId();
+  const hideCoach = () => { onShowChange(false); setView('hidden'); };
   const { plan, recommendation } = session;
   const target = plan.target;
   const working = target?.candidate.viable && !target.blocked;
-  return <section className="coach-unit" aria-label="Coach and hand plan">
-    <header className="coach-unit-heading"><div><span className="coach-eyebrow">Coach · {plan.followedId ? 'Your chosen direction' : 'Exploring directions'}</span><h2>{recommendation.headline}</h2></div><button aria-pressed={show} onClick={() => { onShowChange(!show); if (!show) onHint?.(); }}>{show ? 'Hide highlights' : 'Show on table'}</button></header>
+  if (view === 'hidden') return <section className="coach-unit coach-unit-hidden" aria-label="Coach"><span>Coach hidden</span><button onClick={() => setView('expanded')}>Show coach</button></section>;
+  return <section className={`coach-unit ${view === 'compact' ? 'coach-unit-compact' : ''}`} aria-label="Coach and hand plan">
+    <header className="coach-unit-heading"><div><span className="coach-eyebrow">Coach · {plan.followedId ? 'Your chosen direction' : 'Exploring directions'}</span><h2>{recommendation.headline}</h2></div><div className="coach-unit-controls"><button aria-controls={bodyId} aria-expanded={view === 'expanded'} onClick={() => setView(view === 'expanded' ? 'compact' : 'expanded')}>{view === 'expanded' ? 'Shrink coach' : 'Expand coach'}</button><button onClick={hideCoach}>Hide coach</button><button aria-pressed={show} onClick={() => { onShowChange(!show); if (!show) onHint?.(); }}>{show ? 'Hide highlights' : 'Show on table'}</button></div></header>
+    <div id={bodyId} hidden={view !== 'expanded'}>
     <p className="coach-next-step" aria-live="polite">{recommendation.explanation}</p>
     {session.selectionAssessment ? <p className="coach-selection-preview" role="status">{session.selectionAssessment}</p> : null}
     {plan.warning ? <p className="coach-warning" role="status">{plan.warning} Your pinned hand stays selected until you change it.</p> : null}
@@ -38,5 +44,6 @@ export function CoachPanel({ session, show, onShowChange, focusGroupId, onFocusG
       {recommendation.tradeoff ? <div><h3>The tradeoff</h3><p>{recommendation.tradeoff}</p></div> : <p>{recommendation.explanation}</p>}
       <p className="coach-limits">{recommendation.confidence === 'low' ? 'Tentative guidance. ' : recommendation.confidence === 'medium' ? 'A hand-fit suggestion. ' : 'Based on the current rules and visible state. '}The coach uses your rack and public tiles. It cannot see opponents’ hidden racks or future draws.</p>
     </details>
+    </div>
   </section>;
 }

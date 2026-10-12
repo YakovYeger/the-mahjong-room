@@ -46,3 +46,12 @@
  .coach-alternatives { grid-template-columns: 1fr; }
 }
 @media (prefers-contrast:more) { .shared-table-page .coach-unit { --coach-edge: #d5e3cb; --coach-muted: #e9eedf; } }
+
+.coach-unit-controls { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.coach-unit-heading > div:first-child { flex: 1; min-width: 0; }
+.coach-unit-controls button { white-space: nowrap; }
+.shared-table-page .coach-unit-compact { padding-block: 9px; }
+.coach-unit-compact h2 { font-size: 15px; }
+.shared-table-page .coach-unit-hidden { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; background: none; border: 0; font-size: 12px; }
+.coach-unit [hidden] { display: none; }
+@media (max-width:600px) { .coach-unit-controls { justify-content: flex-start; } }

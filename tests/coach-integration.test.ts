@@ -54,3 +54,18 @@ it('filters publicly blocked lines out of the card’s closest-hand suggestions'
   expect(screen.getByText('Closest available hands')).toBeTruthy();
   expect(screen.queryByRole('button', { name: /Garden Path.*11\/14/ })).toBeNull();
 });
+
+it('shrinks and hides the coach, clearing table annotations and allowing restoration', () => {
+  render(createElement(Integrated));
+  fireEvent.click(screen.getByRole('button', { name: 'Show on table' }));
+  expect(Object.keys(JSON.parse(screen.getByTestId('roles').textContent!).rack).length).toBeGreaterThan(0);
+  fireEvent.click(screen.getByRole('button', { name: 'Shrink coach' }));
+  expect(screen.getByRole('button', { name: 'Expand coach' }).getAttribute('aria-expanded')).toBe('false');
+  expect(screen.queryByText('Why this advice?')?.closest('[hidden]')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Hide coach' }));
+  expect(screen.queryByRole('region', { name: 'Coach and hand plan' })).toBeNull();
+  expect(JSON.parse(screen.getByTestId('roles').textContent!).rack).toEqual({});
+  fireEvent.click(screen.getByRole('button', { name: 'Show coach' }));
+  expect(screen.getByRole('button', { name: 'Shrink coach' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Show on table' }).getAttribute('aria-pressed')).toBe('false');
+});

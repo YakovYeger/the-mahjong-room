@@ -74,3 +74,12 @@ it('contains keyboard focus in the card picker and retains candidates after pinn
   expect(fit.open).toBe(false);
   expect(fit.querySelector('.hand-comparison')).toBeTruthy();
 });
+
+it('shows exposure requirements in closest choices and for the followed hand', () => {
+  render(createElement(CardCompanion, { rack, exposures: [], storageKey: 'exposure-info-test', candidates: TrainingCardProvider.analyzeCandidates(rack).filter(candidate => ['garden-path', 'evening-dots'].includes(candidate.handId)), onArrange: vi.fn(), open: false, onOpenChange: vi.fn() }));
+  const choice = screen.getByRole('button', { name: /Evening Dots.*Exposed allowed/ });
+  fireEvent.click(choice);
+  expect(screen.getByRole('group', { name: 'Followed hand exposure requirement' }).textContent).toContain('You may expose sets of three or more');
+  fireEvent.click(screen.getByRole('button', { name: /Garden Path.*Concealed/ }));
+  expect(screen.getByRole('group', { name: 'Followed hand exposure requirement' }).textContent).toContain('Keep this hand concealed');
+});
