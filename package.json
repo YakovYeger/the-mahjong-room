@@ -15,6 +15,7 @@
     "simulate-games": "tsx scripts/simulate-games.ts"
   },
   "dependencies": {
+    "@base-ui/react": "^1.9.0",
     "@dnd-kit/dom": "^0.5.0",
     "@dnd-kit/react": "^0.5.0",
     "@supabase/ssr": "0.12.5",

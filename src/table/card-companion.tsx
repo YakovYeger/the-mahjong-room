@@ -84,6 +84,8 @@ export function CardCompanion({ cardId = 'training-card', rack, exposures, stora
     const trigger = document.activeElement as HTMLElement | null;
     panelRef.current?.focus();
     const escape = (event: KeyboardEvent) => {
+      // Base UI portals its listbox outside the drawer. Let it handle keys first.
+      if (event.defaultPrevented || document.querySelector('[data-slot="select-content"]')) return;
       if (event.key === 'Escape') onOpenChange(false);
       if (event.key !== 'Tab') return;
       const controls = Array.from(panelRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input, select, summary') ?? []);
