@@ -1,4 +1,5 @@
 'use client';
+import { Tabs } from '../../src/ui/tabs';
 
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
 
@@ -133,9 +134,7 @@ export default function AccountPage() {
             <div className="account-actions"><a className="account-primary account-link" href="/games">Open my games</a><button className="account-secondary" onClick={signOut}>Sign out</button></div>
             {message ? <p className="account-message" role="status">{message}</p> : null}
           </> : <>
-            <div className="auth-tabs" role="tablist" aria-label="Account options">
-              {(['login', 'register', 'recover'] as AuthMode[]).map((item) => <button type="button" role="tab" aria-selected={mode === item} className={mode === item ? 'active' : ''} onClick={() => { setMode(item); setMessage(''); }} key={item}>{item === 'login' ? 'Sign in' : item === 'register' ? 'Create account' : 'Reset'}</button>)}
-            </div>
+            <Tabs<AuthMode> label="Account options" value={mode} onValueChange={next => { setMode(next); setMessage(''); }} options={[{ value: 'login', label: 'Sign in' }, { value: 'register', label: 'Create account' }, { value: 'recover', label: 'Reset' }]}>
             <form onSubmit={submitAuth}>
               <p className="kicker">{mode === 'register' ? 'Create your player profile' : mode === 'recover' ? 'Recover access' : 'Return to your table'}</p>
               <h2>{mode === 'register' ? 'Create an account' : mode === 'recover' ? 'Reset your password' : 'Sign in'}</h2>
@@ -147,6 +146,7 @@ export default function AccountPage() {
               <p className="form-note">Login errors are intentionally generic to protect account privacy.</p>
               {message ? <p className="account-message" role="status">{message}</p> : null}
             </form>
+            </Tabs>
           </>}
         </div>
       </section>

@@ -1,4 +1,5 @@
 'use client';
+import { Menu } from '../src/ui/menu';
 import { Select } from '../src/ui/select';
 import { getCardProvider, type CardId } from '../src/game/cards';
 import { CardCompanion, HandCheck } from '../src/table/card-companion';
@@ -479,7 +480,7 @@ export function GameExperience() {
     <main className={`shell game-shell shared-table-page unified-game ${cardOpen ? 'card-is-open' : ''}`}>
       <TableHeader brand={<button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={`Practice · Game ${gameNumber}`}>
         <button className="table-tool-button" aria-label={`${cardOpen ? 'Hide' : 'Show'} ${game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}`} aria-expanded={cardOpen} onClick={() => setCardOpen((open) => !open)}>{game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button>
-        <details className="table-menu"><summary>Table</summary><div><span>Saved on this device</span><a href="/learn" target="_blank" rel="noreferrer">Tutorial ↗</a><a href="/rules" target="_blank" rel="noreferrer">Rules ↗</a><a href="/account">Save progress</a><button onClick={() => setStarted(false)}>Leave table</button></div></details>
+        <Menu label="Table" note="Saved on this device" items={[{ label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, { label: 'Save progress', href: '/account' }, { label: 'Leave table', onClick: () => setStarted(false) }]} />
       </TableHeader>
       <section className="game-table" aria-label="Guided American Mahjong table">
         <TableSurface players={game.players.map(({ rack, ...player }) => ({ ...player, rackCount: rack.length }))} viewerId={human.id} activePlayerIds={game.phase === 'charleston' || respondingToDiscard ? [human.id] : [game.players[game.turnIndex].id]} wallCount={game.wall.length} discardCount={visibleDiscards.length}>

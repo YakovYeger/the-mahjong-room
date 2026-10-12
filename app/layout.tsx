@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import '../src/ui/select.css';
+import '../src/ui/components.css';
 import '../src/table/table.css';
 
 export const metadata: Metadata = {

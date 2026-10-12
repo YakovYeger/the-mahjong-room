@@ -1,0 +1,20 @@
+.ui-menu-trigger { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid #cabfa9; border-radius: 9px; background: #fffdf7; color: #173e34; font: 600 13px Arial,sans-serif; cursor: pointer; }
+.ui-menu-trigger[data-popup-open], .ui-menu-trigger:hover { border-color: #285f51; background: #e6eee8; }
+.ui-menu-positioner { z-index: 120; }
+.ui-menu-popup { min-width: 190px; max-width: calc(100vw - 24px); max-height: var(--available-height); overflow-y: auto; padding: 6px; border: 1px solid #cabfa9; border-radius: 12px; background: #fffdf7; color: #173e34; box-shadow: 0 12px 32px #0d302b33; }
+.ui-menu-item { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 10px 12px; border: 0; border-radius: 7px; background: transparent; color: #173e34; font: 600 13px Arial,sans-serif; text-decoration: none; text-align: left; cursor: pointer; outline: none; }
+.ui-menu-item[data-highlighted] { background: #e6eee8; }
+.ui-menu-item[data-disabled] { opacity: .5; cursor: not-allowed; }
+.ui-menu-note { max-width: 280px; margin: 4px 10px 8px; color: #657567; font: 12px/1.5 Arial,sans-serif; }
+.ui-dialog-backdrop { position: fixed; z-index: 90; inset: 0; background: #0d302bcc; backdrop-filter: blur(3px); }
+.ui-dialog.companion-drawer { position: fixed; z-index: 95; inset: 16px 0; width: min(760px,94vw); max-height: calc(100dvh - 32px); margin: auto; padding: 20px; transform: none; }
+.ui-tabs-list { display: flex; gap: 6px; margin-bottom: 24px; border-bottom: 1px solid #ddd5c7; padding-bottom: 10px; }
+.ui-tab { flex: 1; min-height: 44px; border: 0; border-radius: 8px; padding: 10px 8px; background: transparent; color: #657567; font: 600 13px Arial,sans-serif; cursor: pointer; }
+.ui-tab[data-active] { background: #173e34; color: #fffdf7; }
+.ui-radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0; }
+.ui-radio-choice { display: grid; gap: 5px; min-height: 70px; border: 1px solid #cabfa9; border-radius: 12px; padding: 14px; background: #fffdf7; color: #173e34; font: 13px Arial,sans-serif; cursor: pointer; text-align: left; }
+.ui-radio-choice[data-checked] { border-color: #285f51; background: #e6eee8; box-shadow: inset 0 0 0 1px #285f51; }
+.ui-radio-choice small { color: #657567; }
+.ui-menu-trigger:focus-visible, .ui-tab:focus-visible, .ui-radio-choice:focus-visible { outline: 3px solid #db684f; outline-offset: 3px; }
+@media (max-width: 600px) { .ui-dialog.companion-drawer { padding: 14px; } }
+.ui-dialog.companion-drawer .training-hand-list { display: grid; grid-template-columns: 1fr; gap: 12px; max-height: none; overflow: visible; }
