@@ -61,3 +61,7 @@
 .coach-unit .coach-unit-controls button:hover, .coach-unit.coach-unit-hidden button:hover { color: #f1d7a7; background: #ffffff0a; }
 .coach-unit .coach-unit-controls button[aria-pressed=true] { color: #f1d7a7; background: none; }
 @media (pointer:coarse) { .coach-unit .coach-unit-controls button, .coach-unit.coach-unit-hidden button { min-height: 44px; } }
+
+/* The restore action needs its own contrast on both cream and green tables. */
+.coach-unit.coach-unit-hidden button { padding: 5px 10px; border: 1px solid #82947a; border-radius: 5px; background: #344f3c; color: #f2efdf; text-decoration: none; }
+.coach-unit.coach-unit-hidden button:hover { background: #43654b; color: #fff8e6; }
