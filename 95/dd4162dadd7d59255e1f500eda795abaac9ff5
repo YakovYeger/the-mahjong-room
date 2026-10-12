@@ -1,0 +1,19 @@
+src/coach/coach.css
+  s_007e0a905cfb60::t_479b3f5e713cea 64-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "95dd4162dadd7d59255e1f500eda795abaac9ff5",
+  "prompts": {},
+  "sessions": {
+    "s_007e0a905cfb60": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1304b-a62c-7853-9c0d-dc401c73e2c4",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
