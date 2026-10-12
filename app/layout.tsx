@@ -3,6 +3,7 @@ import './globals.css';
 import '../src/ui/select.css';
 import '../src/ui/components.css';
 import '../src/table/table.css';
+import '../src/coach/coach.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL ?? 'https://the-mahjong-room.jyeger.chatgpt.site'),

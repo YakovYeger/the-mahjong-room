@@ -1,4 +1,4 @@
-import type { CallWindow, Exposure, HandCandidate, Tile } from '../game/types';
+import type { CallWindow, Exposure, HandCandidate, HandDefinition, Tile } from '../game/types';
 
 export type CoachReasonCode =
   | 'NOT_USED_BY_TOP_HANDS'
@@ -10,6 +10,40 @@ export type CoachReasonCode =
   | 'JOKER_PROTECTED'
   | 'WAIT_FOR_DRAW';
 
+export type CoachDecision = 'charleston-pass' | 'courtesy-pass' | 'charleston-decision' | 'discard' | 'call' | 'draw' | 'wait' | 'completed';
+
+export interface CoachGroup {
+  id: string;
+  label: string;
+  kind: string;
+  count: number;
+  matched: number;
+  missing: number;
+  jokerAllowed: boolean;
+  exposed: boolean;
+  rackTileIds: string[];
+  publicTileIds: string[];
+  unseenNaturals: number;
+  note: string;
+}
+
+export interface CoachHandPlan {
+  hand: HandDefinition;
+  candidate: HandCandidate;
+  groups: CoachGroup[];
+  blocked: boolean;
+  naturalShortage: number;
+  summary: string;
+}
+
+export interface CoachPlan {
+  followedId: string | null;
+  target: CoachHandPlan | null;
+  alternatives: CoachHandPlan[];
+  warning: string | null;
+  blockedHandIds: string[];
+}
+
 export interface CoachVisibleContext {
   cardId?: string;
   playerId: string;
@@ -20,15 +54,31 @@ export interface CoachVisibleContext {
   callWindow: CallWindow | null;
   wallCount: number;
   candidates: HandCandidate[];
+  followedHandId?: string | null;
 }
 
 export interface CoachRecommendation {
-  kind: 'charleston-pass' | 'discard' | 'call' | 'draw';
+  kind: CoachDecision | 'mahjong';
   tileIds: string[];
   reasonCodes: CoachReasonCode[];
   headline: string;
   explanation: string;
   confidence: 'high' | 'medium' | 'low';
+  reasons?: Array<{ title: string; body: string }>;
+  tradeoff?: string;
+  tileReasons?: Array<{ tileId: string; text: string }>;
+}
+
+export interface CoachSession {
+  plan: CoachPlan;
+  recommendation: CoachRecommendation;
+  selectionAssessment?: string;
+}
+
+export interface CoachHighlights {
+  rack: Record<string, 'keep' | 'suggest' | 'focus'>;
+  groupIds: string[];
+  publicTileIds: string[];
 }
 
 export interface ReviewCard {
