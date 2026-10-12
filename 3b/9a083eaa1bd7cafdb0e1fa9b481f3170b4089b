@@ -1,0 +1,83 @@
+app/games/[id]/page.tsx
+  s_007e0a905cfb60::t_55bf898b1d6f4d 135-136,140,279,288,293
+  s_007e0a905cfb60::t_49d6662baef994 6,26-29,33,35,134,137-139,141,261-262,283
+src/coach/use-coach.ts
+  s_007e0a905cfb60::t_08c2e537760941 1-4,6-8,10,13-16,18-23
+  s_007e0a905cfb60::t_ac191dee06a945 5,9,11-12,17
+docs/COACH_ENGINE.md
+  s_007e0a905cfb60::t_07a0fe5588ab0c 1,3,5,7,9-11
+src/coach/coach.css
+  s_007e0a905cfb60::t_70e981fffd15a9 1-48
+src/coach/plan.ts
+  s_007e0a905cfb60::t_d83ba6e90603cb 75-87
+  s_007e0a905cfb60::t_7fffe57a410b89 1-33,35-74,88-97,101-104
+  s_007e0a905cfb60::t_4ff8955f6feb65 34
+  s_007e0a905cfb60::t_28f55e6e772213 98-100
+src/coach/design-fixtures.ts
+  s_007e0a905cfb60::t_7a1e7abf9989f5 9
+  s_007e0a905cfb60::t_ceedca08e3cfb3 1-8,10-27
+app/layout.tsx
+  s_007e0a905cfb60::t_70e981fffd15a9 6
+src/coach/analyze.ts
+  s_007e0a905cfb60::t_0867e01f345929 4-16
+src/coach/coach-panel.tsx
+  s_007e0a905cfb60::t_08c2e537760941 1-42
+src/coach/highlights.ts
+  s_007e0a905cfb60::t_55bf898b1d6f4d 5
+  s_007e0a905cfb60::t_08c2e537760941 1-4,6-21
+src/coach/types.ts
+  s_007e0a905cfb60::t_6085c82c225e95 1,13-43,45-46,57,61,67-74,76-81
+  s_007e0a905cfb60::t_28f55e6e772213 44
+  s_007e0a905cfb60::t_a286639ba7c96f 75
+src/coach/recommend.ts
+  s_007e0a905cfb60::t_7fffe57a410b89 3,5-6,8,10,13-20,22-36,39-50,52-57,61-66,68,70,72-82,84-90,94-101,103-107,109-113,116,131
+  s_007e0a905cfb60::t_28f55e6e772213 108
+  s_007e0a905cfb60::t_d81d73a4a13c14 9,51,119-130
+  s_007e0a905cfb60::t_70e981fffd15a9 102
+tests/coach-planning.test.ts
+  s_007e0a905cfb60::t_485d25b35e35f2 134-138
+  s_007e0a905cfb60::t_7a1e7abf9989f5 121-130,132-133
+  s_007e0a905cfb60::t_70e981fffd15a9 131
+  s_007e0a905cfb60::t_4ff8955f6feb65 1-5,7-94,96-111
+  s_007e0a905cfb60::t_f17db149f17812 112-120
+  s_007e0a905cfb60::t_ecbc34006e8e2f 6,95
+docs/COACH_AUDIT_AND_DESIGN.md
+  s_007e0a905cfb60::t_70e981fffd15a9 14,90
+  s_007e0a905cfb60::t_a82b18bbc3a08b 116-117
+  s_007e0a905cfb60::t_07a0fe5588ab0c 1-13,15-18,20-89,91-115
+  s_007e0a905cfb60::t_d8bea3cf549c3e 19
+src/table/table-surface.tsx
+  s_007e0a905cfb60::t_49d6662baef994 32,42,47,68
+src/table/card-companion.tsx
+  s_007e0a905cfb60::t_aadf6e7e04d4ef 3,13
+  s_007e0a905cfb60::t_49d6662baef994 26,36,51,55,64,67
+tests/coach-integration.test.ts
+  s_007e0a905cfb60::t_f17db149f17812 1-12,14-18,20-24,26-56
+  s_007e0a905cfb60::t_07a0fe5588ab0c 25
+  s_007e0a905cfb60::t_d8eed3f8a5197e 13,19
+app/game-experience.tsx
+  s_007e0a905cfb60::t_49d6662baef994 15-17,227-230,483-484,499,541,549
+  s_007e0a905cfb60::t_7979a736945c00 550
+src/coach/use-followed-hand.ts
+  s_007e0a905cfb60::t_aadf6e7e04d4ef 1-32
+app/coach-preview/coach-preview.tsx
+  s_007e0a905cfb60::t_166c2453c0955b 1-26
+app/coach-preview/page.tsx
+  s_007e0a905cfb60::t_237f769cdf1522 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3b9a083eaa1bd7cafdb0e1fa9b481f3170b4089b",
+  "prompts": {},
+  "sessions": {
+    "s_007e0a905cfb60": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1304b-a62c-7853-9c0d-dc401c73e2c4",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
