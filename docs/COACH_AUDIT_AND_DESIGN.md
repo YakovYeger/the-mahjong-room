@@ -25,7 +25,7 @@ Help a player answer four questions at the table: **Which hand am I working towa
 
 ## Interaction design
 
-The new coach sits **after the rack**, before the card companion. Opening detailed help therefore does not move the rack or game-action controls. The default surface is compact: next-step headline, a concrete explanation, and “Show on table.” Two independent disclosures provide depth without making every turn an essay. “Shrink coach” keeps only the headline and controls; “Expand coach” restores the details. “Hide coach” clears table annotations and leaves a small “Show coach” control. These presentation choices stay local to the mounted table.
+The new coach sits **after the rack**, before the card companion. Opening detailed help therefore does not move the rack or game-action controls. The default surface is compact: next-step headline, a concrete explanation, and “Show on table.” Two independent disclosures provide depth without making every turn an essay. “Shrink coach” keeps only the headline and controls; “Expand coach” restores the details. “Hide coach” clears table annotations and leaves a small “Show coach” control. These presentation choices stay local to the mounted table. Resize, hide, and highlight controls use small text actions in a wrapping header outside the collapsible body, so they remain visible in compact mode. The advice headline has its own full-width row. Compact controls were checked at 360px, 640px, and 1280px with no horizontal overflow.
 
 ### 1. Next step
 
