@@ -1,0 +1,51 @@
+docs/UI_COMPONENTS.md
+  s_cfde2c582148f8::t_b25937c4554dd5 1-27
+src/ui/LICENSE.shadcn
+  s_cfde2c582148f8::t_3185b190a353f9 1-21
+app/games/page.tsx
+  s_cfde2c582148f8::t_a92aca799f4d3d 5,120
+src/table/card-companion.tsx
+  s_cfde2c582148f8::t_a92aca799f4d3d 87-88
+src/ui/select.css
+  s_cfde2c582148f8::t_a92aca799f4d3d 1-20
+  s_cfde2c582148f8::t_b25937c4554dd5 21-23
+src/table/reference-hands.tsx
+  s_cfde2c582148f8::t_a92aca799f4d3d 2,12
+app/layout.tsx
+  s_cfde2c582148f8::t_a92aca799f4d3d 3
+tests/select.test.ts
+  s_cfde2c582148f8::t_167b853ac9837d 1-21,24-45
+  s_cfde2c582148f8::t_c7ce39558d5680 22-23
+package.json
+  s_07e3dfef08585e::t_ecbac625cc75f4 18
+app/game-experience.tsx
+  s_cfde2c582148f8::t_a92aca799f4d3d 2,448
+src/ui/select.tsx
+  s_cfde2c582148f8::t_a92aca799f4d3d 1-49
+package-lock.json
+  s_cfde2c582148f8::t_b16de1ff401491 11,364-423,1461-1498,3438,5238,8845-8850,10678-10686
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0793cbdab09aeaf0c9f114504f24ff9a1a8a14f0",
+  "prompts": {},
+  "sessions": {
+    "s_07e3dfef08585e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12c5f-d6e6-7c41-a7e3-c1aa253840f8",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    },
+    "s_cfde2c582148f8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12ece-44c0-7a50-a95a-5e8f9933c647",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
