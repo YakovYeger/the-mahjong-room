@@ -1,0 +1,23 @@
+src/coach/coach-panel.tsx
+  s_007e0a905cfb60::t_f6641b8a29a959 26-27
+src/coach/coach.css
+  s_007e0a905cfb60::t_f6641b8a29a959 3,50-51,58-63
+docs/COACH_AUDIT_AND_DESIGN.md
+  s_007e0a905cfb60::t_176cdbc51acea2 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "655d27e61bf88ae9811f6b3af30583159a41ccdf",
+  "prompts": {},
+  "sessions": {
+    "s_007e0a905cfb60": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1304b-a62c-7853-9c0d-dc401c73e2c4",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
