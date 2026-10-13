@@ -1,9 +1,11 @@
-# Coach Engine
+# Coach engine
 
-The coach is deterministic and structurally separate from the rules engine. `CoachVisibleContext` contains the player rack, public discards and exposures, wall count, current call window, and ranked Training Card candidates. It deliberately excludes opponent concealed racks and future wall tiles.
+The coach is an independent advisory unit under `src/coach`. It uses the player's rack, public discards/exposures, wall count, and card candidates. It excludes opponents' concealed racks and future wall tiles. Solo and multiplayer use visible-data adapters and the same policy/UI.
 
-Rules answer whether a move is legal. Hand analysis answers which hands are plausible. The coach translates that visible analysis into a timely teaching prompt. It never sees opponent racks or future wall tiles.
+The exact hand followed in the card companion drives the coach. With no pin, the coach proposes a compatible current-fit direction, filtering proven natural-only shortages. A blocked/conflicting pin remains selected and pauses tile suggestions until the player explicitly changes direction.
 
-Recommendations cover Charleston passes, discards, calls, and draws. Each includes tile IDs, typed reason codes, confidence, a headline, and an explanation. The interface reveals these through three progressive hint levels and records how much help the player requested.
+`createCoachSession(context, decision, passCount)` returns an inspectable hand plan and recommendation. Group evidence includes current allocation, missing tiles, natural/Joker constraints, and unseen natural-copy bounds. Discard/Charleston advice reallocates after hypothetical removals and reports actual fit loss. Calls are checked against the target definition and simulated locked exposure. Valid Mahjong takes priority. Waiting and Charleston continuation suggest no tile action; blind/courtesy passes have separate policies.
 
-Post-game review is derived from canonical game events plus local coaching statistics. It reports Charleston completion, calls and exposures, joker exchanges, independent discard decisions, hint use, skill estimates, and the suggested assistance level for the next game.
+`useCoach` manages the shared pin, memoized session, highlight visibility, and per-decision group focus. `CoachPanel` renders next-step guidance, hand comparison, and expandable reasons; it has no game-action/backend access. `getCoachHighlights` yields exclusive rack roles plus card-group and public-tile focus IDs. The table still owns selection and submits every move through existing rules/Supabase.
+
+Post-game review remains event/stat-derived and has heuristic skill scores. Richer evidence-based review, exchange advice, calibrated table pressure, and assistance modes are future increments. See [the detailed audit, design, architecture, and roadmap](COACH_AUDIT_AND_DESIGN.md).

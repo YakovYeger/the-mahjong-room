@@ -12,7 +12,9 @@ import { PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable } from '@dnd-kit/react/sortable';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getCoachVisibleContext } from '../src/coach/analyze';
-import { getProgressiveHint, recommendCall, recommendCharlestonPass, recommendDiscard, recommendDraw } from '../src/coach/recommend';
+import { useCoach } from '../src/coach/use-coach';
+import { CoachPanel } from '../src/coach/coach-panel';
+import { coachHighlightLabel, coachHighlightMark } from '../src/coach/highlights';
 import { generateGameReview } from '../src/coach/review';
 import { loadGuestProgress, saveGuestProgress } from '../src/persistence/guest-progress';
 import { loadGuestGameSession, saveGuestGameSession } from '../src/persistence/guest-session';
@@ -204,8 +206,6 @@ export function GameExperience() {
     return order.flatMap((id) => byId.get(id) ?? []);
   }, [human.rack, rackOrder]);
   const coachContext = useMemo(() => getCoachVisibleContext(game, 'human')!, [game]);
-  const candidates = coachContext.candidates.filter((candidate) => candidate.viable).slice(0, 3);
-  const best = candidates[0];
   const respondingToDiscard = game.phase === 'playing' && game.callWindow !== null
     && game.callWindow.discardedByPlayerId !== 'human' && !game.callWindow.responses.human;
   const needsDraw = game.phase === 'playing' && !game.callWindow && game.players[game.turnIndex].id === 'human' && totalPlayerTiles(human) === 13;
@@ -224,13 +224,10 @@ export function GameExperience() {
   const blindAvailable = game.phase === 'charleston' && !game.charlestonCourtesy && [2, 5].includes(game.charlestonPassIndex);
   const expectedPassTiles = game.charlestonCourtesy ? undefined : 3 - blindCount;
   const exchangeOption = getLegalJokerExchangeOptions(game, 'human')[0];
-  const coachRecommendation = useMemo(() => {
-    if (game.phase === 'charleston') return recommendCharlestonPass(coachContext);
-    if (respondingToDiscard) return recommendCall(coachContext);
-    if (needsDraw) return recommendDraw();
-    return recommendDiscard(coachContext);
-  }, [coachContext, game.phase, needsDraw, respondingToDiscard]);
-  const coachHint = getProgressiveHint(coachRecommendation, hintLevel, human.rack);
+  const coachDecision = game.phase === 'completed' ? 'completed' : game.phase === 'charleston'
+    ? game.charlestonAwaitingDecision ? 'charleston-decision' : game.charlestonCourtesy ? 'courtesy-pass' : 'charleston-pass'
+    : respondingToDiscard ? 'call' : needsDraw ? 'draw' : canDiscard ? 'discard' : 'wait';
+  const coach = useCoach(coachContext, `${game.id}:${human.id}`, coachDecision, 3 - blindCount, selected);
   const gameReview = useMemo(() => generateGameReview(game, 'human', { hintsRequested, manualTurns }), [game, hintsRequested, manualTurns]);
   const visibleDiscards = game.discards;
 
@@ -483,8 +480,8 @@ export function GameExperience() {
         <Menu label="Table" note="Saved on this device" items={[{ label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, { label: 'Save progress', href: '/account' }, { label: 'Leave table', onClick: () => setStarted(false) }]} />
       </TableHeader>
       <section className="game-table" aria-label="Guided American Mahjong table">
-        <TableSurface players={game.players.map(({ rack, ...player }) => ({ ...player, rackCount: rack.length }))} viewerId={human.id} activePlayerIds={game.phase === 'charleston' || respondingToDiscard ? [human.id] : [game.players[game.turnIndex].id]} wallCount={game.wall.length} discardCount={visibleDiscards.length}>
-          <DiscardPool tiles={visibleDiscards} latestTileId={game.callWindow?.discard.id} />
+        <TableSurface highlightedTileIds={coach.highlights.publicTileIds} players={game.players.map(({ rack, ...player }) => ({ ...player, rackCount: rack.length }))} viewerId={human.id} activePlayerIds={game.phase === 'charleston' || respondingToDiscard ? [human.id] : [game.players[game.turnIndex].id]} wallCount={game.wall.length} discardCount={visibleDiscards.length}>
+          <DiscardPool highlightedTileIds={coach.highlights.publicTileIds} tiles={visibleDiscards} latestTileId={game.callWindow?.discard.id} />
         </TableSurface>
         <RackPanel className="player-area play-workspace">
         <TablePrompt title={actionTitle} detail={notice || stageTitle} active={game.phase === 'charleston' || respondingToDiscard || needsDraw || canDiscard}>
@@ -499,7 +496,7 @@ export function GameExperience() {
                       : <>{exchangeOption ? <button className="finish-button" onClick={exchangeJoker}>Exchange for Joker</button> : null}{manualTurns >= 4 ? <button className="finish-button" onClick={finishGame}>Complete with coach</button> : null}{selfMahjong ? <button className="mahjong-button" onClick={() => declareMahjong(false)}>Declare Mahjong</button> : null}<button className="primary" disabled={!canDiscard || selected.length !== 1} onClick={discardTile}>Discard tile</button></>}
             </div>
           </div>
-        <section className="table-coach" aria-label="Coach"><div className="coach-visible-hint"><strong>Coach</strong><p aria-live="polite">{coachHint}</p></div><details><summary>More guidance</summary><div><div className="candidate-list">{candidates.map((candidate, index) => <div key={candidate.handId}><span>{index === 0 ? 'Best match' : 'Alternative'}</span><strong>{candidate.name}</strong><small>{candidate.matchingTileIds.length} / 14 useful</small></div>)}</div><button onClick={requestHint}>{hintLevel < 2 ? 'Show me what to notice' : 'Why these tiles?'}</button></div></details></section>
+
           <MotionConfig reducedMotion="user" transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.7 }}>
             <DragDropProvider
               sensors={(defaults) => [
@@ -541,7 +538,7 @@ export function GameExperience() {
                 const cannotPassJoker = game.phase === 'charleston' && tile.type.kind === 'joker';
                 return <SortableRackItem id={tile.id} index={index} className="tile-slot" key={tile.id}>
                   {({ isDragging, handleRef }) => <>
-                    <button ref={handleRef} data-drag-handle className={`tile ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${cannotPassJoker ? 'cannot-pass' : ''} ${hintLevel >= 1 && coachRecommendation.tileIds.includes(tile.id) ? 'recommended' : ''} ${hintLevel >= 1 && best && !best.matchingTileIds.includes(tile.id) ? 'hinted' : ''}`} aria-label={`${tileLabel(tile)}${cannotPassJoker ? ', cannot be passed' : ''}. Hold and drag to reorder or use Alt and arrow keys.`} aria-pressed={selected.includes(tile.id)} aria-disabled={cannotPassJoker} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); nudgeTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); nudgeTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; if (cannotPassJoker) setNotice('Jokers may be rearranged, but they cannot be passed during the Charleston.'); else toggleTile(tile.id); }}><TileFace tile={tile} /></button>
+                    <button ref={handleRef} data-drag-handle className={`tile ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${cannotPassJoker ? 'cannot-pass' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}${cannotPassJoker ? ', cannot be passed' : ''}. Hold and drag to reorder or use Alt and arrow keys.`} aria-pressed={selected.includes(tile.id)} aria-disabled={cannotPassJoker} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); nudgeTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); nudgeTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; if (cannotPassJoker) setNotice('Jokers may be rearranged, but they cannot be passed during the Charleston.'); else toggleTile(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
                   </>}
                 </SortableRackItem>;
               })}
@@ -549,7 +546,8 @@ export function GameExperience() {
             </DragDropProvider>
           </MotionConfig>
             <small className="reorder-hint" id="rack-reorder-hint"><span aria-hidden="true">↔</span> Drag tiles to arrange · Alt + arrow keys</small>
-          <CardCompanion key={game.id} cardId={game.cardId} rack={human.rack} exposures={human.exposures} storageKey={`${game.id}:${human.id}`} candidates={coachContext.candidates} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); setNotice('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
+        {coach.session ? <CoachPanel session={coach.session} show={coach.show} onShowChange={coach.setShow} focusGroupId={coach.focusGroupId} onFocusGroup={coach.focusGroup} onFollow={coach.follow} onBrowse={() => setCardOpen(true)} onHint={requestHint} /> : null}
+          <CardCompanion blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} key={game.id} cardId={game.cardId} rack={human.rack} exposures={human.exposures} storageKey={`${game.id}:${human.id}`} candidates={coachContext.candidates} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); setNotice('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
 
 
         </RackPanel>

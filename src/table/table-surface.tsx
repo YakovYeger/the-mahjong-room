@@ -29,7 +29,7 @@ export function PlayerSeat({ player, position, active, viewer }: { player: Table
   </article>;
 }
 
-export function TableSurface({ players, viewerId, activePlayerIds, wallCount, discardCount = 0, children }: { players: TablePlayer[]; viewerId: string; activePlayerIds: string[]; wallCount: number; discardCount?: number; children?: ReactNode }) {
+export function TableSurface({ players, viewerId, activePlayerIds, wallCount, discardCount = 0, children, highlightedTileIds = [] }: { highlightedTileIds?: string[]; players: TablePlayer[]; viewerId: string; activePlayerIds: string[]; wallCount: number; discardCount?: number; children?: ReactNode }) {
   const viewerSeat = players.find((player) => player.id === viewerId)?.seat ?? 'east';
   const exposedPlayers = players.filter((player) => player.exposures.length > 0);
   return <><section className={`table-surface${discardCount > 35 ? ' table-surface-late' : ''}`} aria-label="Mahjong table">
@@ -39,12 +39,12 @@ export function TableSurface({ players, viewerId, activePlayerIds, wallCount, di
   </section>{exposedPlayers.length ? <section className={`table-melds${exposedPlayers.length === 1 ? ' table-melds-single' : ''}`} aria-label="Exposed sets">
     {exposedPlayers.map((player) => <article key={player.id} aria-label={`${player.id === viewerId ? 'Your' : player.name + '’s'} exposed sets`}>
       <strong>{player.id === viewerId ? 'You' : player.name} <small>· {player.seat}</small></strong>
-      <div className="table-meld-groups">{player.exposures.map((set) => <div className="table-meld" key={set.id} aria-label={`${set.kind}: ${set.tiles.map(tileLabel).join(', ')}`}><div className="table-exposed-set">{set.tiles.map((tile) => <span key={tile.id} title={tileLabel(tile)}><TileFace tile={tile} compact /></span>)}</div></div>)}</div>
+      <div className="table-meld-groups">{player.exposures.map((set) => <div className="table-meld" key={set.id} aria-label={`${set.kind}: ${set.tiles.map(tileLabel).join(', ')}`}><div className="table-exposed-set">{set.tiles.map((tile) => <span className={highlightedTileIds.includes(tile.id) ? 'coach-public-focus' : undefined} key={tile.id} title={`${tileLabel(tile)}${highlightedTileIds.includes(tile.id) ? ' · Coach focus: public copy' : ''}`}><TileFace tile={tile} compact /></span>)}</div></div>)}</div>
     </article>)}
   </section> : null}</>;
 }
 
-export function DiscardPool({ tiles, latestTileId, dropRef, dropActive = false, children }: { tiles: Tile[]; latestTileId?: string; dropRef?: Ref<HTMLDivElement>; dropActive?: boolean; children?: ReactNode }) {
+export function DiscardPool({ tiles, latestTileId, dropRef, dropActive = false, children, highlightedTileIds = [] }: { highlightedTileIds?: string[]; tiles: Tile[]; latestTileId?: string; dropRef?: Ref<HTMLDivElement>; dropActive?: boolean; children?: ReactNode }) {
   const latest = latestTileId ? tiles.find((tile) => tile.id === latestTileId) : tiles.at(-1);
   const historyRef = useRef<HTMLDivElement>(null);
   const currentTileId = latest?.id;
@@ -65,7 +65,7 @@ export function DiscardPool({ tiles, latestTileId, dropRef, dropActive = false, 
   return <div ref={dropRef} className={`table-discards${dropActive ? ' table-discards-drop-active' : ''}`} role="region" aria-label={`Discard pool, ${tiles.length} visible tiles`}>
     <header><strong>Discards</strong><span>{tiles.length ? `${tiles.length} · oldest first` : 'No discards yet'}</span></header>
     {latest ? <div className="table-latest-discard"><span>{latestTileId ? 'Claim tile' : 'Latest discard'}</span><span className="table-latest-tile"><TileFace tile={latest} /></span><strong>{tileLabel(latest)}</strong></div> : null}
-    <div className="table-discard-grid" ref={historyRef} tabIndex={tiles.length ? 0 : undefined} aria-label="Discard history, scroll to inspect older tiles">{tiles.map((tile, index) => <span className={`table-discard-tile${tile.id === latest?.id ? ' table-discard-latest' : ''}`} title={`${tileLabel(tile)}, discard ${index + 1}`} key={tile.id}><TileFace tile={tile} compact /></span>)}</div>
+    <div className="table-discard-grid" ref={historyRef} tabIndex={tiles.length ? 0 : undefined} aria-label="Discard history, scroll to inspect older tiles">{tiles.map((tile, index) => <span className={`table-discard-tile${tile.id === latest?.id ? ' table-discard-latest' : ''}${highlightedTileIds.includes(tile.id) ? ' coach-public-focus' : ''}`} title={`${tileLabel(tile)}, discard ${index + 1}`} key={tile.id}><TileFace tile={tile} compact /></span>)}</div>
     {children}
   </div>;
 }

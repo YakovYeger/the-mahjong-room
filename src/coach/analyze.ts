@@ -1,6 +1,19 @@
 import { getCardProvider } from '../game/cards';
 import type { GameState, Tile } from '../game/types';
 import type { CoachVisibleContext } from './types';
+import type { GameSnapshot } from '../multiplayer/types';
+
+export function getSnapshotCoachContext(snapshot: GameSnapshot): CoachVisibleContext {
+  const { publicState, privateState } = snapshot;
+  const ownExposures = publicState.players.find(player => player.id === privateState.playerId)?.exposures ?? [];
+  return {
+    playerId: privateState.playerId, cardId: publicState.cardId, rack: privateState.rack, ownExposures,
+    visibleExposures: publicState.players.flatMap(player => player.exposures.map(exposure => ({ playerId: player.id, exposure }))),
+    discards: publicState.discards, wallCount: publicState.wallCount,
+    callWindow: publicState.callWindow ? { ...publicState.callWindow, responses: {} } : null,
+    candidates: getCardProvider(publicState.cardId).analyzeCandidates([...privateState.rack, ...ownExposures.flatMap(set => set.tiles)], ownExposures),
+  };
+}
 
 export function getCoachVisibleContext(state: GameState, playerId: string): CoachVisibleContext | null {
   const player = state.players.find((item) => item.id === playerId);

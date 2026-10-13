@@ -586,3 +586,11 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
  .coach-visible-hint { gap: 8px; }
  .unified-game .table-coach .coach-visible-hint p { font-size: 11px; }
 }
+
+/* Show exposure requirements before a player commits to a followed hand. */
+.companion-hand-rules { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 10px; }
+.companion-exposure-badge { padding: 5px 8px; border: 1px solid #8eaa99; border-radius: 5px; color: #214f3d; background: #e5eddf; font-size: 12px; white-space: nowrap; }
+.companion-exposure-badge.companion-concealed { color: #62491e; border-color: #c7ad73; background: #f3ead5; }
+.companion-hand-rules p { margin: 0; font-size: 12px; line-height: 1.5; color: #5d6857; }
+.companion-choice-label { min-width: 0; }
+.companion-hand-kind { display: block; margin-top: 5px; font-size: 11px; font-weight: 400; color: #54624f; }
