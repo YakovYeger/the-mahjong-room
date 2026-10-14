@@ -1,0 +1,21 @@
+docs/ACCOUNT_MANAGEMENT.md
+  s_22c446349888fd::t_f4ea9367418f8b 34
+docs/IMPLEMENTATION_STATUS.md
+  s_22c446349888fd::t_f4ea9367418f8b 126,131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "688b54cc895a2197f78234e67aca8d3cb4e9e73a",
+  "prompts": {},
+  "sessions": {
+    "s_22c446349888fd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13994-9e97-7d12-b2d0-9e26f8f2e210",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
