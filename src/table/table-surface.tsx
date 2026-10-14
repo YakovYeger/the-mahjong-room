@@ -25,6 +25,7 @@ export function PlayerSeat({ player, position, active, viewer }: { player: Table
   return <article className={`table-seat table-seat-${position}${active ? ' table-seat-active' : ''}`} aria-label={`${viewer ? 'You' : player.name}, ${player.seat}, ${player.presence === 'away' ? 'away' : 'at the table'}${active ? viewer ? ', your move' : ', their move' : ''}`} aria-current={active ? 'true' : undefined}>
     <span className={`table-avatar table-avatar-${player.presence ?? 'present'}`} aria-hidden="true">{viewer ? 'Y' : player.name.slice(0, 1).toUpperCase()}</span>
     <strong className="table-seat-name">{viewer ? 'You' : player.name}</strong>
+    {active || player.presence === 'away' ? <span className="table-seat-state">{player.presence === 'away' ? 'Away' : viewer ? 'Your move' : 'Moving'}</span> : null}
     {player.revealedRack ? <details className="table-seat-tiles"><summary>Final rack</summary><div className="table-exposed-set">{player.revealedRack.map((tile) => <span title={tileLabel(tile)} key={tile.id}><TileFace tile={tile} compact /></span>)}</div></details> : null}
   </article>;
 }
