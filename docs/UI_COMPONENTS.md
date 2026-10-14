@@ -42,3 +42,34 @@ interaction in the Sites deployment. This branch does not publish a site.
 These controls reuse `@base-ui/react`, with shared product styles in
 `src/ui/components.css`. Game tiles, dragging, persistent status messages, and
 native disclosure sections keep their existing implementations.
+
+## Form components — project default
+
+New and changed forms use locally owned shadcn/ui Base UI components. Account sign-in, registration, recovery, username selection, profile settings, password changes, and deletion now share this composition. Field and control sources are adapted from the [official shadcn registry](https://github.com/shadcn-ui/ui/tree/main/apps/v4/registry/bases/base/ui) under `src/ui/LICENSE.shadcn`; product CSS replaces the upstream utility/variant helpers. No new runtime dependencies are required.
+
+- `src/ui/field.tsx`: semantic sets/legends, grouped fields, labels, descriptions, and announced errors.
+- `src/ui/input.tsx`: shadcn's Base UI Input composition, preserving native input attributes, autocomplete, controlled values, and refs.
+- `src/ui/label.tsx`: native labels used by FieldLabel.
+- `src/ui/button.tsx`: shadcn's Base UI Button composition with default, outline, secondary, ghost, and destructive variants. Buttons default to `type="button"`; submit buttons explicitly specify `type="submit"`. `buttonVariants()` also styles native navigation anchors.
+
+The shared styles in `src/ui/components.css` use warm ivory tile-like input faces, felt-green actions, brass borders, gold button focus rings, serif legends, and readable sans-serif labels and controls. Red identifies errors and destructive actions. Input text stays 16px to avoid phone focus zoom, targets stay at least 44px, disabled states remain visible, and reduced-motion removes transitions. Portal forms use the same styles without relying on an account-page ancestor.
+
+```tsx
+<form onSubmit={save}>
+  <FieldSet>
+    <FieldLegend>Profile</FieldLegend>
+    <FieldGroup>
+      <Field data-invalid={!!error}>
+        <FieldLabel htmlFor="display-name">Display name</FieldLabel>
+        <Input id="display-name" value={name} onChange={event => setName(event.target.value)}
+          aria-invalid={!!error} aria-describedby={error ? 'name-hint name-error' : 'name-hint'} />
+        <FieldDescription id="name-hint">Use up to 48 characters.</FieldDescription>
+        <FieldError id="name-error">{error}</FieldError>
+      </Field>
+      <Button type="submit" disabled={busy}>Save profile</Button>
+    </FieldGroup>
+  </FieldSet>
+</form>
+```
+
+Keep form state and async behavior in the feature component; use native validation and shared server contracts for small forms. For a more complex future form, the Field composition also supports a dedicated form-state library. Expose helpful field-level errors and announce request errors separately from successful status messages. Avoid overriding generic input/label/button styles from a page selector.

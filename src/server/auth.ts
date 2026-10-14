@@ -1,10 +1,11 @@
 import type { User } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { createSupabaseAdminClient } from '../lib/supabase/admin';
 import { createSupabaseServerClient } from '../lib/supabase/server';
 import { ApiError } from './http';
 
 export type AuthenticatedUser = Pick<User, 'id' | 'email' | 'user_metadata'>;
-const identitySchema = z.object({ sub: z.uuid(), role: z.literal('authenticated'), email: z.string().optional(),
+const identitySchema = z.object({ sub: z.uuid(), role: z.literal('authenticated'), email: z.string().optional(), session_id: z.uuid(),
   user_metadata: z.record(z.string(), z.unknown()).optional() });
 
 export async function requireUser(): Promise<AuthenticatedUser> {
@@ -15,6 +16,11 @@ export async function requireUser(): Promise<AuthenticatedUser> {
   const { data, error } = await supabase.auth.getClaims();
   const identity = identitySchema.safeParse(data?.claims);
   if (error || !identity.success) throw new ApiError(401, 'AUTH_REQUIRED', 'Sign in to continue.');
+  const admin = createSupabaseAdminClient();
+  if (!admin) throw new ApiError(503, 'BACKEND_NOT_CONFIGURED', 'Account services are not configured yet.');
+  const { data: active, error: sessionError } = await admin.rpc('account_session_active', { requesting_user_id: identity.data.sub, requesting_session_id: identity.data.session_id });
+  if (sessionError) throw new ApiError(503, 'SESSION_CHECK_UNAVAILABLE', 'Your session could not be checked. Please try again.');
+  if (!active) throw new ApiError(401, 'AUTH_REQUIRED', 'Sign in to continue.');
   return { id: identity.data.sub, email: identity.data.email, user_metadata: identity.data.user_metadata ?? {} };
 }
 

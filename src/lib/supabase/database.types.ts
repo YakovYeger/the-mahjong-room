@@ -432,6 +432,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      account_session_active: {
+        Args: { requesting_user_id: string; requesting_session_id: string }
+        Returns: boolean
+      }
       load_player_action_context: {
         Args: { requested_game_id: string; requested_action_id: string; requesting_user_id: string; request_hash_value: string }
         Returns: Json

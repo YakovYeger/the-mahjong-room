@@ -122,3 +122,10 @@ Frontend/server application changes are included in the October 11 Sites release
 - GitHub `YakovYeger/the-mahjong-room` is the application source of truth; Sites handles deployment.
 - Integrated existing GitHub main history with the tested version 37 source without force-pushing. The current TanStack transport, dnd-kit interactions, mobile navigation, and transactional action guards supersede older implementations of the same features.
 - Retained the migration timestamps already applied to production and omitted byte-identical copies under older GitHub filenames to avoid duplicate migrations.
+
+## Account management — October 14 (branch, not yet released)
+
+- G15 account settings: profile details and display-name edits, verified password change/recovery, global sign-out, and confirmed self-service deletion.
+- Server APIs reject revoked sessions immediately. A transactional deletion trigger guards open tables, removes owned history, and anonymizes retained completed seats/history at other hosts' tables.
+- Tested with isolated local Supabase Auth/database fixtures and desktop/mobile browser journeys. Production SMTP and Google OAuth require release verification.
+- Apply the included account-management migration before deploying the matching build; see [ACCOUNT_MANAGEMENT.md](ACCOUNT_MANAGEMENT.md) for policy, tests, and release order.

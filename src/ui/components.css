@@ -18,3 +18,40 @@
 .ui-menu-trigger:focus-visible, .ui-tab:focus-visible, .ui-radio-choice:focus-visible { outline: 3px solid #db684f; outline-offset: 3px; }
 @media (max-width: 600px) { .ui-dialog.companion-drawer { padding: 14px; } }
 .ui-dialog.companion-drawer .training-hand-list { display: grid; grid-template-columns: 1fr; gap: 12px; max-height: none; overflow: visible; }
+
+/* Shared shadcn form controls: ivory tile faces, felt, and warm brass. */
+:root { --form-surface: var(--paper,#fffdf7); --form-ink: var(--ink,#173630); --form-felt: var(--felt,#285f51); --form-border: #96886f; --form-muted: #52685f; --form-danger: #9c3a31; }
+.ui-field-set { min-width: 0; margin: 0; padding: 0; border: 0; }
+.ui-field-legend { margin: 0 0 10px; padding: 0; color: var(--form-ink); font: 700 23px/1.2 Georgia,serif; }
+.ui-field-group { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.ui-field { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.ui-field[data-orientation="horizontal"] { flex-direction: row; align-items: center; }
+.ui-label { color: var(--form-ink); font: 700 13px/1.4 Arial,Helvetica,sans-serif; }
+.ui-field-label { display: block; margin: 0; }
+.ui-field-description { margin: 0; color: var(--form-muted); font: 14px/1.6 Arial,Helvetica,sans-serif; overflow-wrap: anywhere; }
+.ui-field-set > .ui-field-description { margin-bottom: 22px; }
+.ui-field-error { color: var(--form-danger); font: 600 14px/1.5 Arial,Helvetica,sans-serif; overflow-wrap: anywhere; }
+.ui-field-error ul { margin: 0; padding-left: 20px; }
+.ui-input { width: 100%; min-width: 0; min-height: 48px; border: 1px solid var(--form-border); border-bottom-width: 2px; border-radius: 10px; padding: 12px 14px; background: linear-gradient(180deg,#fffefb,#faf7ef); color: var(--form-ink); font: 400 16px/1.4 Arial,Helvetica,sans-serif; box-shadow: inset 0 1px 0 #fff; transition: border-color .15s,box-shadow .15s; }
+.ui-input::placeholder { color: #718078; }
+.ui-input:hover:not(:disabled) { border-color: #8b9b88; }
+.ui-input:focus { outline: 2px solid var(--form-felt); outline-offset: 2px; border-color: var(--form-felt); box-shadow: 0 0 0 4px #285f5110; }
+.ui-input[aria-invalid="true"] { border-color: var(--form-danger); }
+.ui-input[aria-invalid="true"]:focus { outline-color: var(--form-danger); }
+.ui-input:disabled { opacity: .6; cursor: not-allowed; }
+.ui-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; max-width: 100%; border: 1px solid transparent; border-radius: 999px; padding: 12px 20px; font: 700 14px/1.4 Arial,Helvetica,sans-serif; text-align: center; text-decoration: none; cursor: pointer; transition: background .15s,border-color .15s,box-shadow .15s; }
+.ui-button-default { background: var(--form-ink); color: var(--form-surface); border-color: var(--form-ink); box-shadow: inset 0 1px 0 #ffffff18; }
+.ui-button-default:hover:not(:disabled) { background: var(--form-felt); border-color: var(--form-felt); }
+.ui-button-outline { background: var(--form-surface); color: var(--form-ink); border-color: var(--form-border); }
+.ui-button-outline:hover:not(:disabled) { background: #f0eadc; border-color: #a79979; }
+.ui-button-secondary { background: #e6eee8; color: var(--form-ink); border-color: #cfdbd0; }
+.ui-button-secondary:hover:not(:disabled) { background: #dbe7dd; }
+.ui-button-ghost { background: transparent; color: var(--form-ink); }
+.ui-button-ghost:hover:not(:disabled) { background: #e6eee8; }
+.ui-button-destructive { background: var(--form-danger); color: #fffdf7; border-color: var(--form-danger); }
+.ui-button-destructive:hover:not(:disabled) { background: #7d2e27; border-color: #7d2e27; }
+.ui-button:focus-visible { outline: 3px solid #967021; outline-offset: 3px; }
+.ui-button:disabled { opacity: .55; cursor: not-allowed; }
+.ui-button-sm-size { min-height: 44px; padding: 10px 16px; }
+@media (min-width: 600px) { .ui-field[data-orientation="responsive"] { flex-direction: row; align-items: center; } }
+@media (prefers-reduced-motion: reduce) { .ui-input, .ui-button { transition: none; } }
