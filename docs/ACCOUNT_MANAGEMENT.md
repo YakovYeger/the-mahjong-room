@@ -31,7 +31,7 @@ Deletion removes the Auth account and sessions, profile, username/email login id
 
 ## Release ordering
 
-Apply `20261014090351_account_management.sql` before deploying this application build. The shared API auth guard depends on its session lookup and deliberately returns an error if the migration is absent. The migration and browser journeys have been verified on an isolated local Supabase instance; production schema and hosting are unchanged by this branch.
+Apply `20261014090351_account_management.sql` before deploying this application build. The shared API auth guard depends on its session lookup and deliberately returns an error if the migration is absent. The migration was applied to production on October 14, 2026 and its rollback-only regression fixtures passed against the actual database. It is recorded as `20261014090351` in migration history. Local Auth/browser journeys and the private demo preview were also verified.
 
 Push the tested application source to canonical GitHub before publishing the matching Sites build. Preserve the existing `.openai/hosting.json` project identity and audience.
 
