@@ -1,0 +1,54 @@
+src/ui/field.tsx
+  s_22c446349888fd::t_e879b79c6bfb19 1-35
+src/ui/label.tsx
+  s_22c446349888fd::t_e879b79c6bfb19 1-5
+app/account/page.tsx
+  s_22c446349888fd::t_314413464ef5d3 3-4,132-140,143-144,147-168
+  s_22c446349888fd::t_068dc8750f11d9 5
+  s_c42f140ffd33de::t_83a1289fb0441b 36,45,57,60,70,89,96,101,111,118,173
+src/ui/components.css
+  s_22c446349888fd::t_e879b79c6bfb19 21-22,24-52,54-57
+  s_22c446349888fd::t_377ce367612b49 23,53
+src/account/settings.tsx
+  s_22c446349888fd::t_314413464ef5d3 3-5,28-29,45-46,65-66,94-130,132-133,135-138,140-141,143-154
+src/ui/button.tsx
+  s_22c446349888fd::t_e879b79c6bfb19 1-15
+src/ui/input.tsx
+  s_22c446349888fd::t_e879b79c6bfb19 1-10
+AGENTS.md
+  s_22c446349888fd::t_12a5fc1a361f2f 15-21
+app/globals.css
+  s_22c446349888fd::t_12a5fc1a361f2f 746,753-760
+docs/UI_COMPONENTS.md
+  s_22c446349888fd::t_12a5fc1a361f2f 45-64,66-75
+  s_22c446349888fd::t_ceab811a587dac 65
+tests/account-settings.test.ts
+  s_22c446349888fd::t_12a5fc1a361f2f 26-30
+docs/ACCOUNT_MANAGEMENT.md
+  s_22c446349888fd::t_12a5fc1a361f2f 5-6
+  s_22c446349888fd::t_ceab811a587dac 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "73b3c9200fe840147f8157c950e5d29e1e728a20",
+  "prompts": {},
+  "sessions": {
+    "s_22c446349888fd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13994-9e97-7d12-b2d0-9e26f8f2e210",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    },
+    "s_c42f140ffd33de": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a139a5-ac3f-7972-b06c-efd2fb74dbc1",
+        "model": "unknown"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
