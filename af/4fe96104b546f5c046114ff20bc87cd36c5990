@@ -1,0 +1,25 @@
+tests/accessibility.test.ts
+  s_22c446349888fd::t_0175d56acdb13d 3,24-26,32
+  s_22c446349888fd::t_dedf827e1e6842 27-31
+  s_22c446349888fd::t_ea73f403ce2053 33
+src/accessibility/settings.tsx
+  s_22c446349888fd::t_c843aaf1af7620 22,25,28,31,34
+src/ui/radio-group.tsx
+  s_22c446349888fd::t_c843aaf1af7620 6-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "af4fe96104b546f5c046114ff20bc87cd36c5990",
+  "prompts": {},
+  "sessions": {
+    "s_22c446349888fd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13994-9e97-7d12-b2d0-9e26f8f2e210",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
