@@ -1,4 +1,5 @@
 'use client';
+import { AccountSettings } from '../../src/account/settings';
 import { Tabs } from '../../src/ui/tabs';
 
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
@@ -26,17 +27,18 @@ export default function AccountPage() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [profileUsername, setProfileUsername] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [guestGames, setGuestGames] = useState(0);
   const [busy, setBusy] = useState(false);
+  const authError = searchParams.get('auth_error');
   const recoverySession = searchParams.get('recovery') === '1';
 
   useEffect(() => {
     const hydrateAccount = async () => {
       await Promise.resolve();
+      if (authError === 'invalid_link') setMessage('This sign-in or recovery link has expired or already been used. Request a new one.');
       setGuestGames(loadGuestProgress(localStorage)?.gamesCompleted ?? 0);
       if (!supabase) return;
       const { data } = await supabase.auth.getUser();
@@ -48,14 +50,14 @@ export default function AccountPage() {
       ]);
       const profile = profileResult.data;
       setProfileUsername(profile?.username ?? null);
-      setMessage(result.message);
+      setMessage(authError === 'invalid_link' ? 'This sign-in or recovery link has expired or already been used. Request a new one.' : result.message);
       if (result.ok) setGuestGames(0);
     };
-    void hydrateAccount();
+    void hydrateAccount().catch(() => setMessage('Your account could not be loaded. Please refresh and try again.'));
     if (!supabase) return;
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => setUserEmail(session?.user.email ?? null));
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => { setUserEmail(session?.user.email ?? null); if (!session) setProfileUsername(null); });
     return () => data.subscription.unsubscribe();
-  }, [supabase]);
+  }, [supabase, authError]);
 
   const submitAuth = async (event: FormEvent) => {
     event.preventDefault();
@@ -104,33 +106,25 @@ export default function AccountPage() {
     finally { setBusy(false); }
   };
 
-  const updatePassword = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!supabase || newPassword.length < 8) return setMessage('Use at least 8 characters.');
-    setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setMessage(error ? error.message : 'Password updated.');
-    setBusy(false);
-  };
-
   const signOut = async () => {
     if (!supabase) return;
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: 'global' });
+    if (error) { setMessage('You could not be signed out. Please try again.'); return; }
     setUserEmail(null);
     setProfileUsername(null);
     setMessage('Signed out. Your account progress remains saved.');
   };
 
   return (
-    <main className="account-page">
+    <main className={`account-page${userEmail ? ' account-page-signed-in' : ''}`}>
       <header><a className="brand" href="/">The Mahjong Room</a><nav><a href="/games">My games</a><a href="/">Back to the table</a></nav></header>
       <section className="account-shell">
-        <div className="account-copy"><p className="kicker">Your seat, on any device</p><h1>Save games and invite the table.</h1><p>Guest play stays available. An account adds cloud autosave, private rooms, live or time-based turns, and secure reconnects.</p><div className="guest-badge"><strong>{guestGames}</strong><span>guest game{guestGames === 1 ? '' : 's'} ready to save</span></div></div>
+        <div className="account-copy"><p className="kicker">Your seat, on any device</p><h1>{userEmail ? 'Your place at the table.' : 'Save games and invite the table.'}</h1><p>{userEmail ? 'Manage your profile, secure your account, and get ready for your next game.' : 'Guest play stays available. An account adds cloud autosave, private rooms, live or time-based turns, and secure reconnects.'}</p>{!userEmail || guestGames > 0 ? <div className="guest-badge"><strong>{guestGames}</strong><span>guest game{guestGames === 1 ? '' : 's'} ready to save</span></div> : null}</div>
         <div className="account-card">
           {!supabase ? <><p className="kicker">Guest mode</p><h2>Account services are being connected.</h2><p>Your local game remains playable and saved on this device.</p></> : userEmail ? <>
-            <p className="kicker">Signed in</p><h2>{profileUsername ? `@${profileUsername}` : userEmail}</h2>
-            {!profileUsername ? <form onSubmit={claimUsername}><p>Choose a username before joining a multiplayer room.</p><label htmlFor="claim-username">Username</label><input id="claim-username" required minLength={3} maxLength={24} pattern="[A-Za-z0-9_]+" value={username} onChange={(event) => setUsername(event.target.value)} /><button className="account-primary" disabled={busy}>Choose username</button></form> : <p>{userEmail}<br />Your games autosave after every accepted action.</p>}
-            {recoverySession ? <form onSubmit={updatePassword}><label htmlFor="new-password">New password</label><input id="new-password" type="password" minLength={8} required autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /><button className="account-primary" disabled={busy}>Update password</button></form> : null}
+            <p className="kicker">Signed in{profileUsername ? ` as @${profileUsername}` : ''}</p>
+            {!profileUsername ? <form onSubmit={claimUsername}><p>Choose a username before joining a multiplayer room.</p><label htmlFor="claim-username">Username</label><input id="claim-username" required minLength={3} maxLength={24} pattern="[A-Za-z0-9_]+" value={username} onChange={(event) => setUsername(event.target.value)} /><button className="account-primary" disabled={busy}>Choose username</button></form> : null}
+            <AccountSettings key={userEmail} email={userEmail} username={profileUsername} recovery={recoverySession} onSignedOut={text => { setUserEmail(null); setProfileUsername(null); setMessage(text); history.replaceState(null, '', '/account'); }} />
             <div className="account-actions"><a className="account-primary account-link" href="/games">Open my games</a><button className="account-secondary" onClick={signOut}>Sign out</button></div>
             {message ? <p className="account-message" role="status">{message}</p> : null}
           </> : <>
