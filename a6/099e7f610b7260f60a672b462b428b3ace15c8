@@ -1,0 +1,65 @@
+supabase/migrations/20261014090351_account_management.sql
+  s_22c446349888fd::t_fa6e83b133d3f6 60-62
+  s_22c446349888fd::t_cb2ab2fd02eb89 11-12,14,18-19,23-29,36,67-75
+  s_22c446349888fd::t_86fbf6cf16b392 1-10,13,15-17,20-22,30-35,37-59,63-66,76-89
+app/api/account/route.ts
+  s_22c446349888fd::t_862a434bc9124c 1-20,22-40
+  s_22c446349888fd::t_846cf390753ecc 21
+src/lib/supabase/database.types.ts
+  s_22c446349888fd::t_86fbf6cf16b392 435-438
+docs/ACCOUNT_MANAGEMENT.md
+  s_22c446349888fd::t_cb2ab2fd02eb89 19
+  s_22c446349888fd::t_5f7982f0886235 1-18,20-35
+src/server/auth.ts
+  s_22c446349888fd::t_86fbf6cf16b392 3,8,19-23
+tests/account-settings.test.ts
+  s_22c446349888fd::t_fa6e83b133d3f6 1-50
+app/api/account/delete/route.ts
+  s_22c446349888fd::t_862a434bc9124c 1-25
+supabase/tests/account_management.sql
+  s_22c446349888fd::t_0b27cde6530443 1-7,9-38,41-49,53-57
+  s_22c446349888fd::t_3fa2d4017e8535 8,39-40,50
+  s_22c446349888fd::t_cb2ab2fd02eb89 51-52
+app/account/page.tsx
+  s_22c446349888fd::t_287d478232ca89 2,56,58,111-112,119,127
+  s_22c446349888fd::t_846cf390753ecc 53,125-126
+  s_22c446349888fd::t_5f7982f0886235 122
+  s_22c446349888fd::t_b050c4012e0738 35,41,60
+app/api/account/password/route.ts
+  s_22c446349888fd::t_862a434bc9124c 1-18
+src/server/account.ts
+  s_22c446349888fd::t_862a434bc9124c 1-19,23-47
+  s_22c446349888fd::t_dcaccd17b071f4 20-22
+app/globals.css
+  s_22c446349888fd::t_287d478232ca89 734-759
+tests/account-management.test.ts
+  s_22c446349888fd::t_24b26484491b5c 76
+  s_22c446349888fd::t_b050c4012e0738 1-75,77
+src/account/settings.tsx
+  s_22c446349888fd::t_287d478232ca89 1-9,11-105,107-113
+  s_22c446349888fd::t_5f7982f0886235 106
+  s_22c446349888fd::t_b050c4012e0738 10
+scripts/verify-account-management.ts
+  s_22c446349888fd::t_4594d49620568b 1-26,29-65
+  s_22c446349888fd::t_c90fb7afa4aba9 27-28
+docs/IMPLEMENTATION_STATUS.md
+  s_22c446349888fd::t_5f7982f0886235 125-131
+tests/auth-identity.test.ts
+  s_22c446349888fd::t_b050c4012e0738 3,5-6,8,20-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a6099e7f610b7260f60a672b462b428b3ace15c8",
+  "prompts": {},
+  "sessions": {
+    "s_22c446349888fd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13994-9e97-7d12-b2d0-9e26f8f2e210",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
