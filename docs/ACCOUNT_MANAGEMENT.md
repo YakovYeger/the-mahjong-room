@@ -2,6 +2,8 @@
 
 The `/account` page keeps the existing guest, registration, login, Google sign-in, and username-selection flows. Signed-in players see their username, email, membership date, and sign-in methods. They can edit their display name (1–48 characters); new rooms and seats use it, while existing tables keep their original names and usernames stay unchanged.
 
+Account forms use the shared shadcn/ui Field, Input, and Button components with Mahjong Room styling. Password mismatches are announced next to the confirmation field and linked with `aria-describedby`/`aria-invalid`. See [UI_COMPONENTS.md](UI_COMPONENTS.md) for the convention used for future forms.
+
 ## Passwords and verification
 
 Password changes require the current password or a server-verified authentication event in the last five minutes. OAuth users can return through Verify with Google. The verification window uses the signed `amr` timestamp, never `iat`, user metadata, or a browser query parameter. Fresh recovery/OTP verification may reset a password, but cannot authorize deletion. Supabase currently records verified recovery links as `otp`; this was checked against the local Auth API.
@@ -24,6 +26,7 @@ Deletion removes the Auth account and sessions, profile, username/email login id
 - `supabase/tests/account_management.sql`: rollback-only fixtures for live/expired/wrong-owner sessions, rejection during open play, owned-history removal, canonical/public/review redaction, preserved shared seats, and service-only privileges. Run inside `BEGIN` / `ROLLBACK` after applying migrations to an isolated local database.
 - `npx tsx scripts/verify-account-management.ts .env.account-test.local`: localhost-only disposable Auth account runner for profile editing, wrong-password handling, password updates, immediate stale-cookie rejection, single-use recovery, open-table guard, and deletion. Requires `ACCOUNT_TEST_ORIGIN`, `NEXT_PUBLIC_SUPABASE_URL`, and `SUPABASE_SECRET_KEY` in the ignored environment file. It refuses external URLs and cleans up its fixture.
 - Browser checks on local Chrome at 1280×900 and 360×800: actual sign-in/profile save, no horizontal overflow, deletion dialog, typed confirmation, Escape cancellation, My games and home anchors, and no page errors.
+- Shadcn form refactor: Chrome checks with fabricated sessions and mocked account responses cover sign-in/registration/recovery submissions, profile saving, announced request errors, linked mismatch feedback, cancellation without submission, 360/768/1280px reflow, and 16px input text.
 - Live Google OAuth and production SMTP were not exercised. Navigation was verified locally; repeat header/back navigation against the matching Sites release.
 
 ## Release ordering

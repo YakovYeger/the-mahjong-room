@@ -257,9 +257,6 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 .account-card { min-height: 390px; padding: clamp(28px,4vw,48px); border-radius: 22px; background: var(--paper); box-shadow: 0 24px 60px rgba(7,38,30,.28); }
 .account-card h2 { margin: 0 0 14px; font: 700 34px/1.05 Georgia, serif; }
 .account-card > p:not(.kicker), .account-card form > p:not(.kicker) { color: #64756f; line-height: 1.55; }
-.account-card label { display: block; margin: 28px 0 8px; color: #4f625c; font-size: 12px; font-weight: 700; }
-.account-card input { width: 100%; border: 1px solid #cfc7b8; border-radius: 11px; padding: 13px 14px; background: white; color: var(--ink); outline: none; }
-.account-card input:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(219,104,79,.12); }
 .account-primary { width: 100%; margin-top: 14px; border: 0; border-radius: 999px; padding: 14px 18px; background: var(--ink); color: white; font-weight: 700; cursor: pointer; }
 .account-primary:disabled { opacity: .55; }
 .account-link { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
@@ -745,15 +742,19 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 .account-details dt { color: #4f625c; font-size: 13px; }
 .account-details dd { margin: 0; overflow-wrap: anywhere; font-weight: 600; }
 .account-reauth { margin-top: 18px; width: 100%; }
-.account-delete { border: 1px solid #9c3a31; border-radius: 999px; padding: 13px 18px; background: #9c3a31; color: white; font-weight: 700; cursor: pointer; min-height: 44px; }
 .account-danger h3 { color: #9c3a31; }
-.account-delete:disabled, .account-secondary:disabled { opacity: .55; cursor: not-allowed; }
+.account-secondary:disabled { opacity: .55; cursor: not-allowed; }
 .account-delete-dialog { position: fixed; z-index: 95; top: 50%; left: 50%; transform: translate(-50%,-50%); width: min(560px,calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; border-radius: 20px; padding: clamp(22px,4vw,34px); background: var(--paper); color: var(--ink); box-shadow: 0 24px 60px #07261e66; }
 .account-delete-dialog h2 { font: 700 30px Georgia,serif; }
 .account-delete-dialog p { line-height: 1.6; }
-.account-delete-dialog label { display: block; margin: 18px 0 8px; font-size: 13px; font-weight: 700; }
-.account-delete-dialog input { width: 100%; padding: 13px; border: 1px solid #cfc7b8; border-radius: 10px; background: white; color: var(--ink); }
 .account-delete-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
-.account-settings button:focus-visible, .account-delete-dialog :focus-visible { outline: 3px solid #285e51; outline-offset: 3px; }
 @media (max-width: 900px) { .account-page-signed-in .account-shell { grid-template-columns: minmax(0,1fr); } .account-page-signed-in .account-copy { position: static; } }
 @media (max-width: 480px) { .account-details > div { grid-template-columns: minmax(0,1fr); gap: 4px; } .account-delete-actions > button { width: 100%; } .account-page-signed-in .account-card { padding: 24px; } }
+
+.account-auth-fields { margin-top: 26px; }
+.account-google { width: 100%; }
+.account-google b { color: #285f51; font: 700 18px Georgia,serif; }
+.account-security-note { margin-top: 12px; }
+.account-form-error { margin-top: 16px; }
+.account-load-error { display: grid; gap: 12px; margin-top: 16px; }
+.account-delete-trigger { margin-top: 16px; }

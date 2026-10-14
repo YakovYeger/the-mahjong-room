@@ -12,3 +12,10 @@
 - Use native `<a>` elements with root-relative `href` values (for example, `href="/"` or `href="/cards"`) for internal route navigation. `next/link` has a confirmed runtime failure in the Sites/Vinext deployment; do not introduce it without verifying compatibility in the deployed app.
 - Keep the existing targeted `@next/next/no-html-link-for-pages` ESLint exemption in files using native internal anchors. Use buttons for actions and anchors for navigation.
 - Verify changed links by clicking them in the deployed app and checking the destination, including header and back-navigation links.
+
+# Form convention
+
+- Use the shared, locally owned shadcn/ui Base UI form components in `src/ui` for new and changed forms: `Field`, `FieldGroup`, `FieldSet`, `FieldLegend`, `FieldLabel`, `FieldDescription`, `FieldError`, `Input`, and `Button`. Follow `docs/UI_COMPONENTS.md`.
+- Preserve the Mahjong Room aesthetic: warm ivory surfaces, felt-green actions, brass/gold borders and focus cues, serif section titles, readable sans-serif controls, and restrained red for destructive actions/errors. Reuse shared tokens and variants rather than adding page-specific control styles.
+- Keep labels associated with their controls, connect hints/errors with `aria-describedby`, use `aria-invalid` for invalid fields, and retain 44px minimum touch targets and 16px input text. Explicitly set `type="submit"` on submit buttons; shared buttons default to actions.
+- Keep native form semantics and existing server validation. Introduce a form-state library only when the form's complexity warrants it. Retain root-relative native anchors for navigation; `buttonVariants` can style anchors without turning navigation into an action.

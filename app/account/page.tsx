@@ -1,5 +1,8 @@
 'use client';
 import { AccountSettings } from '../../src/account/settings';
+import { Button, buttonVariants } from '../../src/ui/button';
+import { Input } from '../../src/ui/input';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '../../src/ui/field';
 import { Tabs } from '../../src/ui/tabs';
 
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
@@ -30,6 +33,7 @@ export default function AccountPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [profileUsername, setProfileUsername] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [formError, setFormError] = useState('');
   const [guestGames, setGuestGames] = useState(0);
   const [busy, setBusy] = useState(false);
   const authError = searchParams.get('auth_error');
@@ -38,7 +42,7 @@ export default function AccountPage() {
   useEffect(() => {
     const hydrateAccount = async () => {
       await Promise.resolve();
-      if (authError === 'invalid_link') setMessage('This sign-in or recovery link has expired or already been used. Request a new one.');
+      if (authError === 'invalid_link') setFormError('This sign-in or recovery link has expired or already been used. Request a new one.');
       setGuestGames(loadGuestProgress(localStorage)?.gamesCompleted ?? 0);
       if (!supabase) return;
       const { data } = await supabase.auth.getUser();
@@ -50,10 +54,10 @@ export default function AccountPage() {
       ]);
       const profile = profileResult.data;
       setProfileUsername(profile?.username ?? null);
-      setMessage(authError === 'invalid_link' ? 'This sign-in or recovery link has expired or already been used. Request a new one.' : result.message);
+      setMessage(result.message);
       if (result.ok) setGuestGames(0);
     };
-    void hydrateAccount().catch(() => setMessage('Your account could not be loaded. Please refresh and try again.'));
+    void hydrateAccount().catch(() => setFormError('Your account could not be loaded. Please refresh and try again.'));
     if (!supabase) return;
     const { data } = supabase.auth.onAuthStateChange((_event, session) => { setUserEmail(session?.user.email ?? null); if (!session) setProfileUsername(null); });
     return () => data.subscription.unsubscribe();
@@ -63,6 +67,7 @@ export default function AccountPage() {
     event.preventDefault();
     setBusy(true);
     setMessage('');
+    setFormError('');
     try {
       if (mode === 'register') {
         const result = await postJson('/api/auth/register', { email, username, password });
@@ -81,18 +86,19 @@ export default function AccountPage() {
         setMessage('Welcome back.');
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Please try again.');
+      setFormError(error instanceof Error ? error.message : 'Please try again.');
     } finally { setBusy(false); }
   };
 
   const signInWithGoogle = async () => {
     if (!supabase) return;
     setBusy(true);
+    setFormError('');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${location.origin}/auth/confirm?next=/account` },
     });
-    if (error) { setMessage(error.message); setBusy(false); }
+    if (error) { setFormError(error.message); setBusy(false); }
   };
 
   const claimUsername = async (event: FormEvent) => {
@@ -102,14 +108,14 @@ export default function AccountPage() {
       await postJson('/api/auth/username', { username });
       setProfileUsername(username.trim().toLowerCase());
       setMessage('Username saved.');
-    } catch (error) { setMessage(error instanceof Error ? error.message : 'Please try again.'); }
+    } catch (error) { setFormError(error instanceof Error ? error.message : 'Please try again.'); }
     finally { setBusy(false); }
   };
 
   const signOut = async () => {
     if (!supabase) return;
     const { error } = await supabase.auth.signOut({ scope: 'global' });
-    if (error) { setMessage('You could not be signed out. Please try again.'); return; }
+    if (error) { setFormError('You could not be signed out. Please try again.'); return; }
     setUserEmail(null);
     setProfileUsername(null);
     setMessage('Signed out. Your account progress remains saved.');
@@ -123,25 +129,48 @@ export default function AccountPage() {
         <div className="account-card">
           {!supabase ? <><p className="kicker">Guest mode</p><h2>Account services are being connected.</h2><p>Your local game remains playable and saved on this device.</p></> : userEmail ? <>
             <p className="kicker">Signed in{profileUsername ? ` as @${profileUsername}` : ''}</p>
-            {!profileUsername ? <form onSubmit={claimUsername}><p>Choose a username before joining a multiplayer room.</p><label htmlFor="claim-username">Username</label><input id="claim-username" required minLength={3} maxLength={24} pattern="[A-Za-z0-9_]+" value={username} onChange={(event) => setUsername(event.target.value)} /><button className="account-primary" disabled={busy}>Choose username</button></form> : null}
-            <AccountSettings key={userEmail} email={userEmail} username={profileUsername} recovery={recoverySession} onSignedOut={text => { setUserEmail(null); setProfileUsername(null); setMessage(text); history.replaceState(null, '', '/account'); }} />
-            <div className="account-actions"><a className="account-primary account-link" href="/games">Open my games</a><button className="account-secondary" onClick={signOut}>Sign out</button></div>
+            {!profileUsername ? <form onSubmit={claimUsername}>
+              <FieldGroup><Field>
+                <FieldLabel htmlFor="claim-username">Username</FieldLabel>
+                <Input id="claim-username" required minLength={3} maxLength={24} pattern="[A-Za-z0-9_]+" value={username} onChange={event => setUsername(event.target.value)} aria-describedby="claim-username-hint" />
+                <FieldDescription id="claim-username-hint">Choose 3–24 letters, numbers, or underscores before joining a room.</FieldDescription>
+              </Field><Button type="submit" disabled={busy}>Choose username</Button></FieldGroup>
+            </form> : null}
+            <AccountSettings key={userEmail} email={userEmail} username={profileUsername} recovery={recoverySession} onSignedOut={text => { setUserEmail(null); setProfileUsername(null); setMessage(text); setFormError(''); history.replaceState(null, '', '/account'); }} />
+            <div className="account-actions"><a className={buttonVariants()} href="/games">Open my games</a><Button variant="outline" onClick={signOut}>Sign out</Button></div>
             {message ? <p className="account-message" role="status">{message}</p> : null}
           </> : <>
-            <Tabs<AuthMode> label="Account options" value={mode} onValueChange={next => { setMode(next); setMessage(''); }} options={[{ value: 'login', label: 'Sign in' }, { value: 'register', label: 'Create account' }, { value: 'recover', label: 'Reset' }]}>
-            <form onSubmit={submitAuth}>
+            <Tabs<AuthMode> label="Account options" value={mode} onValueChange={next => { setMode(next); setMessage(''); setFormError(''); }} options={[{ value: 'login', label: 'Sign in' }, { value: 'register', label: 'Create account' }, { value: 'recover', label: 'Reset' }]}>
+            <form onSubmit={submitAuth} aria-busy={busy}>
               <p className="kicker">{mode === 'register' ? 'Create your player profile' : mode === 'recover' ? 'Recover access' : 'Return to your table'}</p>
               <h2>{mode === 'register' ? 'Create an account' : mode === 'recover' ? 'Reset your password' : 'Sign in'}</h2>
-              {mode === 'login' ? <><label htmlFor="identifier">Username or email</label><input id="identifier" required autoComplete="username" value={identifier} onChange={(event) => setIdentifier(event.target.value)} /></> : <><label htmlFor="account-email">Email address</label><input id="account-email" type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></>}
-              {mode === 'register' ? <><label htmlFor="register-username">Username</label><input id="register-username" required minLength={3} maxLength={24} pattern="[A-Za-z0-9_]+" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} /></> : null}
-              {mode !== 'recover' ? <><label htmlFor="account-password">Password</label><input id="account-password" type="password" minLength={8} required autoComplete={mode === 'register' ? 'new-password' : 'current-password'} value={password} onChange={(event) => setPassword(event.target.value)} /></> : null}
-              <button className="account-primary" disabled={busy}>{busy ? 'Working…' : mode === 'register' ? 'Create account' : mode === 'recover' ? 'Send recovery email' : 'Sign in'}</button>
-              {mode !== 'recover' ? <><div className="auth-divider"><span>or</span></div><button className="google-button" type="button" onClick={signInWithGoogle} disabled={busy}><b>G</b> Continue with Google</button></> : null}
-              <p className="form-note">Login errors are intentionally generic to protect account privacy.</p>
+              <FieldGroup className="account-auth-fields">
+                {mode === 'login' ? <Field>
+                  <FieldLabel htmlFor="identifier">Username or email</FieldLabel>
+                  <Input id="identifier" required autoComplete="username" value={identifier} onChange={event => setIdentifier(event.target.value)} />
+                </Field> : <Field>
+                  <FieldLabel htmlFor="account-email">Email address</FieldLabel>
+                  <Input id="account-email" type="email" required autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} />
+                </Field>}
+                {mode === 'register' ? <Field>
+                  <FieldLabel htmlFor="register-username">Username</FieldLabel>
+                  <Input id="register-username" required minLength={3} maxLength={24} pattern="[A-Za-z0-9_]+" autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} aria-describedby="register-username-hint" />
+                  <FieldDescription id="register-username-hint">3–24 letters, numbers, or underscores.</FieldDescription>
+                </Field> : null}
+                {mode !== 'recover' ? <Field>
+                  <FieldLabel htmlFor="account-password">Password</FieldLabel>
+                  <Input id="account-password" type="password" minLength={8} required autoComplete={mode === 'register' ? 'new-password' : 'current-password'} value={password} onChange={event => setPassword(event.target.value)} aria-describedby={mode === 'register' ? 'register-password-hint' : undefined} />
+                  {mode === 'register' ? <FieldDescription id="register-password-hint">Use at least 8 characters.</FieldDescription> : null}
+                </Field> : null}
+                <Button type="submit" disabled={busy}>{busy ? 'Working…' : mode === 'register' ? 'Create account' : mode === 'recover' ? 'Send recovery email' : 'Sign in'}</Button>
+              </FieldGroup>
+              {mode !== 'recover' ? <><div className="auth-divider"><span>or</span></div><Button variant="outline" className="account-google" onClick={signInWithGoogle} disabled={busy}><b aria-hidden="true">G</b> Continue with Google</Button></> : null}
+              <FieldDescription className="account-security-note">Login errors are intentionally generic to protect account privacy.</FieldDescription>
               {message ? <p className="account-message" role="status">{message}</p> : null}
             </form>
             </Tabs>
           </>}
+          <FieldError className="account-form-error">{formError}</FieldError>
         </div>
       </section>
     </main>

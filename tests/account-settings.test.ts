@@ -23,7 +23,11 @@ it('does not send mismatched passwords and signs out after a successful change',
   fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'new-password' } });
   fireEvent.change(screen.getByLabelText('Confirm new password'), { target: { value: 'different-password' } });
   fireEvent.click(screen.getByRole('button', { name: 'Update password' }));
-  await screen.findByText('The new passwords do not match.'); expect(mock.fetch).toHaveBeenCalledTimes(1);
+  await screen.findByText('The new passwords do not match.');
+  expect(screen.getByLabelText('Confirm new password').getAttribute('aria-invalid')).toBe('true');
+  expect(screen.getByLabelText('Confirm new password').getAttribute('aria-describedby')).toBe('repeat-password-error');
+  expect(screen.getByRole('alert').id).toBe('repeat-password-error');
+  expect(mock.fetch).toHaveBeenCalledTimes(1);
   fireEvent.change(screen.getByLabelText('Confirm new password'), { target: { value: 'new-password' } });
   mock.fetch.mockResolvedValueOnce(Response.json({ message: 'Password updated.' }));
   fireEvent.click(screen.getByRole('button', { name: 'Update password' }));
