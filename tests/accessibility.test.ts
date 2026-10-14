@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -19,6 +20,16 @@ function Harness() {
   return createElement('div', null, createElement('button', { onClick: openSettings }, 'Table settings'), createElement('span', null, reducedMotion ? 'motion reduced' : 'motion standard'));
 }
 const show = () => render(createElement(AccessibilityProvider, null, createElement(AccessibilitySettings), createElement(Harness)));
+
+it('disables server-rendered radio controls until stored preferences are loaded', () => {
+  const markup = renderToStaticMarkup(createElement(AccessibilitySettings));
+  expect(markup).toContain('Loading preferences');
+  const container = document.createElement('div');
+  container.innerHTML = markup;
+  const controls = container.querySelectorAll('[role="radio"]');
+  expect(controls).toHaveLength(10);
+  expect([...controls].every(control => control.getAttribute('aria-disabled') === 'true')).toBe(true);
+});
 
 it('validates each saved value, safely recovering partial, malformed, or hostile storage', () => {
   for (const raw of [null, '{', 'null', '[]', '17', '"large"']) expect(parsePreferences(raw)).toEqual(defaultPreferences);

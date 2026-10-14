@@ -19,19 +19,19 @@ export function AccessibilitySettings() {
     <form onSubmit={event => event.preventDefault()} aria-label="Accessibility preferences">
       <FieldGroup>
         <FieldSet disabled={!ready}><FieldLegend>Text size</FieldLegend><FieldDescription id={`${id}-text`}>Large text increases type by 25% and gives your rack more room.</FieldDescription>
-          <RadioGroup descriptionId={`${id}-text`} label="Text size" value={preferences.textSize} onValueChange={textSize => update({ textSize })} options={[{ value: 'standard', label: 'Standard text' }, { value: 'large', label: 'Large text' }]} />
+          <RadioGroup disabled={!ready} descriptionId={`${id}-text`} label="Text size" value={preferences.textSize} onValueChange={textSize => update({ textSize })} options={[{ value: 'standard', label: 'Standard text' }, { value: 'large', label: 'Large text' }]} />
         </FieldSet>
         <FieldSet disabled={!ready}><FieldLegend>Light</FieldLegend><FieldDescription id={`${id}-light`}>Keep warm ivory, or soften the screen for an evening game.</FieldDescription>
-          <RadioGroup descriptionId={`${id}-light`} label="Light" value={preferences.theme} onValueChange={theme => update({ theme })} options={[{ value: 'classic', label: 'Classic ivory' }, { value: 'low-light', label: 'Low light' }]} />
+          <RadioGroup disabled={!ready} descriptionId={`${id}-light`} label="Light" value={preferences.theme} onValueChange={theme => update({ theme })} options={[{ value: 'classic', label: 'Classic ivory' }, { value: 'low-light', label: 'Low light' }]} />
         </FieldSet>
         <FieldSet disabled={!ready}><FieldLegend>Contrast</FieldLegend><FieldDescription id={`${id}-contrast`}>Stronger text, borders, and focus cues. Works with either light setting.</FieldDescription>
-          <RadioGroup descriptionId={`${id}-contrast`} label="Contrast" value={preferences.contrast} onValueChange={contrast => update({ contrast })} options={[{ value: 'standard', label: 'Standard contrast' }, { value: 'high', label: 'High contrast' }]} />
+          <RadioGroup disabled={!ready} descriptionId={`${id}-contrast`} label="Contrast" value={preferences.contrast} onValueChange={contrast => update({ contrast })} options={[{ value: 'standard', label: 'Standard contrast' }, { value: 'high', label: 'High contrast' }]} />
         </FieldSet>
         <FieldSet disabled={!ready}><FieldLegend>Suit labels</FieldLegend><FieldDescription id={`${id}-suits`}>Show full names on your rack. Small card and discard tiles keep written abbreviations and distinct symbols.</FieldDescription>
-          <RadioGroup descriptionId={`${id}-suits`} label="Suit labels" value={preferences.suitLabels} onValueChange={suitLabels => update({ suitLabels })} options={[{ value: 'compact', label: 'Compact labels' }, { value: 'full', label: 'Full suit names' }]} />
+          <RadioGroup disabled={!ready} descriptionId={`${id}-suits`} label="Suit labels" value={preferences.suitLabels} onValueChange={suitLabels => update({ suitLabels })} options={[{ value: 'compact', label: 'Compact labels' }, { value: 'full', label: 'Full suit names' }]} />
         </FieldSet>
         <FieldSet disabled={!ready}><FieldLegend>Motion</FieldLegend><FieldDescription id={`${id}-motion`}>Device preference respects your system’s reduced-motion setting. Reduce motion also skips the animated deal.</FieldDescription>
-          <RadioGroup descriptionId={`${id}-motion`} label="Motion" value={preferences.motion} onValueChange={motion => update({ motion })} options={[{ value: 'system', label: 'Device preference' }, { value: 'reduce', label: 'Reduce motion' }]} />
+          <RadioGroup disabled={!ready} descriptionId={`${id}-motion`} label="Motion" value={preferences.motion} onValueChange={motion => update({ motion })} options={[{ value: 'system', label: 'Device preference' }, { value: 'reduce', label: 'Reduce motion' }]} />
         </FieldSet>
       </FieldGroup>
       <p className="accessibility-save-note" role="status">{!ready ? 'Loading preferences…' : storageAvailable ? 'Changes save automatically on this browser. They apply to guest and account play.' : 'Changes apply now, but this browser cannot save them. Keep this page open to retain your preferences.'}</p>
