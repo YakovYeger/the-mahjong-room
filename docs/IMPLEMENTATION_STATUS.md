@@ -85,7 +85,7 @@ Frontend/server application changes are included in the October 11 Sites release
 
 ## Next
 
-- Next product order: G11 accessibility settings, G8 wall/grouped discards, G21 fullscreen table, then G16 profiles/friends. G15 account management is complete.
+- Next product order: G8 wall/grouped discards, G21 fullscreen table, then G16 profiles/friends. G15 account management and G11 accessibility settings are complete.
 - Configure production SMTP/auth templates and an optional verified Resend sender
 - Disable the legacy project's timeout Cron job after reconnecting its original Supabase organization; its retired secret is rejected by production
 - Run the private 1/2/3/4-human beta and measure action latency, Realtime latency, reconnects, conflicts, timeout lag, and database contention
@@ -136,4 +136,4 @@ Frontend/server application changes are included in the October 11 Sites release
 - G11 adds device-saved Large Text, Low Light, High Contrast, full rack suit names, and reduced motion. The Table menu opens settings without leaving the game.
 - Shared type uses relative units; enlarged racks, headings, actions, and navigation reflow. Portaled controls inherit the selected palette, and active/away seats have written state labels.
 - Preferences apply before paint, follow live system motion changes, and synchronize between tabs. Storage failures preserve usable session controls with a clear status.
-- Tests cover persistence, validation, keyboard interaction, and focus return; browser review covers portrait/landscape phones, tablet, desktop, and crowded public tables. See [ACCESSIBILITY.md](ACCESSIBILITY.md) for scope and limits. This feature is prepared on `codex/accessibility-settings` for review before integration into the public release.
+- Tests cover persistence, validation, keyboard interaction, and focus return; browser review covers portrait/landscape phones, tablet, desktop, and crowded public tables. See [ACCESSIBILITY.md](ACCESSIBILITY.md) for scope and limits. Merged through PR #5 on October 15. All 186 tests, typecheck, lint, build, and the hosted preference/navigation/focus checks passed before integration.
