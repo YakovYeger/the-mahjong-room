@@ -4,6 +4,9 @@ import '../src/ui/select.css';
 import '../src/ui/components.css';
 import '../src/table/table.css';
 import '../src/coach/coach.css';
+import '../src/accessibility/accessibility.css';
+import { AccessibilityProvider } from '../src/accessibility/provider';
+import { accessibilityBootstrap } from '../src/accessibility/preferences';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL ?? 'https://the-mahjong-room.jyeger.chatgpt.site'),
@@ -30,15 +33,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   }).replace(/</g, '\\u003c');
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: accessibilityBootstrap }} />
         <script
           dangerouslySetInnerHTML={{
             __html: `window.__MAHJONG_RUNTIME_CONFIG__=${runtimeConfig};`,
           }}
         />
       </head>
-      <body>{children}</body>
+      <body><AccessibilityProvider>{children}</AccessibilityProvider></body>
     </html>
   );
 }

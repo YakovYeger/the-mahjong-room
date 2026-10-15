@@ -1,0 +1,141 @@
+/* Theme roles shared by routes, controls, and portals. Tiles retain their own
+   ivory face so engraved artwork does not depend on the page light setting. */
+:root { --muted: #52685f; --soft-surface: #e6eee8; --edge: #96886f; --focus: #967021; --tile-paper: #fffdf4; --tile-ink: #173e34; --danger: #9c3a31; --type-title: 1.4375rem; --type-body: 1rem; --type-label: .875rem; color-scheme: light; }
+.kicker { color: #9a422e; }
+html[data-theme="low-light"] .kicker { color: #f0aa8e; }
+html[data-contrast="high"] .kicker { color: var(--coral); }
+html[data-text-size="large"] { font-size: 125%; }
+html[data-theme="low-light"] { color-scheme: dark; --cream: #141f1a; --paper: #22342b; --ink: #f3ead6; --muted: #c4cbbd; --soft-surface: #344d3d; --edge: #9f987d; --focus: #edc86e; --tile-paper: #ded4bc; --danger: #ffb9aa; --coral: #f0aa8e; }
+html[data-contrast="high"] { --ink: #102b22; --muted: #253e32; --edge: #344a3b; --focus: #614100; --tile-ink: #081d14; --coral: #923b29; }
+html[data-theme="low-light"][data-contrast="high"] { --cream: #0d1711; --paper: #16251b; --ink: #fff9e9; --muted: #efe9d6; --soft-surface: #2b4132; --edge: #e7dab9; --focus: #ffdb70; --tile-paper: #e8ddbf; --coral: #f0aa8e; }
+:root { --form-border: var(--edge); --form-muted: var(--muted); --form-danger: var(--danger); }
+
+.preferences-page { min-height: 100svh; background: var(--cream); }
+.preferences-page > header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 20px clamp(20px,5vw,70px); border-bottom: 1px solid var(--edge); }
+.preferences-page nav { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+.preferences-page nav a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); text-underline-offset: 4px; }
+.preferences-shell { max-width: 760px; margin: auto; padding: 48px 24px 70px; }
+.preferences-shell h1 { margin: 0; font: 500 clamp(2rem,4vw,3.5rem)/1.12 Georgia,serif; }
+.preferences-intro { margin: 16px 0 32px; color: var(--muted); font: 1.125rem/1.6 Georgia,serif; }
+.accessibility-settings { min-width: 0; }
+.accessibility-settings .ui-field-set { border-top: 1px solid var(--edge); padding-top: 24px; }
+.accessibility-settings .ui-field-legend { padding: 0 12px 0 0; font-size: var(--type-title); }
+.accessibility-settings .ui-field-set > .ui-field-description { margin: 0; }
+.accessibility-settings .ui-radio-group { margin: 18px 0 0; }
+.accessibility-settings .ui-radio-choice { position: relative; min-width: 0; padding-right: 32px; font-size: var(--type-label); }
+.ui-radio-choice[data-checked]::after { content: '✓'; position: absolute; right: 12px; top: 14px; font-weight: 800; }
+.accessibility-save-note { margin: 26px 0 18px; color: var(--muted); font-size: var(--type-label); line-height: 1.6; }
+.accessibility-help { margin-top: 18px; }
+.accessibility-sample { margin: 0 0 32px; padding: 20px; background: #214e3e; color: #f6efdd; border: 1px solid var(--edge); border-radius: 16px; }
+.accessibility-sample > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+.accessibility-sample-tile { width: 84px; height: 112px; border: 1px solid #ad9f80; border-bottom: 5px solid #a39272; border-radius: 8px; padding: 5px; background: var(--tile-paper); color: var(--tile-ink); }
+.accessibility-sample p { margin: 16px 0 0; font-size: var(--type-label); line-height: 1.6; text-align: center; }
+.accessibility-sample .tile-face.illustrated > strong { font-size: 1rem; }
+.accessibility-sample .tile-face.illustrated > small { font-size: .625rem; }
+html[data-suit-labels="full"] .accessibility-sample .tile-face.illustrated > small { font-size: .5rem; letter-spacing: 0; overflow-wrap: anywhere; }
+.accessibility-dialog { position: fixed; z-index: 95; left: 50%; top: 50%; transform: translate(-50%,-50%); width: min(680px,calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: auto; overscroll-behavior: contain; border: 1px solid var(--edge); border-radius: 20px; padding: clamp(18px,4vw,32px); background: var(--paper); color: var(--ink); }
+.accessibility-dialog-heading { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.accessibility-dialog h2 { margin: 0; font: 500 1.875rem/1.2 Georgia,serif; }
+.accessibility-dialog > p { margin: 16px 0 24px; color: var(--muted); line-height: 1.6; }
+.tile-label-full { display: none; }
+.card-suit-cue { display: inline-block; padding-right: 3px; font-size: .65em; font-weight: 800; vertical-align: .12em; }
+html[data-suit-labels="full"] .tile-face:not(.compact) .tile-label-full { display: inline; text-transform: capitalize; }
+html[data-suit-labels="full"] .tile-face:not(.compact) .tile-label-compact { display: none; }
+html[data-suit-labels="full"] .shared-table-page :is(.rack,.cloud-rack), html[data-text-size="large"] .shared-table-page :is(.rack,.cloud-rack) { grid-template-columns: repeat(7,minmax(0,1fr)); }
+html[data-suit-labels="full"] .shared-table-page :is(.tile,.cloud-tile), html[data-text-size="large"] .shared-table-page :is(.tile,.cloud-tile) { height: 112px; }
+html[data-suit-labels="full"] .shared-table-page :is(.tile,.cloud-tile) .tile-face > small, html[data-text-size="large"] .shared-table-page :is(.tile,.cloud-tile) .tile-face > small { font-size: .55rem; letter-spacing: 0; overflow-wrap: anywhere; }
+html[data-text-size="large"] .shared-table-page :is(.tile,.cloud-tile) .tile-face > strong { font-size: .875rem; }
+.shared-table-page :is(.tile,.cloud-tile), .hero-tile, .table-discard-tile, .table-exposed-set > span { background: var(--tile-paper); }
+.tile-face.illustrated > small { color: var(--tile-ink); }
+.table-seat { flex-wrap: wrap; row-gap: 3px; }
+.table-seat-state { flex-basis: 100%; margin-left: 38px; color: #fff5ce; font-size: .625rem; }
+.table-latest-discard { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.table-latest-tile { display: block; flex: 0 0 44px; width: 44px; height: 66px; padding: 2px; border: 1px solid #a39273; border-radius: 5px; background: var(--tile-paper); }
+.table-latest-tile .tile-face.illustrated > small { font-size: .3125rem; letter-spacing: 0; }
+.table-latest-tile .tile-label-full { overflow-wrap: anywhere; }
+.table-discard-grid { flex: 1 1 0; }
+
+/* Portal controls and native dialogs inherit the same palette as the page. */
+.ui-input { background: var(--paper); box-shadow: none; }
+.ui-radio-choice[data-checked], .ui-menu-item[data-highlighted], .select-item[data-highlighted] { background: var(--soft-surface); color: var(--ink); }
+.ui-radio-choice, .ui-menu-popup, .ui-menu-trigger, .select-trigger, .select-popup { border-color: var(--edge); }
+.ui-button:focus-visible, a:focus-visible, button:focus-visible, [tabindex]:focus-visible, .ui-radio-choice:focus-visible, .select-trigger:focus-visible, .ui-menu-trigger:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.shared-table-page :is(.table-tools button,.play-workspace button):focus-visible { outline-color: #ffe19a; }
+.account-page header, .games-page > header { height: auto; min-height: 76px; padding-block: 16px; gap: 12px; flex-wrap: wrap; }
+.account-page header nav, .games-page > header nav { flex-wrap: wrap; gap: 12px 22px; }
+.account-page header nav a, .games-page > header nav a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); }
+
+html[data-theme="low-light"] :is(.topbar,.shared-table-page .table-rack-panel,.shared-table-page .training-card-panel,.room-card,.lobby-card,.games-list-panel,.guest-badge,.lesson-panel,.reveal-grid article,.review-racks article) { background: var(--paper); color: var(--ink); border-color: var(--edge); }
+html[data-theme="low-light"] :is(.ui-tab[data-active],.card-print-link,.card-browser-controls button,.account-primary) { background: #e3c480; color: #142c20; }
+html[data-theme="low-light"] :is(.card-ink-jade,.reference-hand.leading .reference-line-number,.training-card-heading a,.browse-card-link,.guide-page a,.fresh-card-button) { color: #a6dbb3; }
+html[data-theme="low-light"] .card-ink-red { color: #ffb7a9; }
+html[data-theme="low-light"] .card-ink-ink { color: var(--ink); }
+html[data-theme="low-light"] .reference-value.concealed b { color: #ffb7a9; }
+html[data-theme="low-light"] .account-message { background: var(--soft-surface); color: var(--ink) !important; }
+html[data-theme="low-light"] :is(.end-game-dialog,.leave-dialog,.reveal-dialog,.companion-drawer) { background: var(--paper); color: var(--ink); border-color: var(--edge); }
+html[data-theme="low-light"] .ui-button-destructive { background: #8b3028; color: #fff8ef; border-color: #ffb9aa; }
+html[data-theme="low-light"] .ui-button-destructive:hover:not(:disabled) { background: #6e241e; }
+html[data-theme="low-light"] .ui-button-secondary { border-color: var(--edge); }
+html[data-theme="low-light"] .ui-button-outline:hover:not(:disabled) { background: var(--soft-surface); }
+html[data-contrast="high"] :is(.shared-table-page .table-surface,.welcome-rack,.accessibility-sample,.shared-table-page .coach-unit) { background: #143e2d; border-color: var(--edge); }
+html[data-contrast="high"] .shared-table-page .coach-unit { --coach-ink: #fff9e9; --coach-muted: #eee8d2; --coach-edge: #e6d5af; }
+html[data-contrast="high"] :is(.table-discards > header span,.training-hand-list article.unavailable) { opacity: 1; }
+html[data-contrast="high"] :is(.table-discards,.training-hand-list article,.reference-sections > section,.account-section,.table-rack-panel,.ui-input) { border-color: var(--edge); }
+html[data-contrast="high"] :is(.tile.selected,.cloud-tile.selected) { outline: 4px solid var(--focus); outline-offset: 2px; }
+html[data-contrast="high"] .card-ink-red { color: #92312a; }
+html[data-contrast="high"][data-theme="low-light"] .card-ink-red { color: #ffb7a9; }
+html[data-contrast="high"] .shared-table-page .table-seat-name { color: #fff9e9; }
+html[data-contrast="high"] :is(.primary,.mahjong-button) { background: #f3d580; color: #102b22; border: 1px solid #614100; }
+
+/* Reflow text and actions instead of scaling or cropping the whole game. */
+html[data-text-size="large"] .welcome nav { flex-wrap: wrap; height: auto; min-height: 86px; gap: 12px; padding-block: 16px; }
+html[data-text-size="large"] .welcome-nav-actions { flex-wrap: wrap; }
+html[data-text-size="large"] .shared-table-page .table-header { flex-wrap: wrap; }
+html[data-text-size="large"] .shared-table-page .table-prompt { flex-wrap: wrap; }
+html[data-text-size="large"] .shared-table-page .player-controls { display: flex; flex-wrap: wrap; }
+html[data-text-size="large"] .training-card-heading { flex-wrap: wrap; gap: 12px; }
+html[data-text-size="large"] .training-card-panel > footer { position: static; flex-wrap: wrap; margin-top: 10px; }
+html[data-text-size="large"] .table-discards > header { flex-wrap: wrap; }
+html[data-text-size="large"] .table-seat-name { white-space: normal; overflow-wrap: anywhere; }
+html[data-text-size="large"] .account-actions { grid-template-columns: 1fr; }
+html[data-theme="low-light"] .shared-table-page.unified-game { background: var(--cream); }
+html[data-theme="low-light"] .lede { color: var(--muted); }
+html[data-theme="low-light"] :is(.start-button,.review-actions button) { background: #e3c480; color: #142c20; }
+html[data-theme="low-light"] .welcome-learn-link { color: #c4edcd; background: var(--soft-surface); border-color: var(--edge); }
+html[data-theme="low-light"] .account-google b { color: #c4edcd; }
+html[data-theme="low-light"] .guide-intro h1 em { color: var(--muted); }
+html[data-theme="low-light"] :is(.guide-note,.quiz-options button,.turn-rehearsal button,.lesson-controls button) { background: var(--soft-surface); color: var(--ink); border-color: var(--edge); }
+html[data-theme="low-light"] :is(.companion-suggestions > span,.companion-suggestions b,.companion-intro,.companion-fit,.alignment-explanation,.hand-comparison-status,.alignment-key) { color: var(--muted); }
+html[data-theme="low-light"] .unified-game > .table-header { background: var(--paper); }
+html[data-theme="low-light"] :is(.unified-game .play-workspace .card-companion,.companion-drawer .training-hand-list article,.companion-suggestions button,.companion-hand-rules,.final-hand-check) { background: var(--paper); color: var(--ink); }
+html[data-theme="low-light"] :is(.companion-heading h2,.companion-fit summary,.companion-fit li,.companion-hand-rules p,.companion-hand-kind,.companion-card-legend > span,.card-companion button,.final-hand-check button,.companion-drawer button) { color: var(--ink); }
+html[data-theme="low-light"] :is(.card-companion button,.final-hand-check button,.companion-drawer button,.companion-exposure-badge) { background: var(--soft-surface); color: var(--ink); border-color: var(--edge); }
+html[data-theme="low-light"] .companion-drawer :is(.select-trigger,.select-popup) { background: var(--paper); color: var(--ink); }
+html[data-theme="low-light"] .ui-radio-choice[data-checked] { border-color: var(--edge); box-shadow: inset 0 0 0 1px var(--edge); }
+html[data-theme="low-light"] :is(.ui-menu-trigger:hover,.ui-menu-trigger[data-popup-open]) { background: var(--soft-surface); }
+html[data-theme="low-light"] .shared-table-page.unified-game :is(.tile,.cloud-tile) { background: var(--tile-paper); }
+html[data-theme="low-light"] .ui-button-destructive { --form-danger: #8b3028; }
+html[data-contrast="high"] .shared-table-page.unified-game .game-table { background: #143e2d; }
+html[data-text-size="large"] .shared-table-page.unified-game .table-surface { flex-basis: 340px; }
+html[data-text-size="large"] .shared-table-page.unified-game :is(.tile,.cloud-tile), html[data-suit-labels="full"] .shared-table-page.unified-game :is(.tile,.cloud-tile) { height: 112px; aspect-ratio: auto; }
+html[data-text-size="large"] :is(.coach-visible-hint,.companion-heading,.companion-actions) { flex-wrap: wrap; }
+@media (max-width: 700px) {
+  .preferences-shell { padding: 32px 18px 50px; }
+  .accessibility-settings .ui-radio-group { grid-template-columns: 1fr; }
+  .accessibility-sample { padding: 16px 10px; }
+  .accessibility-sample-tile { width: 70px; }
+  .table-seat-state { margin-left: 30px; }
+  html[data-text-size="large"] .shared-table-page .table-surface { --table-min-height: 370px; }
+  html[data-text-size="large"] .table-discards { inset: 154px 10px 70px; }
+  html[data-text-size="large"] .shared-table-page.unified-game .table-surface { flex-basis: 350px; }
+  html[data-text-size="large"] .unified-game .table-discards { inset: 125px 12px 55px; }
+  html[data-suit-labels="full"] .shared-table-page :is(.rack,.cloud-rack), html[data-text-size="large"] .shared-table-page :is(.rack,.cloud-rack) { grid-template-columns: repeat(4,minmax(0,1fr)); }
+}
+@media (max-width: 420px) {
+  html[data-suit-labels="full"] .shared-table-page :is(.rack,.cloud-rack), html[data-text-size="large"] .shared-table-page :is(.rack,.cloud-rack) { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+html[data-motion="reduce"] *, html[data-motion="reduce"] *::before, html[data-motion="reduce"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+html[data-motion="reduce"] :is(.deal-stage,.deal-progress,.discard-cinematic) { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

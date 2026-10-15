@@ -31,7 +31,8 @@ describe('shared table presentation', () => {
     expect(markup).not.toContain('Final rack');
     expect(markup).not.toContain('concealed tiles');
     expect(markup).not.toContain('· 13 tiles');
-    expect(markup).not.toContain('table-seat-state');
+    expect(markup).toContain('table-seat-state');
+    expect(markup).toContain('Moving');
     expect(markup).not.toContain('table-seat-identity');
     expect(markup).not.toContain('To play');
     expect(markup.match(/table-avatar-present/g)).toHaveLength(4);

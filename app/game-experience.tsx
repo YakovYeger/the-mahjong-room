@@ -1,4 +1,5 @@
 'use client';
+import { useAccessibility } from '../src/accessibility/provider';
 import { Menu } from '../src/ui/menu';
 import { Select } from '../src/ui/select';
 import { getCardProvider, type CardId } from '../src/game/cards';
@@ -138,7 +139,7 @@ const dealTargets = [
 
 function DealingScreen({ gameNumber, resuming }: { gameNumber: number; resuming: boolean }) {
   return (
-    <MotionConfig reducedMotion="user">
+    <MotionConfig>
       <main className="dealing-screen" role="status" aria-live="polite" aria-label={`${resuming ? 'Restoring' : 'Dealing'} game ${gameNumber}`}>
         <header><span className="brand">The Mahjong Room</span><span>Game {gameNumber}</span></header>
         <section className="deal-stage" aria-hidden="true">
@@ -181,6 +182,7 @@ export function TableReveal({ game }: { game: GameState }) {
 }
 
 export function GameExperience() {
+  const { openSettings, reducedMotion } = useAccessibility();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [started, setStarted] = useState(false);
   const [dealing, setDealing] = useState(false);
@@ -279,9 +281,9 @@ export function GameExperience() {
 
   useEffect(() => {
     if (!dealing) return;
-    const timer = window.setTimeout(() => setDealing(false), 2300);
+    const timer = window.setTimeout(() => setDealing(false), reducedMotion ? 0 : 2300);
     return () => window.clearTimeout(timer);
-  }, [dealing]);
+  }, [dealing, reducedMotion]);
 
   const resetSelection = () => {
     setSelected([]);
@@ -441,7 +443,7 @@ export function GameExperience() {
       : hasSavedSession ? `Resume game ${gameNumber}` : gameNumber === 1 ? 'Play your first hand' : `Play game ${gameNumber}`;
     return (
       <main className="welcome">
-        <nav><span className="brand">The Mahjong Room</span><span className="welcome-nav-actions"><span className="tiny-label">A calmer way to learn</span><a href="/learn">How to play</a><a href="/rules">Rules</a><a href="/games">Private tables</a><a href="/account">Account</a></span><div className="welcome-menu"><button type="button" aria-expanded={mobileMenuOpen} aria-controls="welcome-mobile-navigation" onClick={() => setMobileMenuOpen((open) => !open)}>Menu</button>{mobileMenuOpen ? <div className="welcome-menu-panel" id="welcome-mobile-navigation"><a href="/learn" onClick={() => setMobileMenuOpen(false)}>How to play</a><a href="/rules" onClick={() => setMobileMenuOpen(false)}>Rules</a><a href="/games" onClick={() => setMobileMenuOpen(false)}>Private tables</a><a href="/account" onClick={() => setMobileMenuOpen(false)}>Account</a></div> : null}</div></nav>
+        <nav><span className="brand">The Mahjong Room</span><span className="welcome-nav-actions"><span className="tiny-label">A calmer way to learn</span><a href="/learn">How to play</a><a href="/rules">Rules</a><a href="/games">Private tables</a><a href="/account">Account</a><a href="/settings">Accessibility</a></span><div className="welcome-menu"><button type="button" aria-expanded={mobileMenuOpen} aria-controls="welcome-mobile-navigation" onClick={() => setMobileMenuOpen((open) => !open)}>Menu</button>{mobileMenuOpen ? <div className="welcome-menu-panel" id="welcome-mobile-navigation"><a href="/learn" onClick={() => setMobileMenuOpen(false)}>How to play</a><a href="/rules" onClick={() => setMobileMenuOpen(false)}>Rules</a><a href="/games" onClick={() => setMobileMenuOpen(false)}>Private tables</a><a href="/account" onClick={() => setMobileMenuOpen(false)}>Account</a><a href="/settings" onClick={() => setMobileMenuOpen(false)}>Accessibility</a></div> : null}</div></nav>
         <section className="welcome-grid">
           <div className="welcome-copy"><p className="kicker">{returning ? `Game ${gameNumber} is ready` : 'Your first game starts here'}</p><h1>{returning ? <>Build your Mahjong instincts <em>one hand at a time.</em></> : <>Learn American Mahjong by <em>actually playing.</em></>}</h1><p className="lede">{returning ? 'Pick up exactly where you left off. Your rack order, table state, coaching level, and game number are saved on this device.' : 'A patient coach sits beside you through the tiles, the Charleston, and every decision—then quietly steps away as you get better.'}</p>{hasSavedSession && game.phase !== 'completed' ? <button className="fresh-card-button" onClick={() => { const next = createGame({seed: game.seed + 1, cardId: game.cardId}); setGame(next); setRackOrder(next.players[0].rack.map(tile => tile.id)); setGameNumber(n => n + 1); setHasSavedSession(false); setManualTurns(0); setHintsRequested(0); setHintLevel(0); setReview(false); }}>Choose a card for a fresh hand</button> : null}<Select<CardId> className="welcome-card-select" label="Play with" value={game.cardId ?? 'training-card'} disabled={hasSavedSession && game.phase !== 'completed'} onValueChange={cardId => { setGame(createGame({ seed: game.seed, cardId })); setHasSavedSession(false); }} options={[{ value: 'training-card', label: 'Training Card · 10 guided hands' }, { value: 'photo-2025', label: 'Your 2025 Card · 55 hands' }]} /><a className="browse-card-link" href="/cards">Explore your 2025 card ↗</a><a className="welcome-learn-link" href="/learn"><strong>New to the tiles?</strong> Take the step-by-step tutorial →</a><button className="start-button" onClick={enterGame}>{startLabel} <span>→</span></button><small>{hasSavedSession ? 'Saved automatically on this device.' : 'No account. No timer. We’ll explain as we go.'}</small></div>
           <div className="welcome-rack" aria-hidden="true">{human.rack.slice(0, 8).map((tile) => <span className="hero-tile" key={tile.id}><TileFace tile={tile} /></span>)}<div className="teacher-note"><span>Coach</span><p>You already have a few tiles that work beautifully together.</p></div></div>
@@ -477,7 +479,7 @@ export function GameExperience() {
     <main className={`shell game-shell shared-table-page unified-game ${cardOpen ? 'card-is-open' : ''}`}>
       <TableHeader brand={<button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={`Practice · Game ${gameNumber}`}>
         <button className="table-tool-button" aria-label={`${cardOpen ? 'Hide' : 'Show'} ${game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}`} aria-expanded={cardOpen} onClick={() => setCardOpen((open) => !open)}>{game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button>
-        <Menu label="Table" note="Saved on this device" items={[{ label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, { label: 'Save progress', href: '/account' }, { label: 'Leave table', onClick: () => setStarted(false) }]} />
+        <Menu label="Table" note="Saved on this device" items={[{ label: 'Accessibility', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, { label: 'Save progress', href: '/account' }, { label: 'Leave table', onClick: () => setStarted(false) }]} />
       </TableHeader>
       <section className="game-table" aria-label="Guided American Mahjong table">
         <TableSurface highlightedTileIds={coach.highlights.publicTileIds} players={game.players.map(({ rack, ...player }) => ({ ...player, rackCount: rack.length }))} viewerId={human.id} activePlayerIds={game.phase === 'charleston' || respondingToDiscard ? [human.id] : [game.players[game.turnIndex].id]} wallCount={game.wall.length} discardCount={visibleDiscards.length}>
@@ -497,7 +499,7 @@ export function GameExperience() {
             </div>
           </div>
 
-          <MotionConfig reducedMotion="user" transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.7 }}>
+          <MotionConfig reducedMotion={reducedMotion ? 'always' : 'user'} transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 520, damping: 38, mass: 0.7 }}>
             <DragDropProvider
               sensors={(defaults) => [
                 ...defaults.filter((sensor) => sensor !== PointerSensor),

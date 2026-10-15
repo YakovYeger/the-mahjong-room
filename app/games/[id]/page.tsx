@@ -1,4 +1,5 @@
 'use client';
+import { useAccessibility } from '../../../src/accessibility/provider';
 import { Menu } from '../../../src/ui/menu';
 
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
@@ -41,6 +42,7 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
 }
 
 function CloudGameTable({ gameId }: { gameId: string }) {
+  const { openSettings } = useAccessibility();
   const cloud = useCloudTable(gameId);
   const snapshot = cloud.data?.snapshot ?? null;
   const room = cloud.data?.room ?? null;
@@ -192,7 +194,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
     <main className={`cloud-game-page shared-table-page unified-game ${cardOpen && !isTerminal ? 'card-is-open' : ''}`}>
       <TableHeader brand={<a className="brand" href="/">The Mahjong Room</a>} context={snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}>
         {!isTerminal ? <button className="table-tool-button" aria-expanded={cardOpen} onClick={() => setCardOpen(open => !open)}>{snapshot.publicState.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button> : null}
-        <Menu label="Table" note={`${online} online`} items={[{ label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, ...(isHost && (snapshot.status === 'active' || snapshot.status === 'paused') ? [{ label: 'End game', onClick: () => setEndDialogOpen(true), disabled: busy }] : []), { label: 'Leave table', onClick: requestLeaveTable }]} />
+        <Menu label="Table" note={`${online} online`} items={[{ label: 'Accessibility', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, ...(isHost && (snapshot.status === 'active' || snapshot.status === 'paused') ? [{ label: 'End game', onClick: () => setEndDialogOpen(true), disabled: busy }] : []), { label: 'Leave table', onClick: requestLeaveTable }]} />
       </TableHeader>
       {endDialogOpen ? <EndGameDialog busy={busy} onCancel={() => setEndDialogOpen(false)} onConfirm={() => void endGameForEveryone()} /> : null}
       {leaveDialogOpen ? <dialog ref={leaveDialogRef} className="leave-dialog" aria-labelledby="leave-dialog-title" aria-describedby="leave-dialog-description" onCancel={(event) => { event.preventDefault(); setLeaveDialogOpen(false); }} onClick={(event) => { if (event.target === event.currentTarget) setLeaveDialogOpen(false); }}>

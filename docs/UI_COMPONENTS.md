@@ -73,3 +73,12 @@ The shared styles in `src/ui/components.css` use warm ivory tile-like input face
 ```
 
 Keep form state and async behavior in the feature component; use native validation and shared server contracts for small forms. For a more complex future form, the Field composition also supports a dedicated form-state library. Expose helpful field-level errors and announce request errors separately from successful status messages. Avoid overriding generic input/label/button styles from a page selector.
+
+## Accessibility themes and type
+
+Use rem units for text and the shared `--ink`, `--muted`, `--paper`,
+`--cream`, `--soft-surface`, `--edge`, and `--focus` roles. Tile artwork uses
+`--tile-paper` and `--tile-ink` independently of page light settings. Shared form
+roles inherit these values, including inside portals. Check both light settings,
+High Contrast, and Large Text when adding a surface. Keep layouts fluid rather
+than fixing text-container heights. See [ACCESSIBILITY.md](ACCESSIBILITY.md).

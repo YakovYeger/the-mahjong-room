@@ -40,8 +40,11 @@ export function TileArtwork({ tile }: { tile: Tile }) {
 
 export function TileFace({ tile, compact = false }: { tile: Tile; compact?: boolean }) {
   const label = shortTile(tile);
+  const fullLabel = tile.type.kind === 'number' ? ({ bamboo: 'Bamboo', characters: 'Characters', dots: 'Dots' }[tile.type.suit])
+    : tile.type.kind === 'wind' ? `${tile.type.wind} wind` : tile.type.kind === 'dragon' ? `${tile.type.dragon} dragon`
+      : tile.type.kind === 'flower' ? 'Flower' : 'Joker';
   const family = tile.type.kind === 'number' ? tile.type.suit : tile.type.kind === 'dragon' ? `dragon-${tile.type.dragon}` : tile.type.kind;
   return <span className={`tile-face illustrated tile-${family} ${compact ? 'compact' : ''}`}>
-    <strong>{label.top}</strong><TileArtwork tile={tile} /><small>{label.bottom}</small>
+    <strong>{label.top}</strong><TileArtwork tile={tile} /><small><span className="tile-label-compact">{label.bottom}</span>{!compact ? <span className="tile-label-full">{fullLabel}</span> : null}</small>
   </span>;
 }
