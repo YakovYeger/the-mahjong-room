@@ -7,6 +7,7 @@ import { TableSurface, DiscardPool, playerPosition } from '../src/table/table-su
 import { TrainingHands } from '../src/table/training-hands';
 import { createTablePreview } from '../src/table/design-fixtures';
 import { tileKey } from '../src/game/tiles';
+import { groupDiscards } from '../src/table/discard-groups';
 
 describe('shared table presentation', () => {
   it('anchors every viewer at the bottom and preserves clockwise seat order', () => {
@@ -59,16 +60,16 @@ describe('shared table presentation', () => {
     const discards = renderToStaticMarkup(createElement(DiscardPool, { tiles: game.discards }));
     expect(discards).toContain('table-latest-discard');
     expect(discards).toContain('tabindex="0"');
-    expect(discards.match(/class="table-discard-tile/g)).toHaveLength(94);
+    expect(discards.match(/class="table-discard-tile/g)).toHaveLength(groupDiscards(game.discards).length);
   });
   it('uses complete, nonduplicated physical decks for late-game crowding previews', () => {
-    for (const state of ['late', 'pung', 'crowded'] as const) {
+    for (const state of ['late', 'pung', 'crowded', 'claim', 'mid', 'empty'] as const) {
       const game = createTablePreview(state);
       const all = [...game.wall, ...game.discards, ...game.players.flatMap((player) => [...player.rack, ...player.exposures.flatMap((set) => set.tiles)])];
       expect(all).toHaveLength(152);
       expect(new Set(all.map((tile) => tile.id)).size).toBe(152);
-      expect(game.discards).toHaveLength(94);
-      expect(game.wall).toHaveLength(5);
+      expect(game.discards).toHaveLength(state === 'mid' ? 49 : state === 'empty' ? 99 : 94);
+      expect(game.wall).toHaveLength(state === 'mid' ? 50 : state === 'empty' ? 0 : 5);
       for (const [index, player] of game.players.entries()) {
         expect(player.rack.length + player.exposures.flatMap((set) => set.tiles).length).toBe(index === game.turnIndex ? 14 : 13);
         for (const set of player.exposures) {
@@ -79,15 +80,19 @@ describe('shared table presentation', () => {
       }
     }
     expect(createTablePreview('crowded').players.flatMap((player) => player.exposures)).toHaveLength(12);
+    const claim = createTablePreview('claim');
+    expect(claim.callWindow?.discard.id).toBe(claim.discards.at(-1)?.id);
+    expect(claim.discards.filter(tile => tileKey(tile) === tileKey(claim.callWindow!.discard)).length).toBeGreaterThan(1);
+    expect(createTablePreview('opening').wall).toHaveLength(99);
   });
-  it('retains all discards in order and highlights the current claim tile', () => {
+  it('keeps the exact claim tile separate from grouped earlier copies', () => {
     const tiles = createGame(417).players[0].rack;
     const markup = renderToStaticMarkup(createElement(DiscardPool, { tiles, latestTileId: tiles[3].id }));
-    expect(markup.match(/class="table-discard-tile/g)).toHaveLength(tiles.length);
-    expect(markup.match(/table-discard-latest/g)).toHaveLength(1);
+    expect(markup.match(/class="table-discard-tile/g)).toHaveLength(groupDiscards(tiles, tiles[3].id).length);
+    expect(markup).toContain('Only this copy is current.');
     expect(markup).toContain(`Discard pool, ${tiles.length} visible tiles`);
-    expect(markup).toContain('discard 1');
-    expect(markup).toContain(`discard ${tiles.length}`);
+    expect(markup).toContain('In order');
+    expect(markup).toContain('Claim tile counted separately.');
   });
   it('shows the common reference without claiming online hands are blocked', () => {
     const markup = renderToStaticMarkup(createElement(TrainingHands));

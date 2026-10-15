@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode, type Ref } from 'react';
+import type { ReactNode } from 'react';
+import { WallMeter } from './wall-meter';
+export { DiscardPool } from './discard-pool';
 import type { Player, Tile } from '../game/types';
 import { tileLabel } from '../game/tiles';
 import { TileFace } from './tile-face';
@@ -35,7 +37,7 @@ export function TableSurface({ players, viewerId, activePlayerIds, wallCount, di
   const exposedPlayers = players.filter((player) => player.exposures.length > 0);
   return <><section className={`table-surface${discardCount > 35 ? ' table-surface-late' : ''}`} aria-label="Mahjong table">
     {players.map((player) => <PlayerSeat key={player.id} player={player} position={playerPosition(player.seat, viewerSeat)} viewer={player.id === viewerId} active={activePlayerIds.includes(player.id)} />)}
-    <span className="table-wall-count" aria-label={`${wallCount} tiles in the wall`}>{wallCount} <small>in wall</small></span>
+    <WallMeter count={wallCount} />
     {children}
   </section>{exposedPlayers.length ? <section className={`table-melds${exposedPlayers.length === 1 ? ' table-melds-single' : ''}`} aria-label="Exposed sets">
     {exposedPlayers.map((player) => <article key={player.id} aria-label={`${player.id === viewerId ? 'Your' : player.name + '’s'} exposed sets`}>
@@ -43,32 +45,6 @@ export function TableSurface({ players, viewerId, activePlayerIds, wallCount, di
       <div className="table-meld-groups">{player.exposures.map((set) => <div className="table-meld" key={set.id} aria-label={`${set.kind}: ${set.tiles.map(tileLabel).join(', ')}`}><div className="table-exposed-set">{set.tiles.map((tile) => <span className={highlightedTileIds.includes(tile.id) ? 'coach-public-focus' : undefined} key={tile.id} title={`${tileLabel(tile)}${highlightedTileIds.includes(tile.id) ? ' · Coach focus: public copy' : ''}`}><TileFace tile={tile} compact /></span>)}</div></div>)}</div>
     </article>)}
   </section> : null}</>;
-}
-
-export function DiscardPool({ tiles, latestTileId, dropRef, dropActive = false, children, highlightedTileIds = [] }: { highlightedTileIds?: string[]; tiles: Tile[]; latestTileId?: string; dropRef?: Ref<HTMLDivElement>; dropActive?: boolean; children?: ReactNode }) {
-  const latest = latestTileId ? tiles.find((tile) => tile.id === latestTileId) : tiles.at(-1);
-  const historyRef = useRef<HTMLDivElement>(null);
-  const currentTileId = latest?.id;
-  useEffect(() => {
-    const history = historyRef.current;
-    if (!history) return;
-    history.scrollTop = history.scrollHeight;
-    if (typeof ResizeObserver === 'undefined') return;
-    let previousLimit = Math.max(0, history.scrollHeight - history.clientHeight);
-    const observer = new ResizeObserver(() => {
-      const followingLatest = history.scrollTop >= previousLimit - 1;
-      previousLimit = Math.max(0, history.scrollHeight - history.clientHeight);
-      if (followingLatest) history.scrollTop = history.scrollHeight;
-    });
-    observer.observe(history);
-    return () => observer.disconnect();
-  }, [tiles.length, currentTileId]);
-  return <div ref={dropRef} className={`table-discards${dropActive ? ' table-discards-drop-active' : ''}`} role="region" aria-label={`Discard pool, ${tiles.length} visible tiles`}>
-    <header><strong>Discards</strong><span>{tiles.length ? `${tiles.length} · oldest first` : 'No discards yet'}</span></header>
-    {latest ? <div className="table-latest-discard"><span>{latestTileId ? 'Claim tile' : 'Latest discard'}</span><span className="table-latest-tile"><TileFace tile={latest} /></span><strong>{tileLabel(latest)}</strong></div> : null}
-    <div className="table-discard-grid" ref={historyRef} tabIndex={tiles.length ? 0 : undefined} aria-label="Discard history, scroll to inspect older tiles">{tiles.map((tile, index) => <span className={`table-discard-tile${tile.id === latest?.id ? ' table-discard-latest' : ''}${highlightedTileIds.includes(tile.id) ? ' coach-public-focus' : ''}`} title={`${tileLabel(tile)}, discard ${index + 1}`} key={tile.id}><TileFace tile={tile} compact /></span>)}</div>
-    {children}
-  </div>;
 }
 
 export function TablePrompt({ title, detail, active = false, children }: { title: string; detail: string; active?: boolean; children?: ReactNode }) {
