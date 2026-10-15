@@ -1,0 +1,56 @@
+tests/discard-display.test.ts
+  s_22c446349888fd::t_784cdda1937776 1-96
+tests/discard-history.test.ts
+  s_22c446349888fd::t_618eac44fb2937 4,15-16,23,37-38
+  s_22c446349888fd::t_bf91c2214b92ec 30-32
+src/table/table-surface.tsx
+  s_22c446349888fd::t_f5267a4372161c 3-5,40
+app/table-preview/table-preview.tsx
+  s_22c446349888fd::t_c03dbbd9befcaa 15-16,20-21,37,46,49
+  s_22c446349888fd::t_e035cb4b86bb96 44,48
+docs/IMPLEMENTATION_STATUS.md
+  s_22c446349888fd::t_1e99678d6bfa76 140-146
+src/ui/tabs.tsx
+  s_22c446349888fd::t_acfe346bcf709c 6-7
+src/table/discard-pool.tsx
+  s_22c446349888fd::t_32b71822df16e0 33,35
+  s_22c446349888fd::t_618eac44fb2937 37,45-46
+  s_22c446349888fd::t_5ed9fd35756e90 52
+  s_22c446349888fd::t_acfe346bcf709c 1-32,34,36,38-44,47-51,53-55
+src/table/design-fixtures.ts
+  s_22c446349888fd::t_618eac44fb2937 14
+  s_22c446349888fd::t_c03dbbd9befcaa 4,10-11,40,42-47
+app/layout.tsx
+  s_22c446349888fd::t_32b71822df16e0 8
+src/table/discard-groups.ts
+  s_22c446349888fd::t_acfe346bcf709c 1-23
+src/table/discards.css
+  s_22c446349888fd::t_09655bc06b3ccc 26
+  s_22c446349888fd::t_32b71822df16e0 1-25,27-59
+src/table/wall-meter.tsx
+  s_22c446349888fd::t_32b71822df16e0 17
+  s_22c446349888fd::t_acfe346bcf709c 1-5,8-9,11-16,18-21
+  s_22c446349888fd::t_30e7f56588c7e7 6-7,10
+tests/table-surface.test.ts
+  s_22c446349888fd::t_784cdda1937776 10,63,88,91-92,94-95
+  s_22c446349888fd::t_9f0df228f296e9 66,71-72,83-86
+docs/WALL_AND_DISCARDS.md
+  s_22c446349888fd::t_30e7f56588c7e7 24-25
+  s_22c446349888fd::t_1e99678d6bfa76 1-23,26-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "13a950ba5c0655fb0cb27143f9153ba190d730e5",
+  "prompts": {},
+  "sessions": {
+    "s_22c446349888fd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13994-9e97-7d12-b2d0-9e26f8f2e210",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
