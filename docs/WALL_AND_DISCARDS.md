@@ -27,10 +27,12 @@ The ordered list follows new discards, permits keyboard scrolling, and preserves
 manual inspection during unrelated updates. Claimed tiles are absent from the
 current pool; original action/event history remains unchanged in the engine.
 
-Both views scroll when space is limited. Switching views changes only local
-presentation state, with no rules action, API write, or saved-game mutation.
+Choose **Grouped** or **In order** under **Game preferences → Discard display**.
+The choice saves in this browser and applies to guest and account play, including
+a table already in progress. The table has no view controls or visible order numbers.
+Both views scroll when space is limited. Switching views changes only preferences, with no rules action, API write, or saved-game mutation.
 Coach highlights preserve individual-copy cues, including a separately displayed
-claim tile. Shared shadcn/Base UI tabs support keyboard view switching. The
+claim tile. Shared shadcn/Base UI preference radios support keyboard selection. The
 surface retains the existing drag-to-discard drop target.
 
 ## Verification

@@ -2,7 +2,7 @@
 import { createElement } from 'react';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { beforeEach, vi, afterEach, describe, expect, it } from 'vitest';
 import { createGame } from '../src/game/engine';
 import { createWall } from '../src/game/tiles';
 import type { Tile } from '../src/game/types';
@@ -10,6 +10,12 @@ import { DiscardPool } from '../src/table/discard-pool';
 import { groupDiscards } from '../src/table/discard-groups';
 import { OPENING_WALL_COUNT, WallMeter, wallSegments } from '../src/table/wall-meter';
 
+import { AccessibilityProvider } from '../src/accessibility/provider';
+import { AccessibilitySettings } from '../src/accessibility/settings';
+
+beforeEach(() => { localStorage.clear(); vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} })); });
+afterEach(() => vi.unstubAllGlobals());
+const pool = (props: Parameters<typeof DiscardPool>[0]) => createElement(AccessibilityProvider, null, createElement(AccessibilitySettings), createElement(DiscardPool, props));
 const dot = (id: string): Tile => ({ id, type: { kind: 'number', suit: 'dots', rank: 8 } });
 const tiles: Tile[] = [dot('a'), { id: 'red', type: { kind: 'dragon', dragon: 'red' } }, dot('b'), { id: 'bam', type: { kind: 'number', suit: 'bamboo', rank: 8 } }, dot('claim')];
 afterEach(cleanup);
@@ -37,38 +43,40 @@ describe('public discard identities', () => {
 
 it('excludes only the live claim copy from counts and keeps its exact ID in individual order', async () => {
   const user = userEvent.setup();
-  render(createElement(DiscardPool, { tiles, latestTileId: 'claim' }));
+  render(pool({ tiles, latestTileId: 'claim' }));
+  expect(screen.queryByRole('tablist')).toBeNull();
+  expect(document.querySelector('.table-discard-position')).toBeNull();
   expect(screen.getByText('Claim tile')).toBeTruthy();
   expect(screen.getByRole('listitem', { name: '8 Dot, 2 discarded copies' })).toBeTruthy();
   expect(screen.queryByRole('listitem', { name: '8 Dot, 3 discarded copies' })).toBeNull();
-  await user.click(screen.getByRole('tab', { name: 'In order' }));
+  await user.click(screen.getByRole('radio', { name: 'In order' }));
   const ordered = screen.getByRole('list', { name: /Individual discards/ });
   expect(within(ordered).getAllByRole('listitem').map(item => item.getAttribute('data-discard-id'))).toEqual(['a', 'red', 'b', 'bam', 'claim']);
   expect(within(ordered).getByRole('listitem', { name: '5. 8 Dot, current claim tile' })).toBeTruthy();
 });
 it('updates after claim removal or response resolution without confusing an older matching discard for the claim', async () => {
   const user = userEvent.setup();
-  const { rerender } = render(createElement(DiscardPool, { tiles, latestTileId: 'claim' }));
-  rerender(createElement(DiscardPool, { tiles: tiles.slice(0, -1) }));
+  const { rerender } = render(pool({ tiles, latestTileId: 'claim' }));
+  rerender(pool({ tiles: tiles.slice(0, -1) }));
   expect(screen.queryByText('Claim tile')).toBeNull();
   expect(screen.getByRole('listitem', { name: '8 Dot, 2 discarded copies' })).toBeTruthy();
-  rerender(createElement(DiscardPool, { tiles }));
+  rerender(pool({ tiles }));
   expect(screen.getByRole('listitem', { name: '8 Dot, 3 discarded copies' })).toBeTruthy();
-  await user.click(screen.getByRole('tab', { name: 'In order' }));
-  rerender(createElement(DiscardPool, { tiles: [...tiles, dot('new')], latestTileId: 'new' }));
-  expect(screen.getByRole('tab', { name: 'In order' }).getAttribute('aria-selected')).toBe('true');
+  await user.click(screen.getByRole('radio', { name: 'In order' }));
+  rerender(pool({ tiles: [...tiles, dot('new')], latestTileId: 'new' }));
+  expect(screen.getByRole('radio', { name: 'In order' }).getAttribute('aria-checked')).toBe('true');
   expect(screen.getByRole('listitem', { name: '6. 8 Dot, current claim tile' })).toBeTruthy();
 });
-it('supports keyboard view switching, per-copy coach cues, an empty pool, and a single claim', async () => {
+it('supports preference selection, per-copy coach cues, an empty pool, and a single claim', async () => {
   const user = userEvent.setup();
-  const { rerender } = render(createElement(DiscardPool, { tiles, highlightedTileIds: ['b'] }));
+  const { rerender } = render(pool({ tiles, highlightedTileIds: ['b'] }));
   expect(screen.getByRole('listitem', { name: '8 Dot, 3 discarded copies, coach focus on 1 copy' })).toBeTruthy();
-  screen.getByRole('tab', { name: 'Grouped' }).focus(); await user.keyboard('{ArrowRight}');
+  await user.click(screen.getByRole('radio', { name: 'In order' }));
   expect(screen.getByRole('listitem', { name: '3. 8 Dot, coach focus' })).toBeTruthy();
-  rerender(createElement(DiscardPool, { tiles: [] }));
+  rerender(pool({ tiles: [] }));
   expect(screen.getByText('No discards yet')).toBeTruthy();expect(screen.queryByRole('tablist')).toBeNull();
-  rerender(createElement(DiscardPool, { tiles: [dot('only')], latestTileId: 'only' }));
-  await user.click(screen.getByRole('tab', { name: 'Grouped' }));
+  rerender(pool({ tiles: [dot('only')], latestTileId: 'only' }));
+  await user.click(screen.getByRole('radio', { name: 'Grouped' }));
   expect(screen.getByText('No earlier discards.')).toBeTruthy();
   expect(screen.getByText('Only this copy is current.')).toBeTruthy();
 });

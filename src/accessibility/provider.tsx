@@ -67,7 +67,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
       {children}
       <Dialog open={open} onOpenChange={setOpen} className="accessibility-dialog" finalFocus={() => document.querySelector<HTMLElement>('.table-tools .ui-menu-trigger') ?? true}>
         <div className="accessibility-dialog-heading"><DialogTitle>Make the table yours.</DialogTitle><Button variant="outline" onClick={() => setOpen(false)} aria-label="Close accessibility settings">Close</Button></div>
-        <DialogDescription>Adjust readability and motion without leaving your game.</DialogDescription>
+        <DialogDescription>Choose your discard display, readability, and motion without leaving your game.</DialogDescription>
         <AccessibilitySettings />
       </Dialog>
     </MotionConfig>

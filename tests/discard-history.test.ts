@@ -1,24 +1,28 @@
 // @vitest-environment jsdom
 
 import { createElement } from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, it, vi } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 import { createTablePreview } from '../src/table/design-fixtures';
 import { DiscardPool } from '../src/table/table-surface';
+
+import { AccessibilityProvider } from '../src/accessibility/provider';
+import { ACCESSIBILITY_KEY } from '../src/accessibility/preferences';
+const pool = (props: Parameters<typeof DiscardPool>[0]) => createElement(AccessibilityProvider, null, createElement(DiscardPool, props));
+beforeEach(() => { localStorage.setItem(ACCESSIBILITY_KEY, JSON.stringify({ discardView: 'order' })); vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} })); });
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 it('follows new discards but preserves manual history inspection during unrelated updates', () => {
   vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(700);
   const tiles = createTablePreview('late').discards;
-  const { rerender } = render(createElement(DiscardPool, { tiles: tiles.slice(0, 93) }));
-  fireEvent.click(screen.getByRole('tab', { name: 'In order' }));
+  const { rerender } = render(pool({ tiles: tiles.slice(0, 93) }));
   const history = screen.getByRole('list', { name: /Individual discards/ });
   expect(history.scrollTop).toBe(700);
   history.scrollTop = 120;
-  rerender(createElement(DiscardPool, { tiles: tiles.slice(0, 93), dropActive: true }));
+  rerender(pool({ tiles: tiles.slice(0, 93), dropActive: true }));
   expect(history.scrollTop).toBe(120);
-  rerender(createElement(DiscardPool, { tiles }));
+  rerender(pool({ tiles }));
   expect(history.scrollTop).toBe(700);
   expect(history.querySelector('.table-discard-history-latest')?.getAttribute('aria-label')).toContain('94.');
 });
@@ -33,8 +37,7 @@ it('keeps the latest discard in view when the available table height changes', (
   });
   vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(700);
   const height = vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
-  const { unmount } = render(createElement(DiscardPool, { tiles: createTablePreview('late').discards }));
-  fireEvent.click(screen.getByRole('tab', { name: 'In order' }));
+  const { unmount } = render(pool({ tiles: createTablePreview('late').discards }));
   const history = screen.getByRole('list', { name: /Individual discards/ });
   history.scrollTop = 600;
   height.mockReturnValue(80);

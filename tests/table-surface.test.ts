@@ -91,7 +91,8 @@ describe('shared table presentation', () => {
     expect(markup.match(/class="table-discard-tile/g)).toHaveLength(groupDiscards(tiles, tiles[3].id).length);
     expect(markup).toContain('Only this copy is current.');
     expect(markup).toContain(`Discard pool, ${tiles.length} visible tiles`);
-    expect(markup).toContain('In order');
+    expect(markup).not.toContain('tablist');
+    expect(markup).not.toContain('table-discard-position');
     expect(markup).toContain('Claim tile counted separately.');
   });
   it('shows the common reference without claiming online hands are blocked', () => {

@@ -16,8 +16,11 @@ export function AccessibilitySettings() {
       <div aria-hidden="true">{(['bamboo', 'characters', 'dots'] as const).map(suit => <div className="accessibility-sample-tile" key={suit}><TileFace tile={{ id: `preview-${suit}`, type: { kind: 'number', suit, rank: 3 } }} /></div>)}</div>
       <p>Distinct symbols and written suit labels keep every tile identifiable.</p>
     </div>
-    <form onSubmit={event => event.preventDefault()} aria-label="Accessibility preferences">
+    <form onSubmit={event => event.preventDefault()} aria-label="Game preferences">
       <FieldGroup>
+        <FieldSet disabled={!ready}><FieldLegend>Discard display</FieldLegend><FieldDescription id={`${id}-discards`}>Group matching discards with copy counts, or show each tile in the order it was discarded.</FieldDescription>
+          <RadioGroup disabled={!ready} descriptionId={`${id}-discards`} label="Discard display" value={preferences.discardView} onValueChange={discardView => update({ discardView })} options={[{ value: 'grouped', label: 'Grouped' }, { value: 'order', label: 'In order' }]} />
+        </FieldSet>
         <FieldSet disabled={!ready}><FieldLegend>Text size</FieldLegend><FieldDescription id={`${id}-text`}>Large text increases type by 25% and gives your rack more room.</FieldDescription>
           <RadioGroup disabled={!ready} descriptionId={`${id}-text`} label="Text size" value={preferences.textSize} onValueChange={textSize => update({ textSize })} options={[{ value: 'standard', label: 'Standard text' }, { value: 'large', label: 'Large text' }]} />
         </FieldSet>
