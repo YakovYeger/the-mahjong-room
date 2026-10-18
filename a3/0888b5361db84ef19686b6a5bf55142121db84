@@ -1,0 +1,41 @@
+app/game-experience.tsx
+  s_22c446349888fd::t_04f5983b561b2b 446,482
+app/games/[id]/page.tsx
+  s_22c446349888fd::t_1c56a1e0e2c958 197
+docs/WALL_AND_DISCARDS.md
+  s_22c446349888fd::t_4d51f5b4bc5ad9 30-33,35
+src/accessibility/preferences.ts
+  s_22c446349888fd::t_eeb08ea556f28e 2,4,12
+src/accessibility/provider.tsx
+  s_22c446349888fd::t_e7a797c3a565ea 70
+src/accessibility/settings.tsx
+  s_22c446349888fd::t_7995fbba3d07a7 19,21-23
+src/table/discard-pool.tsx
+  s_22c446349888fd::t_b2134f463328c7 3,6,11,36,48,51
+src/table/discards.css
+  s_22c446349888fd::t_f4f1c28eb9c226 32
+tests/accessibility.test.ts
+  s_22c446349888fd::t_46835a31a04878 30,50,53,57,59
+tests/discard-display.test.ts
+  s_22c446349888fd::t_e8601eb1b445e5 5,13-18,46-48,52,59-60,63,65-67,70,72,74,76,78-79
+tests/discard-history.test.ts
+  s_22c446349888fd::t_8cd574675f4c37 4-5,9-13,19,23,25,40
+tests/table-surface.test.ts
+  s_22c446349888fd::t_5422d279288457 94-95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a30888b5361db84ef19686b6a5bf55142121db84",
+  "prompts": {},
+  "sessions": {
+    "s_22c446349888fd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13994-9e97-7d12-b2d0-9e26f8f2e210",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
