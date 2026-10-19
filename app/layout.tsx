@@ -6,6 +6,7 @@ import '../src/table/table.css';
 import '../src/coach/coach.css';
 import '../src/accessibility/accessibility.css';
 import '../src/table/discards.css';
+import '../src/table/fullscreen.css';
 import { AccessibilityProvider } from '../src/accessibility/provider';
 import { accessibilityBootstrap } from '../src/accessibility/preferences';
 
