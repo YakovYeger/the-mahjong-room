@@ -1,6 +1,7 @@
 export const ACCESSIBILITY_KEY = 'mahjong-room:accessibility:v1';
-export const defaultPreferences = { textSize: 'standard', theme: 'classic', contrast: 'standard', suitLabels: 'compact', motion: 'system' } as const;
+export const defaultPreferences = { textSize: 'standard', theme: 'classic', contrast: 'standard', suitLabels: 'compact', motion: 'system', discardView: 'order' } as const;
 export interface AccessibilityPreferences {
+  discardView: 'grouped' | 'order';
   textSize: 'standard' | 'large';
   theme: 'classic' | 'low-light';
   contrast: 'standard' | 'high';
@@ -8,7 +9,7 @@ export interface AccessibilityPreferences {
   motion: 'system' | 'reduce';
 }
 const choices: { [K in keyof AccessibilityPreferences]: readonly AccessibilityPreferences[K][] } = {
-  textSize: ['standard', 'large'], theme: ['classic', 'low-light'], contrast: ['standard', 'high'],
+  discardView: ['grouped', 'order'], textSize: ['standard', 'large'], theme: ['classic', 'low-light'], contrast: ['standard', 'high'],
   suitLabels: ['compact', 'full'], motion: ['system', 'reduce'],
 };
 

@@ -137,3 +137,10 @@ Frontend/server application changes are included in the October 11 Sites release
 - Shared type uses relative units; enlarged racks, headings, actions, and navigation reflow. Portaled controls inherit the selected palette, and active/away seats have written state labels.
 - Preferences apply before paint, follow live system motion changes, and synchronize between tabs. Storage failures preserve usable session controls with a clear status.
 - Tests cover persistence, validation, keyboard interaction, and focus return; browser review covers portrait/landscape phones, tablet, desktop, and crowded public tables. See [ACCESSIBILITY.md](ACCESSIBILITY.md) for scope and limits. Merged through PR #5 on October 15. All 186 tests, typecheck, lint, build, and the hosted preference/navigation/focus checks passed before integration.
+
+## Wall and grouped discards — October 15
+
+- G8 adds a compressed visual wall driven by the authoritative count, including partial segments and an empty-wall state.
+- Grouped discard counts distinguish tile identities and keep the current claim copy separate. The In order view preserves every visible pool copy and its order; rules, event history, and call eligibility stay unchanged.
+- Both views retain keyboard scrolling, per-copy coach cues, and shared guest/cloud rendering. Added opening, middle, claim, crowded, and empty-wall review fixtures.
+- Prepared on `codex/wall-grouped-discards` for review. See [WALL_AND_DISCARDS.md](WALL_AND_DISCARDS.md) for behavior and verification scope.

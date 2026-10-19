@@ -27,11 +27,13 @@ it('disables server-rendered radio controls until stored preferences are loaded'
   const container = document.createElement('div');
   container.innerHTML = markup;
   const controls = container.querySelectorAll('[role="radio"]');
-  expect(controls).toHaveLength(10);
+  expect(controls).toHaveLength(12);
   expect([...controls].every(control => control.getAttribute('aria-disabled') === 'true')).toBe(true);
 });
 
 it('validates each saved value, safely recovering partial, malformed, or hostile storage', () => {
+  expect(parsePreferences(null).discardView).toBe('order');
+  expect(parsePreferences('{"discardView":"grouped"}').discardView).toBe('grouped');
   for (const raw of [null, '{', 'null', '[]', '17', '"large"']) expect(parsePreferences(raw)).toEqual(defaultPreferences);
   expect(parsePreferences('{"theme":"low-light","textSize":"injected","motion":"reduce","extra":"ignored"}'))
     .toEqual({ ...defaultPreferences, theme: 'low-light', motion: 'reduce' });
@@ -47,14 +49,16 @@ it('applies the same validated preference before paint as after hydration', asyn
   await waitFor(() => expect(screen.getByRole('radio', { name: 'Low light' }).getAttribute('aria-checked')).toBe('true'));
   expect(document.documentElement.dataset.theme).toBe('low-light');
 });
-it('saves immediately, rehydrates on remount, and resets only accessibility preferences', async () => {
+it('saves immediately, rehydrates on remount, and resets only game preferences', async () => {
   const user = userEvent.setup(); localStorage.setItem('mahjong:guest-progress', 'keep');
   const mounted = show(); await screen.findByText(/Changes save automatically/);
+  await user.click(screen.getByRole('radio', { name: 'In order' }));
   await user.click(screen.getByRole('radio', { name: 'Large text' }));
   await user.click(screen.getByRole('radio', { name: 'High contrast' }));
   await user.click(screen.getByRole('radio', { name: 'Full suit names' }));
-  expect(parsePreferences(localStorage.getItem(ACCESSIBILITY_KEY))).toMatchObject({ textSize: 'large', contrast: 'high', suitLabels: 'full' });
+  expect(parsePreferences(localStorage.getItem(ACCESSIBILITY_KEY))).toMatchObject({ textSize: 'large', contrast: 'high', suitLabels: 'full', discardView: 'order' });
   mounted.unmount(); show();
+  await waitFor(() => expect(screen.getByRole('radio', { name: 'In order' }).getAttribute('aria-checked')).toBe('true'));
   await waitFor(() => expect(screen.getByRole('radio', { name: 'Large text' }).getAttribute('aria-checked')).toBe('true'));
   await user.click(screen.getByRole('button', { name: 'Restore defaults' }));
   expect(parsePreferences(localStorage.getItem(ACCESSIBILITY_KEY))).toEqual(defaultPreferences);
