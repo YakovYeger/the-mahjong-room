@@ -1,0 +1,28 @@
+tests/table-surface.test.ts
+  s_22c446349888fd::t_408277405df268 62
+  s_22c446349888fd::t_c0e8fc7eaf0252 87,90,95-96
+docs/WALL_AND_DISCARDS.md
+  s_22c446349888fd::t_a12c4a20565e59 31
+src/accessibility/preferences.ts
+  s_22c446349888fd::t_5bb4017b0891c0 2
+tests/accessibility.test.ts
+  s_22c446349888fd::t_f81f630217e8e3 35-36
+tests/discard-display.test.ts
+  s_22c446349888fd::t_3728c80b3c77af 13,17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5eb9675e0c9996b3bb3212b4915c53cb247b568a",
+  "prompts": {},
+  "sessions": {
+    "s_22c446349888fd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13994-9e97-7d12-b2d0-9e26f8f2e210",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
