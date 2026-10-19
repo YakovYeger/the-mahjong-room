@@ -28,6 +28,7 @@ manual inspection during unrelated updates. Claimed tiles are absent from the
 current pool; original action/event history remains unchanged in the engine.
 
 Choose **Grouped** or **In order** under **Game preferences → Discard display**.
+**In order** is the default for new or unset preferences. Existing saved choices are preserved.
 The choice saves in this browser and applies to guest and account play, including
 a table already in progress. The table has no view controls or visible order numbers.
 Both views scroll when space is limited. Switching views changes only preferences, with no rules action, API write, or saved-game mutation.

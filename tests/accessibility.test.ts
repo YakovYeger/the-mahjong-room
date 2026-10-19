@@ -32,6 +32,8 @@ it('disables server-rendered radio controls until stored preferences are loaded'
 });
 
 it('validates each saved value, safely recovering partial, malformed, or hostile storage', () => {
+  expect(parsePreferences(null).discardView).toBe('order');
+  expect(parsePreferences('{"discardView":"grouped"}').discardView).toBe('grouped');
   for (const raw of [null, '{', 'null', '[]', '17', '"large"']) expect(parsePreferences(raw)).toEqual(defaultPreferences);
   expect(parsePreferences('{"theme":"low-light","textSize":"injected","motion":"reduce","extra":"ignored"}'))
     .toEqual({ ...defaultPreferences, theme: 'low-light', motion: 'reduce' });

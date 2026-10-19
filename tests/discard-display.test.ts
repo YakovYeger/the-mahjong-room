@@ -10,10 +10,11 @@ import { DiscardPool } from '../src/table/discard-pool';
 import { groupDiscards } from '../src/table/discard-groups';
 import { OPENING_WALL_COUNT, WallMeter, wallSegments } from '../src/table/wall-meter';
 
+import { ACCESSIBILITY_KEY } from '../src/accessibility/preferences';
 import { AccessibilityProvider } from '../src/accessibility/provider';
 import { AccessibilitySettings } from '../src/accessibility/settings';
 
-beforeEach(() => { localStorage.clear(); vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} })); });
+beforeEach(() => { localStorage.clear(); localStorage.setItem(ACCESSIBILITY_KEY, JSON.stringify({ discardView: 'grouped' })); vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} })); });
 afterEach(() => vi.unstubAllGlobals());
 const pool = (props: Parameters<typeof DiscardPool>[0]) => createElement(AccessibilityProvider, null, createElement(AccessibilitySettings), createElement(DiscardPool, props));
 const dot = (id: string): Tile => ({ id, type: { kind: 'number', suit: 'dots', rank: 8 } });
