@@ -1,0 +1,19 @@
+docs/IMPLEMENTATION_STATUS.md
+  s_2a0430a75f86a6::t_59b23d173d18f6 88,146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3c699212bfa54987c2203e46a828bdfaca22ab3c",
+  "prompts": {},
+  "sessions": {
+    "s_2a0430a75f86a6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15087-7033-7993-943b-86fb18aa0f9f",
+        "model": "unknown"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
