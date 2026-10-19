@@ -1,0 +1,34 @@
+docs/FULLSCREEN_TABLE.md
+  s_22c446349888fd::t_ba3f43ba8a2872 1-30
+docs/IMPLEMENTATION_STATUS.md
+  s_22c446349888fd::t_ba3f43ba8a2872 147-152
+src/table/fullscreen.css
+  s_22c446349888fd::t_4ef49e2d26f2ef 1-17
+  s_22c446349888fd::t_f3c27a4687dfec 18
+src/table/fullscreen-button.tsx
+  s_22c446349888fd::t_4ef49e2d26f2ef 1-70,72
+  s_22c446349888fd::t_f7d90aa4333afd 71
+app/layout.tsx
+  s_22c446349888fd::t_4ef49e2d26f2ef 9
+src/table/table-surface.tsx
+  s_22c446349888fd::t_4ef49e2d26f2ef 4,60
+tests/fullscreen.test.ts
+  s_22c446349888fd::t_16b7e6d0cdc272 7-59
+  s_22c446349888fd::t_4e701a10796939 1-6,60-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "14c811a74432c055ee38030c118abe286f8fd494",
+  "prompts": {},
+  "sessions": {
+    "s_22c446349888fd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13994-9e97-7d12-b2d0-9e26f8f2e210",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
