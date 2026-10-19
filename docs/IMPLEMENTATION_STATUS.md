@@ -85,7 +85,7 @@ Frontend/server application changes are included in the October 11 Sites release
 
 ## Next
 
-- Next product order: G8 wall/grouped discards, G21 fullscreen table, then G16 profiles/friends. G15 account management and G11 accessibility settings are complete.
+- Next product order: G21 fullscreen table, then G16 profiles/friends. G8 wall/grouped discards is complete. G15 account management and G11 accessibility settings are complete.
 - Configure production SMTP/auth templates and an optional verified Resend sender
 - Disable the legacy project's timeout Cron job after reconnecting its original Supabase organization; its retired secret is rejected by production
 - Run the private 1/2/3/4-human beta and measure action latency, Realtime latency, reconnects, conflicts, timeout lag, and database contention
@@ -143,4 +143,4 @@ Frontend/server application changes are included in the October 11 Sites release
 - G8 adds a compressed visual wall driven by the authoritative count, including partial segments and an empty-wall state.
 - Grouped discard counts distinguish tile identities and keep the current claim copy separate. The In order view preserves every visible pool copy and its order; rules, event history, and call eligibility stay unchanged.
 - Both views retain keyboard scrolling, per-copy coach cues, and shared guest/cloud rendering. Added opening, middle, claim, crowded, and empty-wall review fixtures.
-- Prepared on `codex/wall-grouped-discards` for review. See [WALL_AND_DISCARDS.md](WALL_AND_DISCARDS.md) for behavior and verification scope.
+- Merged through PR #6 on October 19. In order is the default; the browser-saved discard choice lives in Game preferences. All 193 tests, typecheck, lint, and build pass. See [WALL_AND_DISCARDS.md](WALL_AND_DISCARDS.md) for behavior and verification scope.
