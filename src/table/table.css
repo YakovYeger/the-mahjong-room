@@ -519,7 +519,7 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
 .unified-game .table-coach p { color: #c8d6bd; }
 .unified-game .table-coach button { color: #eef3df; background: #466650; border-color: #7e9b7f; }
 .unified-game .table-coach .candidate-list div { border-color: #7e9b7f; }
-.unified-game .play-workspace .card-companion { margin: 16px -28px 0; padding: 16px 28px 20px; background: #efe9db; border: 0; border-radius: 0 0 18px 18px; color: #244e41; }
+.unified-game :is(.play-workspace,.table-insights) .card-companion { margin: 16px -28px 0; padding: 16px 28px 20px; background: #efe9db; border: 0; border-radius: 0 0 18px 18px; color: #244e41; }
 .unified-game .companion-heading .companion-actions { margin-left: auto; }
 .unified-game .companion-pattern { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 .unified-game .companion-pattern > div { display: flex; gap: 2px; }
@@ -558,7 +558,7 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
  .unified-game .table-latest-tile { width: 48px; }
  .shared-table-page.unified-game .play-workspace { padding: 14px 12px 0; }
  .unified-game .play-workspace .table-prompt h1 { font-size: 1.4375rem; }
- .unified-game .play-workspace .card-companion { margin: 14px -12px 0; padding: 12px; border-radius: 0 0 14px 14px; }
+ .unified-game :is(.play-workspace,.table-insights) .card-companion { margin: 14px -12px 0; padding: 12px; border-radius: 0 0 14px 14px; }
  .unified-game .companion-pattern { gap: 7px; }
  .unified-game .comparison-tile { width: 24px; flex-basis: 24px; height: auto; }
  .unified-game .companion-suggestions button { display: grid; justify-content: start; font-size: 0.625rem; padding: 8px 6px; }
@@ -572,7 +572,7 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
 .shared-table-page.unified-game .game-table { width: 100%; max-width: none; margin: 0; border: 0; border-radius: 0; box-shadow: none; min-height: calc(100svh - 62px); }
 .shared-table-page.unified-game .table-surface { max-width: none; border-radius: 0; flex: 1 0 290px; }
 .shared-table-page.unified-game .play-workspace { border-radius: 0; }
-.unified-game .play-workspace .card-companion { border-radius: 0; }
+.unified-game :is(.play-workspace,.table-insights) .card-companion { border-radius: 0; }
 .shared-table-page.unified-game .play-workspace .table-coach { padding: 9px 12px; margin: 8px 0 14px; border-left: 2px solid #d7b985; background: #d7e3c609; }
 .coach-visible-hint { display: flex; align-items: baseline; gap: 12px; }
 .coach-visible-hint > strong { flex-shrink: 0; font: 700 0.8125rem Georgia,serif; color: #f0dfb8; }
@@ -582,7 +582,7 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
 @media(max-width:700px) {
  .shared-table-page.unified-game .game-table { width: 100%; margin: 0; border: 0; min-height: calc(100svh - 56px); }
  .shared-table-page.unified-game .table-surface { border-radius: 0; }
- .unified-game .play-workspace .card-companion { border-radius: 0; }
+ .unified-game :is(.play-workspace,.table-insights) .card-companion { border-radius: 0; }
  .coach-visible-hint { gap: 8px; }
  .unified-game .table-coach .coach-visible-hint p { font-size: 0.6875rem; }
 }
@@ -594,3 +594,7 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
 .companion-hand-rules p { margin: 0; font-size: 0.75rem; line-height: 1.5; color: #5d6857; }
 .companion-choice-label { min-width: 0; }
 .companion-hand-kind { display: block; margin-top: 5px; font-size: 0.6875rem; font-weight: 400; color: #54624f; }
+
+/* Advice stays separate from the rack so fullscreen can place it alongside play. */
+.table-insights { min-width: 0; padding: 0 28px; background: #143c2e55; color: #e8eddc; }
+@media(max-width:700px) { .table-insights { padding-inline: 12px; } }

@@ -148,5 +148,5 @@ Frontend/server application changes are included in the October 11 Sites release
 ## Fullscreen table — October 19
 
 - G21 adds a shared Fullscreen control for guest and cloud tables, native browser exit synchronization, and a viewport-expanded fallback when fullscreen is unavailable or denied.
-- Table menus, game preferences, Training Card dialogs, scrolling, safe-area spacing, and the explicit exit remain available. No saved-game or backend changes.
+- Desktop fullscreen keeps the table, capped proportional rack tiles, and actions together, with coach/card guidance in a separately scrollable side panel. Landscape phones place the rack beside the table; portrait phones retain two rack rows. Table menus, game preferences, Training Card dialogs, safe-area spacing, and the explicit exit remain available. No saved-game or backend changes.
 - Prepared on `codex/fullscreen-table` for review. All 196 tests, typecheck, lint, build, and native/fallback Chrome checks pass. See [FULLSCREEN_TABLE.md](FULLSCREEN_TABLE.md) for scope and verification limits.

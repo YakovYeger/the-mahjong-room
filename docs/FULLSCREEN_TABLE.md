@@ -13,6 +13,12 @@ handle Escape before the expanded table. Navigation removes the expanded layout
 and exits fullscreen owned by this control. Fullscreen is temporary presentation
 state; it never changes a game action, saved checkpoint, or device preference.
 
+Desktop fullscreen puts the coach and card in a separate, keyboard-scrollable
+side panel. The table, proportional rack, and actions fit together at common
+laptop and desktop sizes. Tiles are capped at 58×87px instead of growing with
+monitor width. Phone racks use two rows; landscape phones put the rack beside
+the table. Larger text and full suit labels retain a readable second rack row.
+
 The header stays visible while table contents scroll. Small screens, large text,
 safe-area insets, racks, actions, discards, and the card remain accessible through
 normal scrolling rather than being scaled down or clipped.
@@ -24,6 +30,10 @@ normal scrolling rather than being scaled down or clipped.
 - Chrome verifies actual native document fullscreen and its exit event, fallback
   layouts at 360×800, 844×390, 768×1024, and 1280×900, settings dialog access,
   and preservation of the serialized guest game.
+- Visual review checks 1920×1080, 1440×900, 1280×720, 1024×768,
+  768×1024, 360×800, and 844×390. Standard desktop play has no page
+  scrolling, including crowded exposed-set fixtures at laptop size. The sidebar
+  scrolls independently; large text and detailed card content may need scrolling.
 - Full regression suite, typecheck, lint, and production build pass. Safari/iOS
   native fullscreen availability varies; the fallback is exercised through a
   browser with native fullscreen disabled. Real-device Safari and a new
