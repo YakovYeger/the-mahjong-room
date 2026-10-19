@@ -144,3 +144,9 @@ Frontend/server application changes are included in the October 11 Sites release
 - Grouped discard counts distinguish tile identities and keep the current claim copy separate. The In order view preserves every visible pool copy and its order; rules, event history, and call eligibility stay unchanged.
 - Both views retain keyboard scrolling, per-copy coach cues, and shared guest/cloud rendering. Added opening, middle, claim, crowded, and empty-wall review fixtures.
 - Merged through PR #6 on October 19. In order is the default; the browser-saved discard choice lives in Game preferences. All 193 tests, typecheck, lint, and build pass. See [WALL_AND_DISCARDS.md](WALL_AND_DISCARDS.md) for behavior and verification scope.
+
+## Fullscreen table — October 19
+
+- G21 adds a shared Fullscreen control for guest and cloud tables, native browser exit synchronization, and a viewport-expanded fallback when fullscreen is unavailable or denied.
+- Table menus, game preferences, Training Card dialogs, scrolling, safe-area spacing, and the explicit exit remain available. No saved-game or backend changes.
+- Prepared on `codex/fullscreen-table` for review. All 196 tests, typecheck, lint, build, and native/fallback Chrome checks pass. See [FULLSCREEN_TABLE.md](FULLSCREEN_TABLE.md) for scope and verification limits.

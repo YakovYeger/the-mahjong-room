@@ -1,0 +1,18 @@
+/* Keep all play controls and portaled dialogs available in either mode. */
+html[data-table-expanded="true"], html[data-table-expanded="true"] body { overflow: hidden; }
+html[data-table-expanded="true"] .shared-table-page {
+  position: fixed; z-index: 80; inset: 0; width: 100%; max-width: none;
+  height: 100dvh; min-height: 0; margin: 0; overflow: auto;
+  overscroll-behavior: contain; scrollbar-gutter: stable;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+html[data-table-expanded="true"] .shared-table-page > .table-header { position: sticky; z-index: 10; top: 0; flex-shrink: 0; }
+html[data-table-expanded="true"] .shared-table-page.unified-game .game-table { width: 100%; max-width: none; margin: 0; border: 0; border-radius: 0; flex: 1 0 auto; }
+html[data-table-expanded="true"] .shared-table-page.unified-game .table-surface { flex-grow: 1; max-width: none; border-radius: 0; }
+.shared-table-page .table-fullscreen-button { min-height: 44px; white-space: nowrap; }
+@media (max-width: 700px) {
+  .shared-table-page > .table-header { flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
+  .shared-table-page .table-tools { flex-wrap: wrap; gap: 6px; }
+  .shared-table-page .table-fullscreen-button { padding-inline: 10px; }
+}
+.table-fullscreen-status { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }

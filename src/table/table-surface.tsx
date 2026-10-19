@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { TableFullscreenButton } from './fullscreen-button';
 import { WallMeter } from './wall-meter';
 export { DiscardPool } from './discard-pool';
 import type { Player, Tile } from '../game/types';
@@ -56,5 +57,5 @@ export function RackPanel({ children, className = '' }: { children: ReactNode; c
 }
 
 export function TableHeader({ brand, context, children }: { brand: ReactNode; context: string; children: ReactNode }) {
-  return <header className="table-header">{brand}<span className="table-context">{context}</span><div className="table-tools">{children}</div></header>;
+  return <header className="table-header">{brand}<span className="table-context">{context}</span><div className="table-tools"><TableFullscreenButton />{children}</div></header>;
 }
