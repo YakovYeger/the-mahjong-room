@@ -432,6 +432,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      friends_snapshot: { Args: { actor: string; lookup_username?: string }; Returns: Json }
+      change_friendship: { Args: { actor: string; target_username: string; operation: string; expected_id?: string }; Returns: Json }
       account_session_active: {
         Args: { requesting_user_id: string; requesting_session_id: string }
         Returns: boolean

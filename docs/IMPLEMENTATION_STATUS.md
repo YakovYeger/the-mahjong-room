@@ -150,3 +150,9 @@ Frontend/server application changes are included in the October 11 Sites release
 - G21 adds a shared Fullscreen control for guest and cloud tables, native browser exit synchronization, and a viewport-expanded fallback when fullscreen is unavailable or denied.
 - Desktop fullscreen keeps the table, capped proportional rack tiles, and actions together, with coach/card guidance in a separately scrollable side panel. Landscape phones place the rack beside the table; portrait phones retain two rack rows. Table menus, game preferences, Training Card dialogs, safe-area spacing, and the explicit exit remain available. No saved-game or backend changes.
 - Merged through PR #7 on October 28. All 196 tests, typecheck, lint, build, and native/fallback Chrome checks pass. See [FULLSCREEN_TABLE.md](FULLSCREEN_TABLE.md) for scope and verification limits.
+
+## Profiles and friends — October 28
+
+- G16 adds a browser-accessible Friends page with exact-username player profiles, explicit incoming/outgoing friend requests, accept/decline/cancel, and confirmed removal. Account and My games link to it through native anchors.
+- Private, service-only friendship storage uses pair uniqueness, serialized transitions, bounded capacity, stale-request guards, and cascading deletion. Production data is unchanged pending review.
+- Prepared on `codex/profiles-friends`. All 205 tests, typecheck, lint, build, isolated SQL/concurrency/security-advisor checks, and browser fixture journeys pass. See [PROFILES_AND_FRIENDS.md](PROFILES_AND_FRIENDS.md) for the release order and verification limits.

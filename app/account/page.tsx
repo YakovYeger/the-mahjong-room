@@ -123,7 +123,7 @@ export default function AccountPage() {
 
   return (
     <main className={`account-page${userEmail ? ' account-page-signed-in' : ''}`}>
-      <header><a className="brand" href="/">The Mahjong Room</a><nav><a href="/settings">Accessibility</a><a href="/games">My games</a><a href="/">Back to the table</a></nav></header>
+      <header><a className="brand" href="/">The Mahjong Room</a><nav><a href="/friends">Friends</a><a href="/settings">Accessibility</a><a href="/games">My games</a><a href="/">Back to the table</a></nav></header>
       <section className="account-shell">
         <div className="account-copy"><p className="kicker">Your seat, on any device</p><h1>{userEmail ? 'Your place at the table.' : 'Save games and invite the table.'}</h1><p>{userEmail ? 'Manage your profile, secure your account, and get ready for your next game.' : 'Guest play stays available. An account adds cloud autosave, private rooms, live or time-based turns, and secure reconnects.'}</p>{!userEmail || guestGames > 0 ? <div className="guest-badge"><strong>{guestGames}</strong><span>guest game{guestGames === 1 ? '' : 's'} ready to save</span></div> : null}</div>
         <div className="account-card">

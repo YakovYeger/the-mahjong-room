@@ -25,6 +25,14 @@ Authenticated browser access is limited by explicit grants and row-level-securit
 
 Canonical state, events, action receipts, login identifiers, and rate limits have no browser grants. Public game records are readable only through indexed membership checks; another participant's rack is never stored in a public projection.
 
+## Social connections
+
+- `private.friendships`: one ordered player pair, requester, pending/accepted
+  status, immutable relationship UUID, and creation timestamp. Profile deletion
+  cascades both directions. No browser grants; service-only security-invoker RPCs
+  expose actor-scoped lists and exact-username profile cards. See
+  [PROFILES_AND_FRIENDS.md](PROFILES_AND_FRIENDS.md).
+
 ## Guest migration
 
 The local key `mahjong-room-progress-v1` contains only summarized learning progress. On sign-in, the client reads current server progress, merges each field without lowering prior achievement, writes through the authenticated API, and clears local data only after success.
