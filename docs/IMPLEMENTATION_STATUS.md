@@ -85,7 +85,7 @@ Frontend/server application changes are included in the October 11 Sites release
 
 ## Next
 
-- Next product order: G21 fullscreen table, then G16 profiles/friends. G8 wall/grouped discards is complete. G15 account management and G11 accessibility settings are complete.
+- Next product order: G16 profiles/friends. G21 fullscreen table is complete. G8 wall/grouped discards is complete. G15 account management and G11 accessibility settings are complete.
 - Configure production SMTP/auth templates and an optional verified Resend sender
 - Disable the legacy project's timeout Cron job after reconnecting its original Supabase organization; its retired secret is rejected by production
 - Run the private 1/2/3/4-human beta and measure action latency, Realtime latency, reconnects, conflicts, timeout lag, and database contention
@@ -149,4 +149,4 @@ Frontend/server application changes are included in the October 11 Sites release
 
 - G21 adds a shared Fullscreen control for guest and cloud tables, native browser exit synchronization, and a viewport-expanded fallback when fullscreen is unavailable or denied.
 - Desktop fullscreen keeps the table, capped proportional rack tiles, and actions together, with coach/card guidance in a separately scrollable side panel. Landscape phones place the rack beside the table; portrait phones retain two rack rows. Table menus, game preferences, Training Card dialogs, safe-area spacing, and the explicit exit remain available. No saved-game or backend changes.
-- Prepared on `codex/fullscreen-table` for review. All 196 tests, typecheck, lint, build, and native/fallback Chrome checks pass. See [FULLSCREEN_TABLE.md](FULLSCREEN_TABLE.md) for scope and verification limits.
+- Merged through PR #7 on October 28. All 196 tests, typecheck, lint, build, and native/fallback Chrome checks pass. See [FULLSCREEN_TABLE.md](FULLSCREEN_TABLE.md) for scope and verification limits.
