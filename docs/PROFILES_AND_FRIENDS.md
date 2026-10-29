@@ -47,7 +47,7 @@ cannot accept or remove a later request. Profile deletion cascades all edges.
   rejection against the production backend through the merged local app. Both
   accounts were removed afterward. Cross-device browser journeys remain beta work.
 
-Apply `20261028182555_profiles_and_friends.sql` before the matching application
+Apply `20261029121947_profiles_and_friends.sql` before the matching application
 release. The migration was applied to production on October 29, 2026, recorded in
 migration history as `20261029121947`. RLS and service-only grants were verified
 against the actual database. Missing functions fail closed with a retryable Friends error.
@@ -55,3 +55,6 @@ The owner-private review uses simulated players without live database writes.
 
 References: [Supabase row-level security](https://supabase.com/docs/guides/database/postgres/row-level-security),
 [Postgres minor-release changes reviewed](https://supabase.com/changelog/postgres-15-19-17-11-breaking-changes).
+
+The checked-in migration timestamp matches the production migration-history
+record, so future CLI deployments will not try to apply this migration twice.
