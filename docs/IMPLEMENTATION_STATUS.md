@@ -85,7 +85,7 @@ Frontend/server application changes are included in the October 11 Sites release
 
 ## Next
 
-- Next product order: G16 profiles/friends. G21 fullscreen table is complete. G8 wall/grouped discards is complete. G15 account management and G11 accessibility settings are complete.
+- Next: production SMTP/auth email setup, then the private multiplayer beta. G16 profiles/friends is complete. G21 fullscreen table is complete. G8 wall/grouped discards is complete. G15 account management and G11 accessibility settings are complete.
 - Configure production SMTP/auth templates and an optional verified Resend sender
 - Disable the legacy project's timeout Cron job after reconnecting its original Supabase organization; its retired secret is rejected by production
 - Run the private 1/2/3/4-human beta and measure action latency, Realtime latency, reconnects, conflicts, timeout lag, and database contention
@@ -154,5 +154,5 @@ Frontend/server application changes are included in the October 11 Sites release
 ## Profiles and friends — October 28
 
 - G16 adds a browser-accessible Friends page with exact-username player profiles, explicit incoming/outgoing friend requests, accept/decline/cancel, and confirmed removal. Account and My games link to it through native anchors.
-- Private, service-only friendship storage uses pair uniqueness, serialized transitions, bounded capacity, stale-request guards, and cascading deletion. Production data is unchanged pending review.
-- Prepared on `codex/profiles-friends`. All 205 tests, typecheck, lint, build, isolated SQL/concurrency/security-advisor checks, and browser fixture journeys pass. See [PROFILES_AND_FRIENDS.md](PROFILES_AND_FRIENDS.md) for the release order and verification limits.
+- Private, service-only friendship storage uses pair uniqueness, serialized transitions, bounded capacity, stale-request guards, and cascading deletion. The migration was applied to production on October 29.
+- Merged through PR #8 on October 29. All 205 tests, typecheck, lint, build, isolated SQL/concurrency/security-advisor checks, and browser fixture journeys pass. See [PROFILES_AND_FRIENDS.md](PROFILES_AND_FRIENDS.md) for the release order and verification limits.

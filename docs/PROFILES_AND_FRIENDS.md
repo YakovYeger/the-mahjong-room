@@ -42,11 +42,15 @@ cannot accept or remove a later request. Profile deletion cascades all edges.
 - Mounted and Chrome tests cover forms, request lifecycle, removal confirmation,
   Escape/cancellation, signed-out UI, native account/games/home navigation, and
   360/768/1280px layouts with 16px controls. Browser sessions/API responses are
-  fabricated; real-account cross-device journeys remain release verification.
+  fabricated. On October 29, a real Supabase Auth/API journey with two disposable
+  confirmed accounts verified profile lookup, request/accept/remove, and anonymous
+  rejection against the production backend through the merged local app. Both
+  accounts were removed afterward. Cross-device browser journeys remain beta work.
 
 Apply `20261028182555_profiles_and_friends.sql` before the matching application
-release. The migration has been tested locally and has **not** been applied to
-production. Missing functions fail closed with a retryable Friends error.
+release. The migration was applied to production on October 29, 2026, recorded in
+migration history as `20261029121947`. RLS and service-only grants were verified
+against the actual database. Missing functions fail closed with a retryable Friends error.
 The owner-private review uses simulated players without live database writes.
 
 References: [Supabase row-level security](https://supabase.com/docs/guides/database/postgres/row-level-security),
