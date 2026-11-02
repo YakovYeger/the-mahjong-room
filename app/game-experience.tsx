@@ -14,7 +14,7 @@ import { isSortable } from '@dnd-kit/react/sortable';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getCoachVisibleContext } from '../src/coach/analyze';
 import { useCoach } from '../src/coach/use-coach';
-import { CoachPanel } from '../src/coach/coach-panel';
+import { TableHelp } from '../src/table/table-help';
 import { coachHighlightLabel, coachHighlightMark } from '../src/coach/highlights';
 import { generateGameReview } from '../src/coach/review';
 import { loadGuestProgress, saveGuestProgress } from '../src/persistence/guest-progress';
@@ -472,30 +472,30 @@ export function GameExperience() {
 
   const stageTitle = game.phase === 'charleston' ? charlestonLabel(game) : `Turn ${game.turnCount + 1} · ${game.wall.length} in wall`;
   const actionTitle = game.phase === 'charleston'
-    ? game.charlestonAwaitingDecision ? 'Continue passing?' : game.charlestonCourtesy ? 'Choose 0–3 tiles' : `Pass ${3 - blindCount} from your rack`
-    : respondingToDiscard ? 'Call, Mahjong, or pass?' : needsDraw ? 'Draw a tile' : 'Choose a discard';
+    ? game.charlestonAwaitingDecision ? 'Continue passing?' : game.charlestonCourtesy ? 'Choose 0–3 tiles' : `Choose ${3 - blindCount} tiles to pass`
+    : respondingToDiscard ? discardMahjong ? 'Call, Mahjong, or pass?' : 'Call or pass?' : needsDraw ? 'Draw a tile' : 'Choose a discard';
 
   return (
     <main className={`shell game-shell shared-table-page unified-game ${cardOpen ? 'card-is-open' : ''}`}>
       <TableHeader brand={<button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={`Practice · Game ${gameNumber}`}>
         <button className="table-tool-button" aria-label={`${cardOpen ? 'Hide' : 'Show'} ${game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}`} aria-expanded={cardOpen} onClick={() => setCardOpen((open) => !open)}>{game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button>
-        <Menu label="Table" note="Saved on this device" items={[{ label: 'Game preferences', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, { label: 'Save progress', href: '/account' }, { label: 'Leave table', onClick: () => setStarted(false) }]} />
+        <Menu label="Table" note="Saved on this device" items={[{ label: 'Game preferences', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, { label: 'Save progress', href: '/account' }, ...(manualTurns >= 4 && canDiscard ? [{ label: 'Complete with coach', onClick: finishGame }] : []), { label: 'Leave table', onClick: () => setStarted(false) }]} />
       </TableHeader>
       <section className="game-table" aria-label="Guided American Mahjong table">
         <TableSurface highlightedTileIds={coach.highlights.publicTileIds} players={game.players.map(({ rack, ...player }) => ({ ...player, rackCount: rack.length }))} viewerId={human.id} activePlayerIds={game.phase === 'charleston' || respondingToDiscard ? [human.id] : [game.players[game.turnIndex].id]} wallCount={game.wall.length} discardCount={visibleDiscards.length}>
           <DiscardPool highlightedTileIds={coach.highlights.publicTileIds} tiles={visibleDiscards} latestTileId={game.callWindow?.discard.id} />
         </TableSurface>
         <RackPanel className="player-area play-workspace">
-        <TablePrompt title={actionTitle} detail={notice || stageTitle} active={game.phase === 'charleston' || respondingToDiscard || needsDraw || canDiscard}>
+        <TablePrompt title={actionTitle} detail={respondingToDiscard && game.callWindow ? `${tileLabel(game.callWindow.discard)} is available. Select a legal set to call, or pass.` : notice || (game.phase === 'charleston' && !game.charlestonAwaitingDecision ? `${stageTitle} · Tap tiles, then pass. Jokers stay with you.` : needsDraw ? 'Take a tile from the wall to begin your turn.' : canDiscard ? 'Tap a tile, then choose Discard tile.' : stageTitle)} active={game.phase === 'charleston' || respondingToDiscard || needsDraw || canDiscard}>
           {game.phase === 'playing' && deadHand.dead ? <span className="table-dead-hand" title={deadHand.message}>Dead hand</span> : null}
         </TablePrompt>
           <div className="player-controls"><p><strong>Your rack</strong><span>{game.phase === 'charleston' ? game.charlestonCourtesy ? `${selected.length} selected · optional` : `${selected.length} of ${expectedPassTiles} selected${blindCount ? ` · ${blindCount} blind` : ''}` : respondingToDiscard ? `${selected.length} selected for a call` : needsDraw ? '13 tiles · ready to draw' : `${totalPlayerTiles(human)} tiles · ${selected.length} selected`}</span></p>
             <div className="action-group">
               {game.phase === 'charleston' && game.charlestonAwaitingDecision ? <><button className="finish-button" onClick={() => chooseSecondCharleston(false)}>Stop and courtesy pass</button><button className="primary" onClick={() => chooseSecondCharleston(true)}>Play second Charleston</button></>
-                : game.phase === 'charleston' ? <>{blindAvailable ? <div className="blind-controls"><button className={blindCount === 0 ? 'active' : ''} onClick={() => { setBlindCount(0); setSelected([]); }}>No blind</button><button className={blindCount === 1 ? 'active' : ''} onClick={() => { setBlindCount(1); setSelected([]); }}>1 blind</button><button className={blindCount === 2 ? 'active' : ''} onClick={() => { setBlindCount(2); setSelected([]); }}>2 blind</button></div> : null}<button className="primary" disabled={!game.charlestonCourtesy && selected.length !== expectedPassTiles} onClick={passTiles}>{game.charlestonCourtesy ? `Courtesy pass ${selected.length || 'none'}` : `Pass ${selected.length + blindCount} tiles`}</button></>
+                : game.phase === 'charleston' ? <>{blindAvailable ? <details className="blind-pass-options"><summary>Blind pass options{blindCount ? ` · ${blindCount} blind` : ''}</summary><div className="blind-controls"><button className={blindCount === 0 ? 'active' : ''} onClick={() => { setBlindCount(0); setSelected([]); }}>No blind</button><button className={blindCount === 1 ? 'active' : ''} onClick={() => { setBlindCount(1); setSelected([]); }}>1 blind</button><button className={blindCount === 2 ? 'active' : ''} onClick={() => { setBlindCount(2); setSelected([]); }}>2 blind</button></div></details> : null}<button className="primary" disabled={!game.charlestonCourtesy && selected.length !== expectedPassTiles} onClick={passTiles}>{game.charlestonCourtesy ? `Courtesy pass ${selected.length || 'none'}` : 'Pass 3 tiles'}</button></>
                   : respondingToDiscard ? <><button className="finish-button" onClick={passOnDiscard}>Pass</button>{discardMahjong ? <button className="mahjong-button" onClick={() => declareMahjong(true)}>Mahjong</button> : null}<button className="primary" disabled={!chosenCall} onClick={callDiscard}>{chosenCall ? `Call ${chosenCall.kind}` : 'Select a legal set'}</button></>
                     : needsDraw ? <button className="primary" onClick={drawTile}>Draw tile</button>
-                      : <>{exchangeOption ? <button className="finish-button" onClick={exchangeJoker}>Exchange for Joker</button> : null}{manualTurns >= 4 ? <button className="finish-button" onClick={finishGame}>Complete with coach</button> : null}{selfMahjong ? <button className="mahjong-button" onClick={() => declareMahjong(false)}>Declare Mahjong</button> : null}<button className="primary" disabled={!canDiscard || selected.length !== 1} onClick={discardTile}>Discard tile</button></>}
+                      : <>{exchangeOption ? <button className="finish-button" onClick={exchangeJoker}>Exchange for Joker</button> : null}{selfMahjong ? <button className="mahjong-button" onClick={() => declareMahjong(false)}>Declare Mahjong</button> : null}<button className="primary" disabled={!canDiscard || selected.length !== 1} onClick={discardTile}>Discard tile</button></>}
             </div>
           </div>
 
@@ -549,10 +549,9 @@ export function GameExperience() {
           </MotionConfig>
             <small className="reorder-hint" id="rack-reorder-hint"><span aria-hidden="true">↔</span> Drag tiles to arrange · Alt + arrow keys</small>
         </RackPanel>
-        <aside className="table-insights" aria-label="Coach and card" tabIndex={0}>
-          {coach.session ? <CoachPanel session={coach.session} show={coach.show} onShowChange={coach.setShow} focusGroupId={coach.focusGroupId} onFocusGroup={coach.focusGroup} onFollow={coach.follow} onBrowse={() => setCardOpen(true)} onHint={requestHint} /> : null}
-          <CardCompanion blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} key={game.id} cardId={game.cardId} rack={human.rack} exposures={human.exposures} storageKey={`${game.id}:${human.id}`} candidates={coachContext.candidates} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); setNotice('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
-        </aside>
+        <TableHelp coach={coach.session ? { session: coach.session, show: coach.show, onShowChange: coach.setShow, focusGroupId: coach.focusGroupId, onFocusGroup: coach.focusGroup, onFollow: coach.follow, onBrowse: () => setCardOpen(true), onHint: requestHint } : null}>
+          <CardCompanion compact blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} key={game.id} cardId={game.cardId} rack={human.rack} exposures={human.exposures} storageKey={`${game.id}:${human.id}`} candidates={coachContext.candidates} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); setNotice('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
+        </TableHelp>
       </section>
     </main>
   );

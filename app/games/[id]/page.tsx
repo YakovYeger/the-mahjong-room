@@ -26,7 +26,7 @@ import { CardCompanion, HandCheck } from '../../../src/table/card-companion';
 import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../../../src/table/table-surface';
 import { getSnapshotCoachContext } from '../../../src/coach/analyze';
 import { useCoach } from '../../../src/coach/use-coach';
-import { CoachPanel } from '../../../src/coach/coach-panel';
+import { TableHelp } from '../../../src/table/table-help';
 import { coachHighlightLabel, coachHighlightMark } from '../../../src/coach/highlights';
 
 
@@ -264,7 +264,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
         <CloudDiscardPool highlightedTileIds={coach.highlights.publicTileIds} tiles={snapshot.publicState.discards} latestTileId={snapshot.publicState.callWindow?.discard.id} dropActive={discardDropActive} canDiscard={pending === 'discard'} />
       </TableSurface>
       <RackPanel className="cloud-rack-section play-workspace">
-      <TablePrompt title={snapshot.status === 'abandoned' ? 'Table ended' : snapshot.status === 'completed' ? 'Game complete' : snapshot.status === 'paused' ? 'Table paused' : pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : 'Your move'} detail={snapshot.status === 'abandoned' ? 'No active decisions' : pending === 'charleston_pass' ? 'Choose three tiles to pass' : pending === 'courtesy_pass' ? 'Choose zero to three tiles for courtesy passing' : pending === 'charleston_decision' ? 'Continue the second Charleston or move to courtesy passing' : pending === 'discard_response' ? 'Call the latest discard, declare Mahjong, or pass' : pending === 'draw' ? 'Draw a tile from the wall' : pending === 'discard' ? 'Choose one tile to discard' : pending === 'wait' ? 'You can arrange your rack while you wait' : 'Review the final table'} active={!isTerminal && snapshot.status === 'active' && pending !== 'wait'}>
+      <TablePrompt title={snapshot.status === 'abandoned' ? 'Table ended' : snapshot.status === 'completed' ? 'Game complete' : snapshot.status === 'paused' ? 'Table paused' : pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : pending === 'charleston_pass' ? 'Choose 3 tiles to pass' : pending === 'courtesy_pass' ? 'An optional exchange' : pending === 'charleston_decision' ? 'Keep passing?' : pending === 'draw' ? 'Draw a tile' : pending === 'discard' ? 'Choose a discard' : 'Call or pass?'} detail={snapshot.status === 'abandoned' ? 'No active decisions' : pending === 'charleston_pass' ? `${selected.length}/3 selected · Jokers stay with you` : pending === 'courtesy_pass' ? 'Choose zero to three tiles for courtesy passing' : pending === 'charleston_decision' ? 'Continue the second Charleston or move to courtesy passing' : pending === 'discard_response' ? 'Call the latest discard, declare Mahjong, or pass' : pending === 'draw' ? 'Draw a tile from the wall' : pending === 'discard' ? 'Choose one tile to discard' : pending === 'wait' ? 'You can arrange your rack while you wait' : 'Review the final table'} active={!isTerminal && snapshot.status === 'active' && pending !== 'wait'}>
         {!isTerminal ? <TurnClock deadlineAt={snapshot.deadlineAt} charleston={snapshot.publicState.phase === 'charleston'} /> : null}
         {snapshot.mode === 'live' && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button disabled={busy} onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}
       </TablePrompt>
@@ -292,10 +292,9 @@ function CloudGameTable({ gameId }: { gameId: string }) {
 
         {message ? <p className="cloud-message" role="status" aria-live="polite">{cloud.uncertain ? 'Reconnecting to confirm your saved move…' : cloud.error?.message ?? message}</p> : null}
       </RackPanel>
-      {!isTerminal ? <aside className="table-insights" aria-label="Coach and card" tabIndex={0}>
-        {coach.session ? <CoachPanel session={coach.session} show={coach.show} onShowChange={coach.setShow} focusGroupId={coach.focusGroupId} onFocusGroup={coach.focusGroup} onFollow={coach.follow} onBrowse={() => setCardOpen(true)} /> : null}
-        <CardCompanion blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} candidates={coachContext!.candidates} cardId={snapshot.publicState.cardId} rack={snapshot.privateState.rack} exposures={snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? []} storageKey={`${gameId}:${snapshot.privateState.playerId}`} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory order still works. */ } setMessage('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
-      </aside> : null}
+      {!isTerminal ? <TableHelp coach={coach.session ? { session: coach.session, show: coach.show, onShowChange: coach.setShow, focusGroupId: coach.focusGroupId, onFocusGroup: coach.focusGroup, onFollow: coach.follow, onBrowse: () => setCardOpen(true) } : null}>
+        <CardCompanion compact blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} candidates={coachContext!.candidates} cardId={snapshot.publicState.cardId} rack={snapshot.privateState.rack} exposures={snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? []} storageKey={`${gameId}:${snapshot.privateState.playerId}`} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory order still works. */ } setMessage('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
+      </TableHelp> : null}
       </DragDropProvider>
       </section>
     </main>
