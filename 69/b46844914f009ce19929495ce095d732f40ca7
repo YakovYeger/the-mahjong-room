@@ -1,0 +1,47 @@
+app/layout.tsx
+  s_8b11fec7c205a1::t_2d9d3356df9231 10
+app/games/[id]/page.tsx
+  s_8b11fec7c205a1::t_e218a95a662676 29,267,295-297
+tests/table-help.test.ts
+  s_8b11fec7c205a1::t_a0f9388d40ec84 19
+  s_8b11fec7c205a1::t_c2c52c778ff5f8 1-18,20-43,45-51
+  s_8b11fec7c205a1::t_ce6e6e7c913887 44
+src/table/cozy-table.css
+  s_8b11fec7c205a1::t_2d9d3356df9231 1-158,162,168,171,174-175,178
+  s_8b11fec7c205a1::t_b7e9dd84c0d131 179-181
+  s_8b11fec7c205a1::t_d360bcd258dc92 159-161,163-167,169-170,172-173,176-177
+src/table/table-help.tsx
+  s_8b11fec7c205a1::t_e218a95a662676 1-6,8-10,12-18
+  s_8b11fec7c205a1::t_a0f9388d40ec84 7
+  s_8b11fec7c205a1::t_49752d356e29cd 11
+app/game-experience.tsx
+  s_8b11fec7c205a1::t_e218a95a662676 17,475,552-554
+  s_8b11fec7c205a1::t_a0f9388d40ec84 476,482,489
+  s_8b11fec7c205a1::t_8b51c2dfcf8bae 495,498
+src/table/discard-pool.tsx
+  s_8b11fec7c205a1::t_e218a95a662676 35
+  s_8b11fec7c205a1::t_88e7726f1a6105 36
+src/table/table-art.tsx
+  s_8b11fec7c205a1::t_f380cb70760587 1-30
+src/table/table-surface.tsx
+  s_8b11fec7c205a1::t_e218a95a662676 5,30,41,54
+src/table/card-companion.tsx
+  s_8b11fec7c205a1::t_e218a95a662676 51-52,63,67,72-73,75-76,79
+  s_8b11fec7c205a1::t_978f4eb2c11ee1 74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "69b46844914f009ce19929495ce095d732f40ca7",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
