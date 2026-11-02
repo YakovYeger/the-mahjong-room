@@ -120,7 +120,7 @@ html[data-table-expanded="true"] .shared-table-page.unified-game .play-workspace
  .unified-game .table-tools { margin-left: auto; gap: 5px; }
  .unified-game .table-header :is(.table-tool-button,.table-fullscreen-button,.ui-menu-trigger) { padding-inline: 10px; font-size: .6875rem; }
  .shared-table-page.unified-game .game-table, html[data-table-expanded="true"] .shared-table-page.unified-game .game-table { width: calc(100% - 16px); max-width: 540px; margin: 12px auto 0; border-width: 4px; border-radius: 24px; }
- .shared-table-page.unified-game .table-surface, html[data-table-expanded="true"] .shared-table-page.unified-game .table-surface { --table-min-height: 290px; min-height: var(--table-min-height); height: auto; flex: 0 0 var(--table-min-height); border-radius: 20px 20px 0 0; }
+ .shared-table-page.unified-game .table-surface, html[data-table-expanded="true"] .shared-table-page.unified-game .table-surface { --table-min-height: 320px; min-height: var(--table-min-height); height: auto; flex: 0 0 var(--table-min-height); border-radius: 20px 20px 0 0; }
  .unified-game .table-avatar { width: 32px; height: 32px; flex-basis: 32px; }
  .unified-game .table-seat { max-width: 110px; }
  .unified-game .table-seat-left, .unified-game .table-seat-right { top: 65px; transform: none; }

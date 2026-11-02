@@ -50,7 +50,7 @@ export function DiscardPool({ tiles, latestTileId, dropRef, dropActive = false, 
         </li>)}
       </ol>}
     </div> : null}
-    {tiles.length ? <p id={helpId} className="table-discard-help">{view === 'grouped' ? `×2 = two discards, not a set.${claim ? ' Claim tile counted separately.' : ''} Scroll to inspect all.` : 'Oldest first. Scroll for earlier tiles. Claimed tiles leave this pool.'}</p> : null}
+    {tiles.length ? <p id={helpId} className="table-discard-help">{view === 'grouped' ? `×2 = two discards, not a set.${claim ? ' Claim tile counted separately.' : ''} Scroll to inspect all.` : 'Oldest first · Scroll for earlier tiles.'}</p> : null}
     {children}
   </div>;
 }
