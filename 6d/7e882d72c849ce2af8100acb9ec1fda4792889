@@ -1,0 +1,21 @@
+src/table/cozy-table.css
+  s_8b11fec7c205a1::t_da84920b42bf30 123
+src/table/discard-pool.tsx
+  s_8b11fec7c205a1::t_cd317b0b646f7d 53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6d7e882d72c849ce2af8100acb9ec1fda4792889",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
