@@ -184,3 +184,38 @@ html[data-suit-labels="full"] .shared-table-page.unified-game .play-workspace .t
 @media(max-width:700px) {
  html[data-text-size="large"] .shared-table-page.unified-game .play-workspace :is(.rack,.cloud-rack), html[data-suit-labels="full"] .shared-table-page.unified-game .play-workspace :is(.rack,.cloud-rack) { grid-template-columns: repeat(5,minmax(0,66px)); max-width: 360px; }
 }
+/* The hand plan is portaled outside .unified-game: own its rack layout here. */
+.companion-drawer .companion-heading { flex-wrap: wrap; align-items: center; gap: 12px; }
+.companion-drawer .companion-heading > div:first-child { flex: 1 1 180px; min-width: 0; }
+.companion-drawer .companion-actions { margin: 0; align-items: center; flex-wrap: nowrap; }
+.companion-drawer .companion-hand-rules { margin-block: 16px; }
+.companion-drawer .companion-pattern {
+  --plan-tile-width: clamp(38px,10vw,48px);
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 14px;
+  margin: 16px 0; padding: 16px 12px 12px; border-bottom: 3px solid #b59a66;
+  border-radius: 10px 10px 2px 2px; background: #285c4c;
+}
+.companion-drawer .companion-pattern > div { display: flex; flex-wrap: nowrap; gap: 3px; min-width: 0; max-width: 100%; }
+.companion-drawer .companion-pattern .comparison-tile {
+  flex: 0 0 var(--plan-tile-width); width: var(--plan-tile-width); height: auto; aspect-ratio: 2 / 3;
+  padding: 3px; border: 1px solid #c6b99a; border-bottom: 5px solid #baa77d; border-radius: 7px;
+  background: linear-gradient(110deg,#ffffff80,transparent 65%),var(--tile-paper);
+  box-shadow: inset 1px 1px 0 #fff9,1px 3px 3px #102c2466; opacity: 1;
+}
+.companion-drawer .companion-pattern .tile-face.illustrated > strong { font-size: .625rem; }
+.companion-drawer .companion-pattern .tile-face.illustrated > small { font-size: .3125rem; }
+.companion-drawer .companion-fit > summary { min-height: 44px; padding-block: 12px; font-size: .8125rem; cursor: pointer; }
+.companion-drawer .companion-suggestions { margin-top: 12px; }
+.shared-table-page.unified-game .play-workspace .organize-rack-button,
+.shared-table-page.unified-game .play-workspace .cloud-actions > .organize-rack-button,
+.companion-drawer .companion-actions > .organize-rack-button {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 44px;
+  width: 44px; height: 44px; min-height: 44px; padding: 0; border: 1px solid #829a85;
+  border-radius: 9px; background: transparent; color: #eee5ca; box-shadow: none;
+}
+.companion-drawer .companion-actions > .organize-rack-button { color: var(--ink); border-color: var(--edge); background: var(--paper); }
+.organize-rack-button svg { flex: 0 0 auto; }
+@media(max-width:400px) {
+ .companion-drawer .companion-pattern { padding-inline: 8px; column-gap: 10px; }
+ .companion-drawer .companion-heading > div:first-child { flex-basis: 100%; }
+}

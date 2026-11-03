@@ -18,6 +18,19 @@ export function tileLabel(tile: Tile): string {
   return 'Joker';
 }
 
+/** Changes presentation order only; physical tiles and the supplied rack stay intact. */
+export function organizeTileIds(tiles: Tile[]): string[] {
+  const order = (tile: Tile) => {
+    const type = tile.type;
+    if (type.kind === 'number') return ['bamboo', 'characters', 'dots'].indexOf(type.suit) * 10 + type.rank;
+    if (type.kind === 'wind') return 30 + ['east', 'south', 'west', 'north'].indexOf(type.wind);
+    if (type.kind === 'dragon') return 40 + ['red', 'green', 'white'].indexOf(type.dragon);
+    if (type.kind === 'flower') return 50 + type.index;
+    return 60;
+  };
+  return [...tiles].sort((a, b) => order(a) - order(b)).map(tile => tile.id);
+}
+
 export function normalizeTileOrder(order: string[], tiles: Tile[]): string[] {
   const tileIds = new Set(tiles.map((tile) => tile.id));
   const retained = order.filter((id) => tileIds.has(id));

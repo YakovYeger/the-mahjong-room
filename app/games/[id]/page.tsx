@@ -8,7 +8,7 @@ import { use, useEffect, useMemo, useRef, useState } from 'react';
 import { DragDropProvider, PointerSensor, useDroppable } from '@dnd-kit/react';
 import { PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable } from '@dnd-kit/react/sortable';
-import { moveTileId, normalizeTileOrder, tileLabel } from '../../../src/game/tiles';
+import { moveTileId, normalizeTileOrder, organizeTileIds, tileLabel } from '../../../src/game/tiles';
 import { SortableRackItem } from '../../../src/game/sortable-rack-item';
 import { cardTileKey } from '../../../src/game/training-card';
 import type { GameAction, GameEvent } from '../../../src/game/types';
@@ -26,6 +26,7 @@ import { CardCompanion, HandCheck } from '../../../src/table/card-companion';
 import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../../../src/table/table-surface';
 import { getSnapshotCoachContext } from '../../../src/coach/analyze';
 import { useCoach } from '../../../src/coach/use-coach';
+import { OrganizeRackButton } from '../../../src/table/organize-rack-button';
 import { TableHelp } from '../../../src/table/table-help';
 import { coachHighlightLabel, coachHighlightMark } from '../../../src/coach/highlights';
 
@@ -269,6 +270,12 @@ function CloudGameTable({ gameId }: { gameId: string }) {
       </TablePrompt>
         <div className="cloud-actions">
         <div className="cloud-rack-heading"><strong>Your rack</strong><span>{isTerminal ? 'Final rack' : selected.length ? `${selected.length} selected` : 'Select tiles to act'}</span></div>
+          {!isTerminal ? <OrganizeRackButton disabled={busy} onClick={() => {
+            const ids = organizeTileIds(orderedRack);
+            setRackOrder(ids);
+            try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory ordering still works. */ }
+            setMessage('Rack organized by suit and number.');
+          }} /> : null}
           {pending === 'charleston_pass' ? <button disabled={busy || selected.length !== 3} onClick={() => void act({ type: 'PASS_TILES', tileIds: selected })}>Pass three tiles</button> : null}
           {pending === 'courtesy_pass' ? <button disabled={busy || selected.length > 3} onClick={() => void act({ type: 'COURTESY_PASS', tileIds: selected })}>Pass {selected.length || 'no'} tiles</button> : null}
           {pending === 'charleston_decision' ? <><button disabled={busy} onClick={() => void act({ type: 'CHOOSE_SECOND_CHARLESTON', continue: true })}>Continue Charleston</button><button className="secondary" disabled={busy} onClick={() => void act({ type: 'CHOOSE_SECOND_CHARLESTON', continue: false })}>Move to courtesy pass</button></> : null}
