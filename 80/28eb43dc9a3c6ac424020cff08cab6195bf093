@@ -1,0 +1,28 @@
+src/table/table-surface.tsx
+  s_8b11fec7c205a1::t_373811dd6fa3d9 5,41
+src/table/discard-pool.tsx
+  s_8b11fec7c205a1::t_373811dd6fa3d9 35-36
+src/table/cozy-table.css
+  s_8b11fec7c205a1::t_0e68732badca83 1-2,4-5,7-14,16-17,20-28,30-33,35-62,64-67,70-71,73-76,78-80,90-115,131-136,139,141-157,159-172,175-178
+  s_8b11fec7c205a1::t_b8eaba3cf0b68f 181-183,185
+app/games/[id]/page.tsx
+  s_8b11fec7c205a1::t_373811dd6fa3d9 196
+app/game-experience.tsx
+  s_8b11fec7c205a1::t_373811dd6fa3d9 481
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8028eb43dc9a3c6ac424020cff08cab6195bf093",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
