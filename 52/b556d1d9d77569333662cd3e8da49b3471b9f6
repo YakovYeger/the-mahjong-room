@@ -1,0 +1,31 @@
+tests/organize-rack.test.ts
+  s_8b11fec7c205a1::t_a61c6de5abf53d 1-24
+app/game-experience.tsx
+  s_8b11fec7c205a1::t_7e191a99425b08 17,25,493
+app/games/[id]/page.tsx
+  s_8b11fec7c205a1::t_4ce05971efedcd 11,29,273-278
+src/game/tiles.ts
+  s_8b11fec7c205a1::t_db529e6977742e 21-33
+src/table/card-companion.tsx
+  s_8b11fec7c205a1::t_8ee0bd22b84d15 12,69
+src/table/cozy-table.css
+  s_8b11fec7c205a1::t_4e88d138bb6cf2 187-221
+src/table/organize-rack-button.tsx
+  s_8b11fec7c205a1::t_29dbe4c6b3badc 1-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "52b556d1d9d77569333662cd3e8da49b3471b9f6",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
