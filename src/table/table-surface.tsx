@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { TableFullscreenButton } from './fullscreen-button';
-import { PlayerPortrait, TableBotanicals } from './table-art';
+import { PlayerPortrait } from './table-art';
 import { WallMeter } from './wall-meter';
 export { DiscardPool } from './discard-pool';
 import type { Player, Tile } from '../game/types';
@@ -38,9 +38,7 @@ export function TableSurface({ players, viewerId, activePlayerIds, wallCount, di
   const viewerSeat = players.find((player) => player.id === viewerId)?.seat ?? 'east';
   const exposedPlayers = players.filter((player) => player.exposures.length > 0);
   return <><section className={`table-surface${discardCount > 35 ? ' table-surface-late' : ''}`} aria-label="Mahjong table">
-    <TableBotanicals />
-    {players.map((player) => <PlayerSeat key={player.id} player={player} position={playerPosition(player.seat, viewerSeat)} viewer={player.id === viewerId} active={activePlayerIds.includes(player.id)} />)}
-    <WallMeter count={wallCount} />
+    <div className="table-player-rail"><div className="table-opponents">{players.map((player) => <PlayerSeat key={player.id} player={player} position={playerPosition(player.seat, viewerSeat)} viewer={player.id === viewerId} active={activePlayerIds.includes(player.id)} />)}</div><WallMeter count={wallCount} /></div>
     {children}
   </section>{exposedPlayers.length ? <section className={`table-melds${exposedPlayers.length === 1 ? ' table-melds-single' : ''}`} aria-label="Exposed sets">
     {exposedPlayers.map((player) => <article key={player.id} aria-label={`${player.id === viewerId ? 'Your' : player.name + '’s'} exposed sets`}>
