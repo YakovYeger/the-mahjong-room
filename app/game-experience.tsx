@@ -22,7 +22,8 @@ import { loadGuestProgress, saveGuestProgress } from '../src/persistence/guest-p
 import { loadGuestGameSession, saveGuestGameSession } from '../src/persistence/guest-session';
 import { runBotAction } from '../src/game/bots';
 import { applyGameAction, createGame, getLegalJokerExchangeOptions, totalPlayerTiles } from '../src/game/engine';
-import { moveTileId, normalizeTileOrder, organizeTileIds, tileLabel } from '../src/game/tiles';
+import { moveTileId, normalizeTileOrder, tileLabel } from '../src/game/tiles';
+import { organizeRack } from '../src/game/rack-order';
 import { SortableRackItem } from '../src/game/sortable-rack-item';
 import { analyzeDiscardDeadHand, cardTileKey, getLegalCallOptions } from '../src/game/training-card';
 import type { GameState, Player } from '../src/game/types';
@@ -231,6 +232,7 @@ export function GameExperience() {
     ? game.charlestonAwaitingDecision ? 'charleston-decision' : game.charlestonCourtesy ? 'courtesy-pass' : 'charleston-pass'
     : respondingToDiscard ? 'call' : needsDraw ? 'draw' : canDiscard ? 'discard' : 'wait';
   const coach = useCoach(coachContext, `${game.id}:${human.id}`, coachDecision, 3 - blindCount, selected);
+  const followedHand = coach.followedId ? getCardProvider(game.cardId).getHands().find(hand => hand.id === coach.followedId) : undefined;
   const gameReview = useMemo(() => generateGameReview(game, 'human', { hintsRequested, manualTurns }), [game, hintsRequested, manualTurns]);
   const visibleDiscards = game.discards;
 
@@ -490,7 +492,7 @@ export function GameExperience() {
           {game.phase === 'playing' && deadHand.dead ? <span className="table-dead-hand" title={deadHand.message}>Dead hand</span> : null}
         </TablePrompt>
           <div className="player-controls"><p><strong>Your rack</strong><span>{game.phase === 'charleston' ? game.charlestonCourtesy ? `${selected.length} selected · optional` : `${selected.length} of ${expectedPassTiles} selected${blindCount ? ` · ${blindCount} blind` : ''}` : respondingToDiscard ? `${selected.length} selected for a call` : needsDraw ? '13 tiles · ready to draw' : `${totalPlayerTiles(human)} tiles · ${selected.length} selected`}</span></p>
-            <OrganizeRackButton onClick={() => { setRackOrder(organizeTileIds(orderedRack)); setNotice('Rack organized by suit and number.'); }} />
+            <OrganizeRackButton label={followedHand ? `Organize rack by ${followedHand.name}` : 'Organize rack by suit and number'} onClick={() => { setRackOrder(organizeRack(orderedRack, human.exposures, followedHand)); setNotice(followedHand ? `Rack organized by ${followedHand.name}. Unmatched tiles are at the end.` : 'Rack organized by suit and number.'); }} />
             <div className="action-group">
               {game.phase === 'charleston' && game.charlestonAwaitingDecision ? <><button className="finish-button" onClick={() => chooseSecondCharleston(false)}>Stop and courtesy pass</button><button className="primary" onClick={() => chooseSecondCharleston(true)}>Play second Charleston</button></>
                 : game.phase === 'charleston' ? <>{blindAvailable ? <details className="blind-pass-options"><summary>Blind pass options{blindCount ? ` · ${blindCount} blind` : ''}</summary><div className="blind-controls"><button className={blindCount === 0 ? 'active' : ''} onClick={() => { setBlindCount(0); setSelected([]); }}>No blind</button><button className={blindCount === 1 ? 'active' : ''} onClick={() => { setBlindCount(1); setSelected([]); }}>1 blind</button><button className={blindCount === 2 ? 'active' : ''} onClick={() => { setBlindCount(2); setSelected([]); }}>2 blind</button></div></details> : null}<button className="primary" disabled={!game.charlestonCourtesy && selected.length !== expectedPassTiles} onClick={passTiles}>{game.charlestonCourtesy ? `Courtesy pass ${selected.length || 'none'}` : 'Pass 3 tiles'}</button></>

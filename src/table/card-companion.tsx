@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { getCardProvider, type CardId } from '../game/cards';
+import { organizeRack } from '../game/rack-order';
 import { arrangeHand, cardTileKey } from '../game/training-card';
 import { createWall, tileLabel } from '../game/tiles';
 import type { Exposure, HandCandidate, HandDefinition, Tile } from '../game/types';
@@ -58,9 +59,7 @@ export function CardCompanion({ cardId = 'training-card', rack, exposures, stora
   const pick = (handId: string) => { follow(handId); onOpenChange(false); };
   const arrange = () => {
     if (!hand) return;
-    const layout = arrangeHand([...rack, ...exposures.flatMap(exposure => exposure.tiles)], exposures, hand);
-    const rackIds = new Set(rack.map(tile => tile.id));
-    onArrange([...layout.matchingTileIds, ...layout.extras.map(tile => tile.id)].filter(tileId => rackIds.has(tileId)));
+    onArrange(organizeRack(rack, exposures, hand));
     if (compact) setOverview(false);
   };
   const followedLayout = hand ? arrangeHand([...rack, ...exposures.flatMap(exposure => exposure.tiles)], exposures, hand) : undefined;

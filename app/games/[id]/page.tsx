@@ -8,7 +8,8 @@ import { use, useEffect, useMemo, useRef, useState } from 'react';
 import { DragDropProvider, PointerSensor, useDroppable } from '@dnd-kit/react';
 import { PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable } from '@dnd-kit/react/sortable';
-import { moveTileId, normalizeTileOrder, organizeTileIds, tileLabel } from '../../../src/game/tiles';
+import { moveTileId, normalizeTileOrder, tileLabel } from '../../../src/game/tiles';
+import { organizeRack } from '../../../src/game/rack-order';
 import { SortableRackItem } from '../../../src/game/sortable-rack-item';
 import { cardTileKey } from '../../../src/game/training-card';
 import type { GameAction, GameEvent } from '../../../src/game/types';
@@ -166,6 +167,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
     tiles: player.revealedRack ?? (player.id === snapshot.privateState.playerId ? snapshot.privateState.rack : null),
   }));
   const isHost = Boolean(room && room.ownerId === room.players.find((player) => player.playerKey === snapshot.privateState.playerId)?.userId);
+  const followedHand = coach.followedId ? getCardProvider(snapshot.publicState.cardId).getHands().find(hand => hand.id === coach.followedId) : undefined;
   const orderedRack = (() => {
     const order = normalizeTileOrder(rackOrder, snapshot.privateState.rack);
     const byId = new Map(snapshot.privateState.rack.map((tile) => [tile.id, tile]));
@@ -270,11 +272,11 @@ function CloudGameTable({ gameId }: { gameId: string }) {
       </TablePrompt>
         <div className="cloud-actions">
         <div className="cloud-rack-heading"><strong>Your rack</strong><span>{isTerminal ? 'Final rack' : selected.length ? `${selected.length} selected` : 'Select tiles to act'}</span></div>
-          {!isTerminal ? <OrganizeRackButton disabled={busy} onClick={() => {
-            const ids = organizeTileIds(orderedRack);
+          {!isTerminal ? <OrganizeRackButton disabled={busy} label={followedHand ? `Organize rack by ${followedHand.name}` : 'Organize rack by suit and number'} onClick={() => {
+            const ids = organizeRack(orderedRack, snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? [], followedHand);
             setRackOrder(ids);
             try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory ordering still works. */ }
-            setMessage('Rack organized by suit and number.');
+            setMessage(followedHand ? `Rack organized by ${followedHand.name}. Unmatched tiles are at the end.` : 'Rack organized by suit and number.');
           }} /> : null}
           {pending === 'charleston_pass' ? <button disabled={busy || selected.length !== 3} onClick={() => void act({ type: 'PASS_TILES', tileIds: selected })}>Pass three tiles</button> : null}
           {pending === 'courtesy_pass' ? <button disabled={busy || selected.length > 3} onClick={() => void act({ type: 'COURTESY_PASS', tileIds: selected })}>Pass {selected.length || 'no'} tiles</button> : null}
