@@ -1,0 +1,62 @@
+/* Tactile, finite feedback. Motion never gates an action or changes game state. */
+.shared-table-page.unified-game .play-workspace { position: relative; }
+.move-feedback { position: absolute; inset: 0; z-index: 8; pointer-events: none; }
+.move-feedback-wash { position: absolute; inset: 0; border-radius: 12px; box-shadow: inset 0 0 32px #e6c57733; opacity: 0; animation: move-warmth .8s ease-out; }
+.move-reward { position: absolute; top: -28px; left: 50%; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; padding: 8px 15px; border: 1px solid #d9bc76; border-radius: 24px; color: #fff1c4; background: #173d32f5; box-shadow: 0 4px 16px #102b2440; font: 600 .75rem/1.3 Arial,sans-serif; opacity: 0; animation: move-reward 1.15s cubic-bezier(.16,1,.3,1) both; }
+.move-reward > span { color: #e9c87d; }
+.move-sparkles { position: absolute; top: -6px; left: 50%; }
+.move-sparkles i { position: absolute; width: 4px; height: 4px; border-radius: 1px; background: #efd691; opacity: 0; animation: move-spark .65s ease-out var(--spark-delay) both; }
+.move-flight-layer { position: fixed; z-index: 45; inset: 0; pointer-events: none; overflow: hidden; }
+.move-flight { position: absolute; display: block; height: auto; aspect-ratio: 2 / 3; padding: 3px; border: 1px solid #c6b99a; border-bottom: 5px solid #baa77d; border-radius: 7px; background: var(--tile-paper); box-shadow: 0 6px 18px #0b2e2866; transform-origin: center; animation: move-flight .56s cubic-bezier(.22,.8,.26,1) both; }
+.move-flight > .tile-face { width: 100%; height: 100%; }
+.move-flight .tile-face.illustrated > strong { font-size: .625rem; }
+.move-flight .tile-face.illustrated > small { font-size: .3125rem; }
+@keyframes move-flight {
+  0% { opacity: 1; transform: translate(0,-6px) rotate(0) scale(1); }
+  35% { opacity: 1; }
+  75% { opacity: .95; }
+  100% { opacity: 0; transform: translate(var(--flight-x),var(--flight-y)) rotate(var(--flight-turn)) scale(.68); }
+}
+@keyframes move-reward {
+  0% { opacity: 0; transform: translate(-50%,12px) scale(.88); }
+  22% { opacity: 1; transform: translate(-50%,-3px) scale(1.03); }
+  36%,72% { opacity: 1; transform: translate(-50%,0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%,-10px) scale(.98); }
+}
+@keyframes move-spark {
+  0% { opacity: 0; transform: translate(0,0) scale(.4) rotate(0); }
+  25% { opacity: .9; }
+  100% { opacity: 0; transform: translate(var(--spark-x),var(--spark-y)) scale(.2) rotate(100deg); }
+}
+@keyframes move-warmth { 0%,100% { opacity: 0; } 25% { opacity: 1; } }
+/* The sortable wrapper owns drag transforms; only its tile face receives motion. */
+@media(prefers-reduced-motion:no-preference) {
+ .shared-table-page.unified-game .play-workspace :is(.tile,.cloud-tile) { transition: transform .3s cubic-bezier(.18,1.4,.35,1),box-shadow .2s ease,outline-color .2s ease; }
+ .unified-game :is(.tile-slot,.cloud-tile-slot):not(.is-dragging) > :is(.tile,.cloud-tile) { animation: tile-soft-land .48s cubic-bezier(.2,1.35,.38,1) var(--tile-delay,0ms) backwards; }
+ .unified-game .play-workspace :is(.tile,.cloud-tile):not(:disabled):active { transform: translateY(-3px) scale(.96); }
+ .unified-game .play-workspace :is(.tile,.cloud-tile).selected { box-shadow: 0 4px 14px #f1ca6a24,0 5px 12px #0b241b80; }
+ .unified-game .play-workspace :is(.action-group,.cloud-actions) > button:not(:disabled), .unified-game .organize-rack-button, .table-help-button { transition: transform .15s ease,box-shadow .2s ease,background .2s ease; }
+ .unified-game .play-workspace :is(.action-group,.cloud-actions) > button:not(:disabled):active, .unified-game .organize-rack-button:active, .table-help-button:active { transform: scale(.96); }
+ .unified-game .table-prompt h1 { animation: turn-settle .35s cubic-bezier(.2,1.2,.4,1) backwards; }
+ .unified-game .table-prompt-active h1::after { content: ''; display: inline-block; width: 6px; height: 6px; margin: 0 0 3px 10px; border-radius: 50%; background: #ecd397; animation: turn-bloom .65s ease-out; }
+ .unified-game .table-latest-tile { animation: discard-land .42s cubic-bezier(.2,1.3,.4,1); }
+ .unified-game .play-workspace:has(.move-feedback-arrange) .organize-rack-button svg { animation: organize-nod .45s ease; }
+ .unified-game .play-workspace :is(.rack,.cloud-rack) { position: relative; }
+ .unified-game .play-workspace:has(.move-feedback-arrange) :is(.rack,.cloud-rack)::after { content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: 8px; background: linear-gradient(100deg,transparent 15%,#f9e4a433 45%,transparent 75%); opacity: 0; animation: rack-sheen .7s ease-out; }
+}
+@media(hover:hover) and (prefers-reduced-motion:no-preference) {
+ .unified-game .play-workspace :is(.tile,.cloud-tile):not(.selected):not(:disabled):hover { transform: translateY(-3px); box-shadow: 0 5px 10px #0b241b66; }
+}
+@keyframes tile-soft-land { 0% { opacity: 0; translate: 0 -18px; scale: .9; } 65% { opacity: 1; translate: 0 2px; scale: 1.015; } 100% { opacity: 1; translate: 0 0; scale: 1; } }
+@keyframes discard-land { 0% { opacity: .2; translate: 0 -12px; rotate: -5deg; scale: 1.1; } 70% { opacity: 1; translate: 0 2px; rotate: 1deg; scale: .98; } 100% { translate: 0 0; rotate: 0deg; scale: 1; } }
+@keyframes turn-settle { from { opacity: .5; translate: 0 5px; } to { opacity: 1; translate: 0 0; } }
+@keyframes turn-bloom { 0% { box-shadow: 0 0 0 0 #ecd39766; } 100% { box-shadow: 0 0 0 12px #ecd39700; } }
+@keyframes organize-nod { 0%,100% { rotate: 0deg; } 35% { rotate: -12deg; } 65% { rotate: 7deg; } }
+@keyframes rack-sheen { 0% { opacity: 0; translate: -12% 0; } 30% { opacity: 1; } 100% { opacity: 0; translate: 12% 0; } }
+.review-hero, .game-over-banner { position: relative; }
+.win-flourish { position: absolute; top: 30%; left: 50%; z-index: 2; pointer-events: none; }
+.win-flourish i { position: absolute; width: 7px; height: 12px; border-radius: 5px 1px; background: #c8a14b; opacity: 0; animation: win-petal 1.6s cubic-bezier(.15,.7,.3,1) both; }
+.win-flourish i:nth-child(3n) { background: #90b697; }
+@keyframes win-petal { 0% { opacity: 0; transform: translate(0,0) scale(.3); } 18% { opacity: 1; } 75% { opacity: .8; } 100% { opacity: 0; transform: translate(var(--petal-x),var(--petal-y)) rotate(var(--petal-turn)) scale(.5); } }
+html[data-motion="reduce"] :is(.move-feedback,.move-flight-layer,.win-flourish) { display: none; }
+@media(prefers-reduced-motion:reduce) { .move-feedback,.move-flight-layer,.win-flourish { display: none; } }

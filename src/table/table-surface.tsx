@@ -49,7 +49,7 @@ export function TableSurface({ players, viewerId, activePlayerIds, wallCount, di
 }
 
 export function TablePrompt({ title, detail, active = false, children }: { title: string; detail: string; active?: boolean; children?: ReactNode }) {
-  return <section className={`table-prompt${active ? ' table-prompt-active' : ''}`} aria-label="Current decision"><div><span className="table-turn-label">{active ? 'Your turn' : 'At the table'}</span><h1>{title}</h1><p>{detail}</p></div>{children}</section>;
+  return <section className={`table-prompt${active ? ' table-prompt-active' : ''}`} aria-label="Current decision"><div><span className="table-turn-label">{active ? 'Your turn' : 'At the table'}</span><h1 key={`${active}:${title}`}>{title}</h1><p>{detail}</p></div>{children}</section>;
 }
 
 export function RackPanel({ children, className = '' }: { children: ReactNode; className?: string }) {

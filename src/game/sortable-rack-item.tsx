@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { useSortable } from '@dnd-kit/react/sortable';
 
 type SortableRackItemProps = {
@@ -19,7 +19,7 @@ export function SortableRackItem({ id, index, className, disabled = false, child
     transition: { duration: 180, easing: 'cubic-bezier(.2,.8,.2,1)' },
   });
 
-  return <div ref={ref} data-sortable-id={id} className={`${className}${isDragging ? ' is-dragging' : ''}`}>
+  return <div ref={ref} style={{ '--tile-delay': `${Math.min(index, 6) * 22}ms` } as CSSProperties} data-sortable-id={id} className={`${className}${isDragging ? ' is-dragging' : ''}`}>
     {children({ isDragging, handleRef })}
   </div>;
 }

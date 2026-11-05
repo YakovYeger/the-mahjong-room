@@ -27,6 +27,7 @@ import { CardCompanion, HandCheck } from '../../../src/table/card-companion';
 import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../../../src/table/table-surface';
 import { getSnapshotCoachContext } from '../../../src/coach/analyze';
 import { useCoach } from '../../../src/coach/use-coach';
+import { captureMove, moveCue, MoveFeedback, useMoveFeedback, WinCelebration } from '../../../src/table/move-feedback';
 import { OrganizeRackButton } from '../../../src/table/organize-rack-button';
 import { TableHelp } from '../../../src/table/table-help';
 import { coachHighlightLabel, coachHighlightMark } from '../../../src/coach/highlights';
@@ -45,6 +46,7 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
 
 function CloudGameTable({ gameId }: { gameId: string }) {
   const { openSettings } = useAccessibility();
+  const moveFeedback = useMoveFeedback();
   const cloud = useCloudTable(gameId);
   const snapshot = cloud.data?.snapshot ?? null;
   const room = cloud.data?.room ?? null;
@@ -101,8 +103,11 @@ function CloudGameTable({ gameId }: { gameId: string }) {
   const act = async (action: GameAction) => {
     if (!snapshot || busy) return;
     setMessage('Saving move…');
+    const cue = moveCue(action, snapshot.privateState.rack);
+    const receipt = cue ? captureMove(cue.kind, cue.tiles) : null;
     try {
       await cloud.submit(action);
+      moveFeedback.play(receipt);
       setSelected([]); setResolutionNotice(null); setMessage('Move saved.');
     } catch (error) { setMessage(error instanceof Error ? error.message : 'The move could not be saved.'); }
   };
@@ -208,7 +213,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
       {resolutionNotice?.type === 'TURN_AUTO_RESOLVED' ? <div className="game-resolution" role="status">{snapshot.publicState.players.find((player) => player.id === resolutionNotice.playerId)?.name ?? 'A player'}&apos;s move timed out and was selected automatically.</div> : null}
       {resolutionNotice?.type === 'PLAYER_CONTROL_CHANGED' ? <div className="game-resolution" role="status">{snapshot.publicState.players.find((player) => player.id === resolutionNotice.playerId)?.name ?? 'A player'} did not return during the two-minute grace period. A bot now controls that seat.</div> : null}
       {isTerminal ? <section className={`game-over-banner ${winner ? 'has-winner' : ''}`} aria-labelledby="game-over-title">
-        {winner ? <div className="mahjong-celebration" aria-hidden="true"><i /><i /><i /></div> : null}
+        {winner ? <WinCelebration /> : null}
         <div><p className="kicker">Game over</p><h2 id="game-over-title">{terminalOutcome}</h2><p>{snapshot.status === 'completed' ? winner ? 'The final table state is ready to review.' : 'All tiles were drawn; no winner was declared.' : 'No further moves can be made at this table.'}</p></div>
         <nav aria-label="Game over actions"><a className="game-review-link" href="#game-review">Review game</a><a className="game-list-link" href="/games">My games · Start another</a></nav>
       </section> : null}
@@ -266,6 +271,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
         <CloudDiscardPool highlightedTileIds={coach.highlights.publicTileIds} tiles={snapshot.publicState.discards} latestTileId={snapshot.publicState.callWindow?.discard.id} dropActive={discardDropActive} canDiscard={pending === 'discard'} />
       </TableSurface>
       <RackPanel className="cloud-rack-section play-workspace">
+      <MoveFeedback feedback={moveFeedback.feedback} />
       <TablePrompt title={snapshot.status === 'abandoned' ? 'Table ended' : snapshot.status === 'completed' ? 'Game complete' : snapshot.status === 'paused' ? 'Table paused' : pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : pending === 'charleston_pass' ? 'Choose 3 tiles to pass' : pending === 'courtesy_pass' ? 'An optional exchange' : pending === 'charleston_decision' ? 'Keep passing?' : pending === 'draw' ? 'Draw a tile' : pending === 'discard' ? 'Choose a discard' : 'Call or pass?'} detail={snapshot.status === 'abandoned' ? 'No active decisions' : pending === 'charleston_pass' ? `${selected.length}/3 selected · Jokers stay with you` : pending === 'courtesy_pass' ? 'Choose zero to three tiles for courtesy passing' : pending === 'charleston_decision' ? 'Continue the second Charleston or move to courtesy passing' : pending === 'discard_response' ? 'Call the latest discard, declare Mahjong, or pass' : pending === 'draw' ? 'Draw a tile from the wall' : pending === 'discard' ? 'Choose one tile to discard' : pending === 'wait' ? 'You can arrange your rack while you wait' : 'Review the final table'} active={!isTerminal && snapshot.status === 'active' && pending !== 'wait'}>
         {!isTerminal ? <TurnClock deadlineAt={snapshot.deadlineAt} charleston={snapshot.publicState.phase === 'charleston'} /> : null}
         {snapshot.mode === 'live' && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button disabled={busy} onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}
@@ -273,6 +279,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
         <div className="cloud-actions">
         <div className="cloud-rack-heading"><strong>Your rack</strong><span>{isTerminal ? 'Final rack' : selected.length ? `${selected.length} selected` : 'Select tiles to act'}</span></div>
           {!isTerminal ? <OrganizeRackButton disabled={busy} label={followedHand ? `Organize rack by ${followedHand.name}` : 'Organize rack by suit and number'} onClick={() => {
+            moveFeedback.celebrate('arrange');
             const ids = organizeRack(orderedRack, snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? [], followedHand);
             setRackOrder(ids);
             try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory ordering still works. */ }
@@ -301,7 +308,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
         {message ? <p className="cloud-message" role="status" aria-live="polite">{cloud.uncertain ? 'Reconnecting to confirm your saved move…' : cloud.error?.message ?? message}</p> : null}
       </RackPanel>
       {!isTerminal ? <TableHelp coach={coach.session ? { session: coach.session, show: coach.show, onShowChange: coach.setShow, focusGroupId: coach.focusGroupId, onFocusGroup: coach.focusGroup, onFollow: coach.follow, onBrowse: () => setCardOpen(true) } : null}>
-        <CardCompanion compact blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} candidates={coachContext!.candidates} cardId={snapshot.publicState.cardId} rack={snapshot.privateState.rack} exposures={snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? []} storageKey={`${gameId}:${snapshot.privateState.playerId}`} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory order still works. */ } setMessage('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
+        <CardCompanion compact blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} candidates={coachContext!.candidates} cardId={snapshot.publicState.cardId} rack={snapshot.privateState.rack} exposures={snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? []} storageKey={`${gameId}:${snapshot.privateState.playerId}`} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { moveFeedback.celebrate('arrange'); setRackOrder(ids); try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory order still works. */ } setMessage('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
       </TableHelp> : null}
       </DragDropProvider>
       </section>

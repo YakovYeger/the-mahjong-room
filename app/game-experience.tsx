@@ -14,6 +14,7 @@ import { isSortable } from '@dnd-kit/react/sortable';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getCoachVisibleContext } from '../src/coach/analyze';
 import { useCoach } from '../src/coach/use-coach';
+import { MoveFeedback, useMoveFeedback, WinCelebration } from '../src/table/move-feedback';
 import { OrganizeRackButton } from '../src/table/organize-rack-button';
 import { TableHelp } from '../src/table/table-help';
 import { coachHighlightLabel, coachHighlightMark } from '../src/coach/highlights';
@@ -185,6 +186,7 @@ export function TableReveal({ game }: { game: GameState }) {
 
 export function GameExperience() {
   const { openSettings, reducedMotion } = useAccessibility();
+  const moveFeedback = useMoveFeedback();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [started, setStarted] = useState(false);
   const [dealing, setDealing] = useState(false);
@@ -311,6 +313,7 @@ export function GameExperience() {
       : { type: 'PASS_TILES' as const, tileIds: selected, blindCount };
     const result = applyGameAction(game, 'human', action);
     if (!result.ok) return setNotice(result.violation.message);
+    if (selected.length || blindCount) moveFeedback.celebrate('pass', human.rack.filter(tile => selected.includes(tile.id)));
     const next = advanceCharlestonBots(result.state);
     setGame(next);
     resetSelection();
@@ -334,6 +337,7 @@ export function GameExperience() {
       setReview(true);
       return;
     }
+    moveFeedback.celebrate('draw');
     const drawn = result.state.players[0].rack.at(-1)!;
     setNotice(`You drew ${tileLabel(drawn)}. ${getCardProvider(game.cardId).validateMahjong(allTiles(result.state.players[0]), result.state.players[0].exposures).valid ? 'Your hand is complete—declare Mahjong.' : 'Notice whether it strengthens your leading hand.'}`);
   };
@@ -352,6 +356,7 @@ export function GameExperience() {
     if (!chosenCall) return;
     const result = applyGameAction(game, 'human', { type: 'CALL_TILE', rackTileIds: selected });
     if (!result.ok) return setNotice(result.violation.message);
+    moveFeedback.celebrate('call');
     const next = advancePlayingBots(result.state);
     setGame(next);
     resetSelection();
@@ -377,6 +382,7 @@ export function GameExperience() {
     if (!result.ok) return setNotice(result.violation.message);
     setGame(result.state);
     resetSelection();
+    moveFeedback.celebrate('exchange');
     setNotice(`You replaced ${tileLabel(exchangeOption.rackTile)} in ${exchangeOption.owner.name}'s exposure and brought the Joker into your rack.`);
   };
 
@@ -385,6 +391,7 @@ export function GameExperience() {
     const discarded = human.rack.find((tile) => tile.id === selected[0]);
     const result = applyGameAction(game, 'human', { type: 'DISCARD_TILE', tileId: selected[0] });
     if (!result.ok) return setNotice(result.violation.message);
+    moveFeedback.celebrate('discard', discarded ? [discarded] : []);
     const next = advancePlayingBots(result.state);
     setGameWithDiscardSequence(next);
     resetSelection();
@@ -462,7 +469,7 @@ export function GameExperience() {
     return (
       <main className="review-page">
         <header><span className="brand">The Mahjong Room</span><span>Game review</span></header>
-        <section className="review-hero"><p className="kicker">Game {gameNumber} complete</p><h1>{game.winnerId === 'human' ? 'Mahjong—beautifully played.' : game.winnerId ? `${game.players.find((player) => player.id === game.winnerId)?.name} called Mahjong.` : 'The wall is complete.'}</h1><p>{gameReview.summary}</p></section>
+        <section className="review-hero">{game.winnerId === 'human' ? <WinCelebration /> : null}<p className="kicker">Game {gameNumber} complete</p><h1>{game.winnerId === 'human' ? 'Mahjong—beautifully played.' : game.winnerId ? `${game.players.find((player) => player.id === game.winnerId)?.name} called Mahjong.` : 'The wall is complete.'}</h1><p>{gameReview.summary}</p></section>
         <TableReveal game={game} />
         <section className="review-grid">
           {gameReview.cards.map((card) => <article key={card.id}><span className={`review-icon ${card.tone === 'strong' ? '' : 'coral'}`}>{card.tone === 'strong' ? '✓' : '↗'}</span><p className="kicker">{card.eyebrow}</p><h2>{card.title}</h2><p>{card.body}</p></article>)}
@@ -488,11 +495,12 @@ export function GameExperience() {
           <DiscardPool highlightedTileIds={coach.highlights.publicTileIds} tiles={visibleDiscards} latestTileId={game.callWindow?.discard.id} />
         </TableSurface>
         <RackPanel className="player-area play-workspace">
+        <MoveFeedback feedback={moveFeedback.feedback} />
         <TablePrompt title={actionTitle} detail={respondingToDiscard && game.callWindow ? `${tileLabel(game.callWindow.discard)} is available. Select a legal set to call, or pass.` : notice || (game.phase === 'charleston' && !game.charlestonAwaitingDecision ? `${stageTitle} · Tap tiles, then pass. Jokers stay with you.` : needsDraw ? 'Take a tile from the wall to begin your turn.' : canDiscard ? 'Tap a tile, then choose Discard tile.' : stageTitle)} active={game.phase === 'charleston' || respondingToDiscard || needsDraw || canDiscard}>
           {game.phase === 'playing' && deadHand.dead ? <span className="table-dead-hand" title={deadHand.message}>Dead hand</span> : null}
         </TablePrompt>
           <div className="player-controls"><p><strong>Your rack</strong><span>{game.phase === 'charleston' ? game.charlestonCourtesy ? `${selected.length} selected · optional` : `${selected.length} of ${expectedPassTiles} selected${blindCount ? ` · ${blindCount} blind` : ''}` : respondingToDiscard ? `${selected.length} selected for a call` : needsDraw ? '13 tiles · ready to draw' : `${totalPlayerTiles(human)} tiles · ${selected.length} selected`}</span></p>
-            <OrganizeRackButton label={followedHand ? `Organize rack by ${followedHand.name}` : 'Organize rack by suit and number'} onClick={() => { setRackOrder(organizeRack(orderedRack, human.exposures, followedHand)); setNotice(followedHand ? `Rack organized by ${followedHand.name}. Unmatched tiles are at the end.` : 'Rack organized by suit and number.'); }} />
+            <OrganizeRackButton label={followedHand ? `Organize rack by ${followedHand.name}` : 'Organize rack by suit and number'} onClick={() => { moveFeedback.celebrate('arrange'); setRackOrder(organizeRack(orderedRack, human.exposures, followedHand)); setNotice(followedHand ? `Rack organized by ${followedHand.name}. Unmatched tiles are at the end.` : 'Rack organized by suit and number.'); }} />
             <div className="action-group">
               {game.phase === 'charleston' && game.charlestonAwaitingDecision ? <><button className="finish-button" onClick={() => chooseSecondCharleston(false)}>Stop and courtesy pass</button><button className="primary" onClick={() => chooseSecondCharleston(true)}>Play second Charleston</button></>
                 : game.phase === 'charleston' ? <>{blindAvailable ? <details className="blind-pass-options"><summary>Blind pass options{blindCount ? ` · ${blindCount} blind` : ''}</summary><div className="blind-controls"><button className={blindCount === 0 ? 'active' : ''} onClick={() => { setBlindCount(0); setSelected([]); }}>No blind</button><button className={blindCount === 1 ? 'active' : ''} onClick={() => { setBlindCount(1); setSelected([]); }}>1 blind</button><button className={blindCount === 2 ? 'active' : ''} onClick={() => { setBlindCount(2); setSelected([]); }}>2 blind</button></div></details> : null}<button className="primary" disabled={!game.charlestonCourtesy && selected.length !== expectedPassTiles} onClick={passTiles}>{game.charlestonCourtesy ? `Courtesy pass ${selected.length || 'none'}` : 'Pass 3 tiles'}</button></>
@@ -553,7 +561,7 @@ export function GameExperience() {
             <small className="reorder-hint" id="rack-reorder-hint"><span aria-hidden="true">↔</span> Drag tiles to arrange · Alt + arrow keys</small>
         </RackPanel>
         <TableHelp coach={coach.session ? { session: coach.session, show: coach.show, onShowChange: coach.setShow, focusGroupId: coach.focusGroupId, onFocusGroup: coach.focusGroup, onFollow: coach.follow, onBrowse: () => setCardOpen(true), onHint: requestHint } : null}>
-          <CardCompanion compact blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} key={game.id} cardId={game.cardId} rack={human.rack} exposures={human.exposures} storageKey={`${game.id}:${human.id}`} candidates={coachContext.candidates} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); setNotice('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
+          <CardCompanion compact blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} key={game.id} cardId={game.cardId} rack={human.rack} exposures={human.exposures} storageKey={`${game.id}:${human.id}`} candidates={coachContext.candidates} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { moveFeedback.celebrate('arrange'); setRackOrder(ids); setNotice('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
         </TableHelp>
       </section>
     </main>
