@@ -143,8 +143,8 @@ html[data-motion="reduce"] :is(.rack-incoming,.charleston-receipt,.winning-revea
 .table-wall-number { position: relative; }
 .unified-game .table-wall-low .table-wall-number { color: #f1d28d; }
 .unified-game .table-surface:has(.table-wall-low) { box-shadow: inset 0 0 75px #b48c3d12; }
-.wall-milestone { position: absolute; inset: -9px; border: 1px solid #f1d28d; border-radius: 50%; pointer-events: none; opacity: 0; animation: wall-last-light 1.7s ease-out both; }
-@keyframes wall-last-light { 0% { opacity: 0; scale: .75; } 25% { opacity: .85; box-shadow: 0 0 20px #f1d28d55; } 100% { opacity: 0; scale: 1.8; } }
+.wall-milestone { position: absolute; inset: -3px; border: 1px solid #f1d28d; border-radius: 50%; pointer-events: none; opacity: 0; animation: wall-last-light 1.7s ease-out both; }
+@keyframes wall-last-light { 0% { opacity: 0; scale: .75; } 25% { opacity: .85; box-shadow: 0 0 20px #f1d28d55; } 100% { opacity: 0; scale: 1.15; } }
 html[data-motion="reduce"] :is(.rack-turn-ripple,.wall-milestone) { display: none; }
 html[data-motion="reduce"] .joker-return { animation: none !important; }
 @media(prefers-reduced-motion:reduce) { .rack-turn-ripple,.wall-milestone { display: none; } }
