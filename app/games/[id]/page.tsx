@@ -4,7 +4,7 @@ import { Menu } from '../../../src/ui/menu';
 
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
 
-import { use, useEffect, useMemo, useRef, useState } from 'react';
+import { use, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { DragDropProvider, PointerSensor, useDroppable } from '@dnd-kit/react';
 import { PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable } from '@dnd-kit/react/sortable';
@@ -27,6 +27,8 @@ import { CardCompanion, HandCheck } from '../../../src/table/card-companion';
 import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../../../src/table/table-surface';
 import { getSnapshotCoachContext } from '../../../src/coach/analyze';
 import { useCoach } from '../../../src/coach/use-coach';
+import { WinningHandReveal } from '../../../src/table/winning-hand-reveal';
+import { passDirection, useCharlestonArrival } from '../../../src/table/charleston-motion';
 import { CelebrationLayer, useCelebration } from '../../../src/table/celebration';
 import { captureMove, moveCue, MoveFeedback, useMoveFeedback } from '../../../src/table/move-feedback';
 import { OrganizeRackButton } from '../../../src/table/organize-rack-button';
@@ -50,6 +52,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
   const moveFeedback = useMoveFeedback();
   const cloud = useCloudTable(gameId);
   const snapshot = cloud.data?.snapshot ?? null;
+  const arrival = useCharlestonArrival(snapshot ? { id: gameId, sequence: snapshot.eventSequence, events: snapshot.recentEvents, rack: snapshot.privateState.rack } : null);
   const celebration = useCelebration(snapshot ? { id: gameId, sequence: snapshot.eventSequence, events: snapshot.recentEvents, viewerId: snapshot.privateState.playerId, rack: snapshot.privateState.rack, players: snapshot.publicState.players } : null);
   const room = cloud.data?.room ?? null;
   const busy = cloud.busy;
@@ -106,7 +109,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
     if (!snapshot || busy) return;
     setMessage('Saving move…');
     const cue = moveCue(action, snapshot.privateState.rack);
-    const receipt = cue ? captureMove(cue.kind, cue.tiles) : null;
+    const receipt = cue ? captureMove(cue.kind, cue.tiles, passDirection(snapshot.publicState.charlestonPassIndex, snapshot.publicState.charlestonCourtesy)) : null;
     try {
       await cloud.submit(action);
       moveFeedback.play(receipt);
@@ -222,7 +225,17 @@ function CloudGameTable({ gameId }: { gameId: string }) {
       {isTerminal ? <section className="cloud-game-review" id="game-review" aria-labelledby="cloud-review-title">
         <div className="cloud-review-heading"><div><p className="kicker">Final table</p><h2 id="cloud-review-title">Game review</h2></div><p>{terminalOutcome}</p></div>
         {winningLine ? <article className="winning-line-card"><p className="kicker">Winning line · Selected game card</p><h3>{winningLine.name}</h3><p>{winningLine.section} · {winningLine.exposure === 'concealed' ? 'Concealed' : 'Exposed'}</p><small>{winningLine.description}</small></article> : winner ? <p className="review-note">The winner was confirmed by the game rules. A matching Training Card line was not included in this saved result.</p> : null}
-        <div className="review-racks">{finalRacks.map(({ player, tiles }) => <article key={player.id} className={player.id === winner?.id ? 'review-winner' : ''}><div><strong>{player.name}{player.id === winner?.id ? ' · Winner' : ''}</strong><small>{tiles ? `${tiles.length + player.exposures.reduce((count, exposure) => count + exposure.tiles.length, 0)} final tiles` : 'Concealed rack'}</small></div>{tiles ? <HandCheck cardId={snapshot.publicState.cardId} rack={tiles} exposures={player.exposures} storageKey={`${gameId}:${player.id}`} /> : <p className="review-note">This rack remains concealed because the table ended before the hand was completed.</p>}</article>)}</div>
+        <div className="review-racks">{finalRacks.map(({ player, tiles }) => {
+          const won = player.id === winner?.id;
+          const check = tiles ? <HandCheck cardId={snapshot.publicState.cardId} rack={tiles} exposures={player.exposures} storageKey={`${gameId}:${player.id}`} /> : null;
+          return <article key={player.id} className={won ? 'review-winner' : ''}>
+            <div><strong>{player.name}{won ? ' · Winner' : ''}</strong><small>{tiles ? `${tiles.length + player.exposures.reduce((count, exposure) => count + exposure.tiles.length, 0)} final tiles` : 'Concealed rack'}</small></div>
+            {tiles ? won ? <>
+              <WinningHandReveal rack={tiles} exposures={player.exposures} cardId={snapshot.publicState.cardId} waiting={celebration?.kind === 'mahjong'} />
+              <details className="winning-reveal-details"><summary>See card comparison</summary>{check}</details>
+            </> : check : <p className="review-note">This rack remains concealed because the table ended before the hand was completed.</p>}
+          </article>;
+        })}</div>
         <article className="review-discard-record"><div><strong>Discarded tiles</strong><small>{snapshot.publicState.discards.length} total</small></div>{snapshot.publicState.discards.length ? <div className="review-tile-row">{snapshot.publicState.discards.map((tile) => <span key={tile.id} title={tileLabel(tile)}>{compactTile(tile)}</span>)}</div> : <p className="review-note">No tiles were discarded.</p>}</article>
         <div className="review-next-actions"><a href="/games">Return to My Games</a><a className="primary" href="/games">Start another game</a></div>
       </section> : null}
@@ -274,6 +287,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
       </TableSurface>
       <RackPanel className="cloud-rack-section play-workspace">
       <MoveFeedback feedback={moveFeedback.feedback} />
+      {arrival ? <span className="charleston-receipt" role="status">✦ {arrival.tileIds.length} new {arrival.tileIds.length === 1 ? 'tile' : 'tiles'}</span> : null}
       <TablePrompt title={snapshot.status === 'abandoned' ? 'Table ended' : snapshot.status === 'completed' ? 'Game complete' : snapshot.status === 'paused' ? 'Table paused' : pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : pending === 'charleston_pass' ? 'Choose 3 tiles to pass' : pending === 'courtesy_pass' ? 'An optional exchange' : pending === 'charleston_decision' ? 'Keep passing?' : pending === 'draw' ? 'Draw a tile' : pending === 'discard' ? 'Choose a discard' : 'Call or pass?'} detail={snapshot.status === 'abandoned' ? 'No active decisions' : pending === 'charleston_pass' ? `${selected.length}/3 selected · Jokers stay with you` : pending === 'courtesy_pass' ? 'Choose zero to three tiles for courtesy passing' : pending === 'charleston_decision' ? 'Continue the second Charleston or move to courtesy passing' : pending === 'discard_response' ? 'Call the latest discard, declare Mahjong, or pass' : pending === 'draw' ? 'Draw a tile from the wall' : pending === 'discard' ? 'Choose one tile to discard' : pending === 'wait' ? 'You can arrange your rack while you wait' : 'Review the final table'} active={!isTerminal && snapshot.status === 'active' && pending !== 'wait'}>
         {!isTerminal ? <TurnClock deadlineAt={snapshot.deadlineAt} charleston={snapshot.publicState.phase === 'charleston'} /> : null}
         {snapshot.mode === 'live' && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button disabled={busy} onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}
@@ -299,7 +313,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
 <div className="cloud-rack" role="group" aria-label="Your rack">{orderedRack.map((tile, index) => {
           return <SortableRackItem id={tile.id} index={index} disabled={busy || isTerminal} className="cloud-tile-slot" key={tile.id}>
             {({ isDragging, handleRef }) => <>
-              <button ref={handleRef} data-drag-handle className={`cloud-tile ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} disabled={busy || isTerminal} aria-describedby="cloud-rack-help" aria-pressed={selected.includes(tile.id)} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}. Hold and drag to reorder.`} title={tileLabel(tile)} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); moveTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); moveTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; toggle(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
+              <button ref={handleRef} data-drag-handle style={arrival?.tileIds.includes(tile.id) ? { '--arrival-delay': `${arrival.tileIds.indexOf(tile.id) * 100}ms` } as CSSProperties : undefined} className={`cloud-tile ${arrival?.tileIds.includes(tile.id) ? `rack-incoming rack-incoming-${arrival.direction}` : ''} ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} disabled={busy || isTerminal} aria-describedby="cloud-rack-help" aria-pressed={selected.includes(tile.id)} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}. Hold and drag to reorder.`} title={tileLabel(tile)} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); moveTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); moveTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; toggle(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
             </>}
           </SortableRackItem>;
         })}</div>

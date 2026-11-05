@@ -52,3 +52,15 @@ it('does not create flight animations or reward timers with reduced motion', () 
   expect(result.current.feedback).toBeNull();
   expect(vi.getTimerCount()).toBe(0);
 });
+
+it('sends Charleston tiles toward the correct player, rather than the discard pile', () => {
+  const slot = document.createElement('div'); slot.dataset.sortableId = tile.id;
+  const button = document.createElement('button'); slot.appendChild(button); document.body.appendChild(slot);
+  button.getBoundingClientRect = () => new DOMRect(40, 500, 48, 72);
+  for (const [direction, position, x] of [['right','right',300], ['left','left',30], ['across','top',160]] as const) {
+    const seat = document.createElement('div'); seat.className = `table-seat-${position}`; document.body.appendChild(seat);
+    seat.getBoundingClientRect = () => new DOMRect(x, 70, 48, 48);
+    expect(captureMove('pass', [tile], direction).flights[0]).toMatchObject({ dx: x - 40, dy: -442 });
+    seat.remove();
+  }
+});

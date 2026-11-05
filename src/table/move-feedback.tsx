@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import { createPortal } from 'react-dom';
 import type { GameAction, Tile } from '../game/types';
 import { useAccessibility } from '../accessibility/provider';
+import type { PassDirection } from './charleston-motion';
 import { TileFace } from './tile-face';
 
 export type MoveKind = 'pass' | 'draw' | 'discard' | 'call' | 'exchange' | 'arrange';
@@ -28,8 +29,10 @@ interface MoveReceipt { kind: MoveKind; flights: Flight[] }
 interface Feedback extends MoveReceipt { id: number }
 
 /** Capture geometry before a confirmed move replaces the rack. No rules or timers are delayed. */
-export function captureMove(kind: MoveKind, tiles: Tile[] = []): MoveReceipt {
-  const destination = document.querySelector('.table-latest-tile') ?? document.querySelector('.table-discards');
+export function captureMove(kind: MoveKind, tiles: Tile[] = [], direction: PassDirection = 'across'): MoveReceipt {
+  const destination = kind === 'pass'
+    ? document.querySelector(`.table-seat-${direction === 'across' ? 'top' : direction}`) ?? document.querySelector('.table-surface')
+    : document.querySelector('.table-latest-tile') ?? document.querySelector('.table-discards');
   const target = destination?.getBoundingClientRect();
   const slots = Array.from(document.querySelectorAll<HTMLElement>('[data-sortable-id]'));
   const flights = target ? tiles.slice(0, 3).flatMap((tile, index) => {
@@ -51,8 +54,8 @@ export function useMoveFeedback() {
     if (!receipt || reducedMotion) return;
     setFeedback({ ...receipt, id: ++serial.current });
   }, [reducedMotion]);
-  const celebrate = useCallback((kind: MoveKind, tiles: Tile[] = []) => {
-    if (!reducedMotion) play(captureMove(kind, tiles));
+  const celebrate = useCallback((kind: MoveKind, tiles: Tile[] = [], direction?: PassDirection) => {
+    if (!reducedMotion) play(captureMove(kind, tiles, direction));
   }, [play, reducedMotion]);
   useEffect(() => {
     if (!feedback) return;

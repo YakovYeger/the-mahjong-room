@@ -11,9 +11,11 @@ import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { DragDropProvider, PointerSensor } from '@dnd-kit/react';
 import { PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable } from '@dnd-kit/react/sortable';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { getCoachVisibleContext } from '../src/coach/analyze';
 import { useCoach } from '../src/coach/use-coach';
+import { WinningHandReveal } from '../src/table/winning-hand-reveal';
+import { passDirection, useCharlestonArrival } from '../src/table/charleston-motion';
 import { CelebrationLayer, useCelebration } from '../src/table/celebration';
 import { MoveFeedback, useMoveFeedback } from '../src/table/move-feedback';
 import { OrganizeRackButton } from '../src/table/organize-rack-button';
@@ -169,7 +171,7 @@ function DealingScreen({ gameNumber, resuming }: { gameNumber: number; resuming:
   );
 }
 
-export function TableReveal({ game }: { game: GameState }) {
+export function TableReveal({ game, waiting = false }: { game: GameState; waiting?: boolean }) {
   return (
     <section className="table-reveal" aria-labelledby="table-reveal-title">
       <header><div><p className="kicker">Everyone turns their rack</p><h2 id="table-reveal-title">{game.winnerId ? 'The table at Mahjong' : 'The final hands'}</h2></div><p>Compare each direction and see how close every player was.</p></header>
@@ -178,7 +180,8 @@ export function TableReveal({ game }: { game: GameState }) {
         const winner = player.id === game.winnerId;
         return <article className={winner ? 'winner' : ''} key={player.id}>
           <div className="reveal-player"><div><strong>{player.name}</strong><small>{player.seat} seat · {tiles.length} tiles</small></div>{winner ? <b>Mahjong</b> : null}</div>
-          <HandCheck cardId={game.cardId} rack={player.rack} exposures={player.exposures} storageKey={`${game.id}:${player.id}`} />
+          {winner ? <WinningHandReveal rack={player.rack} exposures={player.exposures} cardId={game.cardId} waiting={waiting} /> : null}
+          {winner ? <details className="winning-reveal-details"><summary>See card comparison</summary><HandCheck cardId={game.cardId} rack={player.rack} exposures={player.exposures} storageKey={`${game.id}:${player.id}`} /></details> : <HandCheck cardId={game.cardId} rack={player.rack} exposures={player.exposures} storageKey={`${game.id}:${player.id}`} />}
         </article>;
       })}</div>
     </section>
@@ -207,6 +210,7 @@ export function GameExperience() {
   const [sessionReady, setSessionReady] = useState(false);
   const [hasSavedSession, setHasSavedSession] = useState(false);
   const human = game.players[0];
+  const arrival = useCharlestonArrival(sessionReady && started && !dealing ? { id: game.id, sequence: game.eventSequence, events: game.events, rack: human.rack } : null);
   const celebration = useCelebration(sessionReady && started && !dealing ? { id: game.id, sequence: game.eventSequence, events: game.events, viewerId: human.id, rack: human.rack, players: game.players } : null);
   const orderedRack = useMemo(() => {
     const order = normalizeTileOrder(rackOrder, human.rack);
@@ -315,7 +319,7 @@ export function GameExperience() {
       : { type: 'PASS_TILES' as const, tileIds: selected, blindCount };
     const result = applyGameAction(game, 'human', action);
     if (!result.ok) return setNotice(result.violation.message);
-    if (selected.length || blindCount) moveFeedback.celebrate('pass', human.rack.filter(tile => selected.includes(tile.id)));
+    if (selected.length || blindCount) moveFeedback.celebrate('pass', human.rack.filter(tile => selected.includes(tile.id)), passDirection(game.charlestonPassIndex, game.charlestonCourtesy));
     const next = advanceCharlestonBots(result.state);
     setGame(next);
     resetSelection();
@@ -472,7 +476,7 @@ export function GameExperience() {
         <CelebrationLayer celebration={celebration} />
         <header><span className="brand">The Mahjong Room</span><span>Game review</span></header>
         <section className="review-hero"><p className="kicker">Game {gameNumber} complete</p><h1>{game.winnerId === 'human' ? 'Mahjong—beautifully played.' : game.winnerId ? `${game.players.find((player) => player.id === game.winnerId)?.name} called Mahjong.` : 'The wall is complete.'}</h1><p>{gameReview.summary}</p></section>
-        <TableReveal game={game} />
+        <TableReveal game={game} waiting={celebration?.kind === 'mahjong'} />
         <section className="review-grid">
           {gameReview.cards.map((card) => <article key={card.id}><span className={`review-icon ${card.tone === 'strong' ? '' : 'coral'}`}>{card.tone === 'strong' ? '✓' : '↗'}</span><p className="kicker">{card.eyebrow}</p><h2>{card.title}</h2><p>{card.body}</p></article>)}
           <article className="skill-card"><p className="kicker">Skills practiced</p>{gameReview.skills.map(({ name, score }) => <div className="skill" key={name}><span>{name}</span><i><b style={{ width: `${score}%` }} /></i></div>)}</article>
@@ -499,6 +503,7 @@ export function GameExperience() {
         </TableSurface>
         <RackPanel className="player-area play-workspace">
         <MoveFeedback feedback={moveFeedback.feedback} />
+        {arrival ? <span className="charleston-receipt" role="status">✦ {arrival.tileIds.length} new {arrival.tileIds.length === 1 ? 'tile' : 'tiles'}</span> : null}
         <TablePrompt title={actionTitle} detail={respondingToDiscard && game.callWindow ? `${tileLabel(game.callWindow.discard)} is available. Select a legal set to call, or pass.` : notice || (game.phase === 'charleston' && !game.charlestonAwaitingDecision ? `${stageTitle} · Tap tiles, then pass. Jokers stay with you.` : needsDraw ? 'Take a tile from the wall to begin your turn.' : canDiscard ? 'Tap a tile, then choose Discard tile.' : stageTitle)} active={game.phase === 'charleston' || respondingToDiscard || needsDraw || canDiscard}>
           {game.phase === 'playing' && deadHand.dead ? <span className="table-dead-hand" title={deadHand.message}>Dead hand</span> : null}
         </TablePrompt>
@@ -554,7 +559,7 @@ export function GameExperience() {
                 const cannotPassJoker = game.phase === 'charleston' && tile.type.kind === 'joker';
                 return <SortableRackItem id={tile.id} index={index} className="tile-slot" key={tile.id}>
                   {({ isDragging, handleRef }) => <>
-                    <button ref={handleRef} data-drag-handle className={`tile ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${cannotPassJoker ? 'cannot-pass' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}${cannotPassJoker ? ', cannot be passed' : ''}. Hold and drag to reorder or use Alt and arrow keys.`} aria-pressed={selected.includes(tile.id)} aria-disabled={cannotPassJoker} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); nudgeTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); nudgeTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; if (cannotPassJoker) setNotice('Jokers may be rearranged, but they cannot be passed during the Charleston.'); else toggleTile(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
+                    <button ref={handleRef} data-drag-handle style={arrival?.tileIds.includes(tile.id) ? { '--arrival-delay': `${arrival.tileIds.indexOf(tile.id) * 100}ms` } as CSSProperties : undefined} className={`tile ${arrival?.tileIds.includes(tile.id) ? `rack-incoming rack-incoming-${arrival.direction}` : ''} ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${cannotPassJoker ? 'cannot-pass' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}${cannotPassJoker ? ', cannot be passed' : ''}. Hold and drag to reorder or use Alt and arrow keys.`} aria-pressed={selected.includes(tile.id)} aria-disabled={cannotPassJoker} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); nudgeTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); nudgeTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; if (cannotPassJoker) setNotice('Jokers may be rearranged, but they cannot be passed during the Charleston.'); else toggleTile(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
                   </>}
                 </SortableRackItem>;
               })}

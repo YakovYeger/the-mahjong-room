@@ -92,3 +92,39 @@ html[data-motion="reduce"] :is(.move-feedback,.move-flight-layer,.win-flourish) 
 .celebration-still .celebration-emblem,.celebration-still .celebration-stars { display: none; }
 @media(prefers-reduced-motion:reduce) { .celebration-effects { display: none; } }
 html[data-motion="reduce"] .celebration-effects { display: none; }
+
+.charleston-receipt { position: absolute; top: -24px; left: 50%; z-index: 9; translate: -50% 0; border: 1px solid #d9bc76; border-radius: 24px; background: #173d32f5; color: #fff1c4; padding: 7px 14px; font: 600 .75rem/1.3 Arial,sans-serif; white-space: nowrap; pointer-events: none; animation: arrival-receipt 1.8s ease both; }
+@media(prefers-reduced-motion:no-preference) {
+ .shared-table-page.unified-game .play-workspace :is(.tile,.cloud-tile).rack-incoming { animation: charleston-arrive .7s cubic-bezier(.2,1.25,.35,1) calc(.24s + var(--arrival-delay,0ms)) both; }
+ .rack-incoming-right { --arrival-x: -80px; --arrival-y: -45px; --arrival-turn: -12deg; }
+ .rack-incoming-left { --arrival-x: 80px; --arrival-y: -45px; --arrival-turn: 12deg; }
+ .rack-incoming-across { --arrival-x: 0px; --arrival-y: -100px; --arrival-turn: -4deg; }
+}
+@keyframes charleston-arrive { 0% { opacity: 0; translate: var(--arrival-x) var(--arrival-y); rotate: var(--arrival-turn); scale: .75; } 65% { opacity: 1; translate: 0 3px; rotate: 1deg; scale: 1.04; box-shadow: 0 0 18px #efd18b77; } 100% { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; } }
+@keyframes arrival-receipt { 0% { opacity: 0; } 20%,78% { opacity: 1; } 100% { opacity: 0; } }
+.winning-reveal { margin: 16px 0 22px; padding: clamp(12px,3vw,22px); border: 1px solid #ccb16f; border-radius: 18px; background: linear-gradient(130deg,#fff9e9,#f2ead5); color: #173e34; overflow: hidden; }
+.winning-reveal-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 18px; }
+.winning-reveal .winning-reveal-heading h3 { font: 600 clamp(1.2rem,4vw,1.7rem)/1.2 Georgia,serif; margin: 5px 0 0; }
+.winning-reveal .winning-reveal-heading .kicker { font-size: .625rem; color: #74613d; margin: 0; }
+.winning-reveal-heading button { flex-shrink: 0; color: #365b4c; }
+.winning-reveal-heading svg { width: 20px; height: 20px; }
+.winning-reveal-groups { display: flex; flex-wrap: wrap; align-items: end; gap: 18px 12px; }
+.winning-reveal-group { position: relative; min-width: 0; border-radius: 9px; padding: 5px 4px 7px; background: #e6dfcd80; }
+.winning-reveal-tiles { display: flex; gap: 2px; }
+.winning-reveal-tile { display: block; width: clamp(27px,7.5vw,42px); aspect-ratio: 2 / 3; border: 1px solid #c7b99a; border-bottom: 4px solid #b5a27b; border-radius: 5px; padding: 2px; background: #fffaf0; box-shadow: 0 2px 4px #23453719; }
+.winning-reveal-tile .tile-face { width: 100%; height: 100%; }
+.winning-reveal-tile .tile-face > strong { font-size: 8px; }
+.winning-reveal-tile .tile-face > small { font-size: 5px; }
+.winning-reveal-label { display: block; margin-top: 7px; text-align: center; font: 600 .625rem/1.3 Arial,sans-serif; text-transform: capitalize; color: #5f624e; }
+.winning-reveal .winning-reveal-caption { margin: 16px 0 0; color: #686249; font: .75rem/1.4 Arial,sans-serif; }
+.winning-reveal-caption span { color: #a28031; margin-left: 5px; }
+@media(prefers-reduced-motion:no-preference) {
+ .winning-reveal-playing .winning-reveal-tile { animation: winning-tile-settle .65s cubic-bezier(.2,1.2,.4,1) var(--reveal-tile-delay) both; }
+ .winning-reveal-playing .winning-reveal-group { animation: winning-group-glow 1.1s ease calc(var(--group-delay) + .35s) both; }
+}
+@keyframes winning-tile-settle { from { opacity: .3; translate: -20px 15px; rotate: -8deg; scale: .9; } 65% { opacity: 1; translate: 0 -2px; rotate: 1deg; scale: 1.02; } to { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; } }
+@keyframes winning-group-glow { 0%,100% { box-shadow: 0 0 0 1px #c8a14b00; background: #e6dfcd80; } 35% { box-shadow: 0 0 0 2px #c8a14b99,0 0 24px #e8c87566; background: #f5df9e; } }
+html[data-motion="reduce"] :is(.rack-incoming,.charleston-receipt,.winning-reveal-tile,.winning-reveal-group),.winning-reveal-still :is(.winning-reveal-tile,.winning-reveal-group) { animation: none !important; }
+.winning-reveal-heading .winning-reveal-replay { min-width: 44px; min-height: 44px; width: 44px; padding: 10px; }
+.winning-reveal-details > summary { min-height: 44px; padding: 12px 0; cursor: pointer; font: 600 .8rem/1.5 Arial,sans-serif; color: #365b4c; }
+.play-workspace:has(.charleston-receipt) .move-feedback-pass :is(.move-reward,.move-sparkles) { display: none; }

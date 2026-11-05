@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { createTablePreview, type TablePreviewState } from '../../src/table/design-fixtures';
 import { tileLabel } from '../../src/game/tiles';
 import { DiscardPool, RackPanel, TableHeader, TablePrompt, TableSurface } from '../../src/table/table-surface';
+import { WinningHandReveal } from '../../src/table/winning-hand-reveal';
 import { HandCheck } from '../../src/table/card-companion';
 import { getCardProvider } from '../../src/game/cards';
 import { createWall } from '../../src/game/tiles';
@@ -42,7 +43,7 @@ export default function TablePreview() {
         <span>Sample tiles · Read-only · No saved game changes</span>
       </nav>
     <section className="game-table" aria-label="Read-only table design preview">
-      {review ? <HandCheck cardId="photo-2025" rack={winningRack} exposures={[]} storageKey="design-preview-winning" /> : <><TableSurface players={game.players} viewerId={viewer.id} activePlayerIds={[game.players[game.turnIndex].id]} wallCount={game.wall.length} discardCount={game.discards.length}>
+      {review ? <div><WinningHandReveal rack={winningRack} exposures={[]} cardId="photo-2025" /><HandCheck cardId="photo-2025" rack={winningRack} exposures={[]} storageKey="design-preview-winning" /></div> : <><TableSurface players={game.players} viewerId={viewer.id} activePlayerIds={[game.players[game.turnIndex].id]} wallCount={game.wall.length} discardCount={game.discards.length}>
         <DiscardPool tiles={game.discards} latestTileId={game.callWindow?.discard.id} />
       </TableSurface>
       <RackPanel className="play-workspace">
