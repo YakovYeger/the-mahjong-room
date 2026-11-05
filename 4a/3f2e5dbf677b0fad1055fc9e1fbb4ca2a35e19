@@ -1,0 +1,44 @@
+src/table/motion.css
+  s_8b11fec7c205a1::t_08b7ac1ddc2b21 95-130
+src/table/winning-hand-reveal.tsx
+  s_8b11fec7c205a1::t_08b7ac1ddc2b21 26,29,31,39
+  s_8b11fec7c205a1::t_38322f4b4edf0d 1-25,27-28,30,32-38,40-49
+app/game-experience.tsx
+  s_8b11fec7c205a1::t_38322f4b4edf0d 17-18,174,183,213,322,479
+  s_8b11fec7c205a1::t_08b7ac1ddc2b21 184,506
+  s_8b11fec7c205a1::t_fe69d49d76dd96 14,562
+app/table-preview/table-preview.tsx
+  s_8b11fec7c205a1::t_588681fc1e9cda 8,46
+app/games/[id]/page.tsx
+  s_8b11fec7c205a1::t_08b7ac1ddc2b21 290
+  s_8b11fec7c205a1::t_38322f4b4edf0d 30-31,55,112
+  s_8b11fec7c205a1::t_dd3d5447256f42 7,228-238,316
+src/table/move-feedback.tsx
+  s_8b11fec7c205a1::t_38322f4b4edf0d 7,32-35,57-58
+src/table/charleston-motion.ts
+  s_8b11fec7c205a1::t_38322f4b4edf0d 1-37
+tests/winning-hand-reveal.test.ts
+  s_8b11fec7c205a1::t_383e33b24ccc02 28
+  s_8b11fec7c205a1::t_6319b9f0200aa7 43
+  s_8b11fec7c205a1::t_d5a3f770d4a4c7 1-27,29-42,44-51
+tests/charleston-motion.test.ts
+  s_8b11fec7c205a1::t_9ea36200829b3e 1-33
+tests/move-feedback.test.ts
+  s_8b11fec7c205a1::t_546c0d396456d9 55-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4a3f2e5dbf677b0fad1055fc9e1fbb4ca2a35e19",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
