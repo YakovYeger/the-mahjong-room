@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { captureMove, moveCue, useMoveFeedback } from '../src/table/move-feedback';
+import { captureJokerExchange, captureMove, moveCue, useMoveFeedback } from '../src/table/move-feedback';
 import type { Tile } from '../src/game/types';
 
 const preferences = vi.hoisted(() => ({ reducedMotion: false }));
@@ -63,4 +63,19 @@ it('sends Charleston tiles toward the correct player, rather than the discard pi
     expect(captureMove('pass', [tile], direction).flights[0]).toMatchObject({ dx: x - 40, dy: -442 });
     seat.remove();
   }
+});
+
+it('captures a two-way Joker trade using only a known rack tile and a public target', () => {
+  const action = { type: 'EXCHANGE_JOKER' as const, rackTileId: tile.id, jokerTileId: 'public-joker', exposureId: 'set', exposureOwnerId: 'other' };
+  expect(captureJokerExchange(action, [tile]).flights).toEqual([]);
+  const slot = document.createElement('div'); slot.dataset.sortableId = tile.id;
+  const button = document.createElement('button'); slot.appendChild(button); document.body.appendChild(slot);
+  const target = document.createElement('span'); target.dataset.publicTileId = action.jokerTileId; document.body.appendChild(target);
+  button.getBoundingClientRect = () => new DOMRect(40, 500, 48, 72);
+  target.getBoundingClientRect = () => new DOMRect(200, 150, 32, 48);
+  const receipt = captureJokerExchange(action, [tile]);
+  expect(receipt.returningId).toBe('public-joker');
+  expect(receipt.flights[0]).toMatchObject({ tile, dx: 152, dy: -362 });
+  expect(receipt.flights[1]).toMatchObject({ tile: { id: 'public-joker', type: { kind: 'joker' } }, dx: -152, dy: 362, returning: true });
+  expect(captureJokerExchange({ ...action, rackTileId: 'hidden' }, [tile]).flights).toEqual([]);
 });

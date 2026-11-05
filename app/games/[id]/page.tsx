@@ -27,10 +27,11 @@ import { CardCompanion, HandCheck } from '../../../src/table/card-companion';
 import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../../../src/table/table-surface';
 import { getSnapshotCoachContext } from '../../../src/coach/analyze';
 import { useCoach } from '../../../src/coach/use-coach';
+import { useTurnCue } from '../../../src/table/turn-cue';
 import { WinningHandReveal } from '../../../src/table/winning-hand-reveal';
 import { passDirection, useCharlestonArrival } from '../../../src/table/charleston-motion';
 import { CelebrationLayer, useCelebration } from '../../../src/table/celebration';
-import { captureMove, moveCue, MoveFeedback, useMoveFeedback } from '../../../src/table/move-feedback';
+import { captureJokerExchange, captureMove, moveCue, MoveFeedback, useMoveFeedback } from '../../../src/table/move-feedback';
 import { OrganizeRackButton } from '../../../src/table/organize-rack-button';
 import { TableHelp } from '../../../src/table/table-help';
 import { coachHighlightLabel, coachHighlightMark } from '../../../src/coach/highlights';
@@ -54,6 +55,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
   const snapshot = cloud.data?.snapshot ?? null;
   const arrival = useCharlestonArrival(snapshot ? { id: gameId, sequence: snapshot.eventSequence, events: snapshot.recentEvents, rack: snapshot.privateState.rack } : null);
   const celebration = useCelebration(snapshot ? { id: gameId, sequence: snapshot.eventSequence, events: snapshot.recentEvents, viewerId: snapshot.privateState.playerId, rack: snapshot.privateState.rack, players: snapshot.publicState.players } : null);
+  const turnCue = useTurnCue(snapshot ? { id: gameId, turn: snapshot.status === 'active' && snapshot.publicState.phase === 'playing' && ['draw', 'discard'].includes(snapshot.privateState.pendingAction) ? snapshot.publicState.turnCount : null } : null);
   const room = cloud.data?.room ?? null;
   const busy = cloud.busy;
   const online = cloud.online;
@@ -109,7 +111,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
     if (!snapshot || busy) return;
     setMessage('Saving move…');
     const cue = moveCue(action, snapshot.privateState.rack);
-    const receipt = cue ? captureMove(cue.kind, cue.tiles, passDirection(snapshot.publicState.charlestonPassIndex, snapshot.publicState.charlestonCourtesy)) : null;
+    const receipt = action.type === 'EXCHANGE_JOKER' ? captureJokerExchange(action, snapshot.privateState.rack) : cue ? captureMove(cue.kind, cue.tiles, passDirection(snapshot.publicState.charlestonPassIndex, snapshot.publicState.charlestonCourtesy)) : null;
     try {
       await cloud.submit(action);
       moveFeedback.play(receipt);
@@ -287,6 +289,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
       </TableSurface>
       <RackPanel className="cloud-rack-section play-workspace">
       <MoveFeedback feedback={moveFeedback.feedback} />
+      {turnCue !== null ? <span key={turnCue} className="rack-turn-ripple" aria-hidden="true" /> : null}
       {arrival ? <span className="charleston-receipt" role="status">✦ {arrival.tileIds.length} new {arrival.tileIds.length === 1 ? 'tile' : 'tiles'}</span> : null}
       <TablePrompt title={snapshot.status === 'abandoned' ? 'Table ended' : snapshot.status === 'completed' ? 'Game complete' : snapshot.status === 'paused' ? 'Table paused' : pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : pending === 'charleston_pass' ? 'Choose 3 tiles to pass' : pending === 'courtesy_pass' ? 'An optional exchange' : pending === 'charleston_decision' ? 'Keep passing?' : pending === 'draw' ? 'Draw a tile' : pending === 'discard' ? 'Choose a discard' : 'Call or pass?'} detail={snapshot.status === 'abandoned' ? 'No active decisions' : pending === 'charleston_pass' ? `${selected.length}/3 selected · Jokers stay with you` : pending === 'courtesy_pass' ? 'Choose zero to three tiles for courtesy passing' : pending === 'charleston_decision' ? 'Continue the second Charleston or move to courtesy passing' : pending === 'discard_response' ? 'Call the latest discard, declare Mahjong, or pass' : pending === 'draw' ? 'Draw a tile from the wall' : pending === 'discard' ? 'Choose one tile to discard' : pending === 'wait' ? 'You can arrange your rack while you wait' : 'Review the final table'} active={!isTerminal && snapshot.status === 'active' && pending !== 'wait'}>
         {!isTerminal ? <TurnClock deadlineAt={snapshot.deadlineAt} charleston={snapshot.publicState.phase === 'charleston'} /> : null}
@@ -313,7 +316,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
 <div className="cloud-rack" role="group" aria-label="Your rack">{orderedRack.map((tile, index) => {
           return <SortableRackItem id={tile.id} index={index} disabled={busy || isTerminal} className="cloud-tile-slot" key={tile.id}>
             {({ isDragging, handleRef }) => <>
-              <button ref={handleRef} data-drag-handle style={arrival?.tileIds.includes(tile.id) ? { '--arrival-delay': `${arrival.tileIds.indexOf(tile.id) * 100}ms` } as CSSProperties : undefined} className={`cloud-tile ${arrival?.tileIds.includes(tile.id) ? `rack-incoming rack-incoming-${arrival.direction}` : ''} ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} disabled={busy || isTerminal} aria-describedby="cloud-rack-help" aria-pressed={selected.includes(tile.id)} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}. Hold and drag to reorder.`} title={tileLabel(tile)} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); moveTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); moveTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; toggle(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
+              <button ref={handleRef} data-drag-handle style={arrival?.tileIds.includes(tile.id) ? { '--arrival-delay': `${arrival.tileIds.indexOf(tile.id) * 100}ms` } as CSSProperties : undefined} className={`cloud-tile ${moveFeedback.feedback?.returningId === tile.id ? 'joker-return' : ''} ${arrival?.tileIds.includes(tile.id) ? `rack-incoming rack-incoming-${arrival.direction}` : ''} ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} disabled={busy || isTerminal} aria-describedby="cloud-rack-help" aria-pressed={selected.includes(tile.id)} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}. Hold and drag to reorder.`} title={tileLabel(tile)} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); moveTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); moveTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; toggle(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
             </>}
           </SortableRackItem>;
         })}</div>

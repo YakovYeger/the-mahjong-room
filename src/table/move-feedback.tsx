@@ -24,8 +24,8 @@ export function moveCue(action: GameAction, rack: Tile[]): { kind: MoveKind; til
   }
 }
 
-interface Flight { tile: Tile; x: number; y: number; dx: number; dy: number; width: number }
-interface MoveReceipt { kind: MoveKind; flights: Flight[] }
+interface Flight { tile: Tile; x: number; y: number; dx: number; dy: number; width: number; returning?: boolean }
+interface MoveReceipt { kind: MoveKind; flights: Flight[]; returningId?: string }
 interface Feedback extends MoveReceipt { id: number }
 
 /** Capture geometry before a confirmed move replaces the rack. No rules or timers are delayed. */
@@ -44,6 +44,20 @@ export function captureMove(kind: MoveKind, tiles: Tile[] = [], direction: PassD
       dy: target.y + target.height / 2 - rect.y - rect.height / 2 }];
   }) : [];
   return { kind, flights };
+}
+
+/** Geometry contains only a tile from your rack and the publicly exposed Joker. */
+export function captureJokerExchange(action: Extract<GameAction, { type: 'EXCHANGE_JOKER' }>, rack: Tile[]): MoveReceipt {
+  const natural = rack.find(tile => tile.id === action.rackTileId && tile.type.kind !== 'joker');
+  const source = Array.from(document.querySelectorAll<HTMLElement>('[data-sortable-id]')).find(element => element.dataset.sortableId === action.rackTileId)?.querySelector('button')?.getBoundingClientRect();
+  const target = Array.from(document.querySelectorAll<HTMLElement>('[data-public-tile-id]')).find(element => element.dataset.publicTileId === action.jokerTileId)?.getBoundingClientRect();
+  if (!natural || !source?.width || !target?.width) return { kind: 'exchange', flights: [] };
+  const dx = target.x + target.width / 2 - source.x - source.width / 2;
+  const dy = target.y + target.height / 2 - source.y - source.height / 2;
+  return { kind: 'exchange', returningId: action.jokerTileId, flights: [
+    { tile: natural, x: source.x, y: source.y, width: source.width, dx, dy },
+    { tile: { id: action.jokerTileId, type: { kind: 'joker' } }, x: target.x, y: target.y, width: target.width, dx: -dx, dy: -dy, returning: true },
+  ] };
 }
 
 export function useMoveFeedback() {
@@ -74,7 +88,7 @@ export function MoveFeedback({ feedback }: { feedback: Feedback | null }) {
       <span className="move-reward"><span>✦</span>{labels[feedback.kind]}</span>
       <span className="move-sparkles">{Array.from({ length: 6 }, (_, i) => <i key={i} style={{ '--spark-x': `${(i - 2.5) * 25}px`, '--spark-y': `${-20 - (i % 3) * 13}px`, '--spark-delay': `${i * 25}ms` } as CSSProperties} />)}</span>
     </div>
-    {feedback.flights.length ? createPortal(<div className="move-flight-layer" aria-hidden="true" key={feedback.id}>{feedback.flights.map((flight, i) => <span className={`move-flight move-flight-${feedback.kind}`} key={flight.tile.id} style={{ left: flight.x, top: flight.y, width: flight.width, '--flight-x': `${flight.dx}px`, '--flight-y': `${flight.dy}px`, '--flight-turn': `${(i - 1) * 7}deg`, animationDelay: `${i * 35}ms` } as CSSProperties}><TileFace tile={flight.tile} /></span>)}</div>, document.body) : null}
+    {feedback.flights.length ? createPortal(<div className="move-flight-layer" aria-hidden="true" key={feedback.id}>{feedback.flights.map((flight, i) => <span className={`move-flight move-flight-${feedback.kind}${flight.returning ? ' move-flight-returning' : ''}`} key={flight.tile.id} style={{ left: flight.x, top: flight.y, width: flight.width, '--flight-x': `${flight.dx}px`, '--flight-y': `${flight.dy}px`, '--flight-turn': `${(i - 1) * 7}deg`, animationDelay: `${i * 35}ms` } as CSSProperties}><TileFace tile={flight.tile} /></span>)}</div>, document.body) : null}
   </>;
 }
 

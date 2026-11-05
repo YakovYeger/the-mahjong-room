@@ -14,10 +14,11 @@ import { isSortable } from '@dnd-kit/react/sortable';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { getCoachVisibleContext } from '../src/coach/analyze';
 import { useCoach } from '../src/coach/use-coach';
+import { useTurnCue } from '../src/table/turn-cue';
 import { WinningHandReveal } from '../src/table/winning-hand-reveal';
 import { passDirection, useCharlestonArrival } from '../src/table/charleston-motion';
 import { CelebrationLayer, useCelebration } from '../src/table/celebration';
-import { MoveFeedback, useMoveFeedback } from '../src/table/move-feedback';
+import { captureJokerExchange, MoveFeedback, useMoveFeedback } from '../src/table/move-feedback';
 import { OrganizeRackButton } from '../src/table/organize-rack-button';
 import { TableHelp } from '../src/table/table-help';
 import { coachHighlightLabel, coachHighlightMark } from '../src/coach/highlights';
@@ -221,6 +222,7 @@ export function GameExperience() {
   const respondingToDiscard = game.phase === 'playing' && game.callWindow !== null
     && game.callWindow.discardedByPlayerId !== 'human' && !game.callWindow.responses.human;
   const needsDraw = game.phase === 'playing' && !game.callWindow && game.players[game.turnIndex].id === 'human' && totalPlayerTiles(human) === 13;
+  const turnCue = useTurnCue(sessionReady && started && !dealing ? { id: game.id, turn: game.phase === 'playing' && !game.callWindow && game.players[game.turnIndex].id === human.id ? game.turnCount : null } : null);
   const canDiscard = game.phase === 'playing' && !game.callWindow && game.players[game.turnIndex].id === 'human' && totalPlayerTiles(human) === 14;
   const legalCalls = respondingToDiscard && game.callWindow ? getLegalCallOptions(human.rack, human.exposures, game.callWindow.discard, getCardProvider(game.cardId).getHands()) : [];
   const chosenCall = legalCalls.find((option) => option.rackTileIds.length === selected.length
@@ -380,14 +382,16 @@ export function GameExperience() {
 
   const exchangeJoker = () => {
     if (!exchangeOption) return;
-    const result = applyGameAction(game, 'human', {
-      type: 'EXCHANGE_JOKER', exposureOwnerId: exchangeOption.owner.id, exposureId: exchangeOption.exposure.id,
+    const action = {
+      type: 'EXCHANGE_JOKER' as const, exposureOwnerId: exchangeOption.owner.id, exposureId: exchangeOption.exposure.id,
       rackTileId: exchangeOption.rackTile.id, jokerTileId: exchangeOption.joker.id,
-    });
+    };
+    const result = applyGameAction(game, 'human', action);
     if (!result.ok) return setNotice(result.violation.message);
+    const receipt = captureJokerExchange(action, human.rack);
     setGame(result.state);
     resetSelection();
-    moveFeedback.celebrate('exchange');
+    moveFeedback.play(receipt);
     setNotice(`You replaced ${tileLabel(exchangeOption.rackTile)} in ${exchangeOption.owner.name}'s exposure and brought the Joker into your rack.`);
   };
 
@@ -503,6 +507,7 @@ export function GameExperience() {
         </TableSurface>
         <RackPanel className="player-area play-workspace">
         <MoveFeedback feedback={moveFeedback.feedback} />
+        {turnCue !== null ? <span key={turnCue} className="rack-turn-ripple" aria-hidden="true" /> : null}
         {arrival ? <span className="charleston-receipt" role="status">✦ {arrival.tileIds.length} new {arrival.tileIds.length === 1 ? 'tile' : 'tiles'}</span> : null}
         <TablePrompt title={actionTitle} detail={respondingToDiscard && game.callWindow ? `${tileLabel(game.callWindow.discard)} is available. Select a legal set to call, or pass.` : notice || (game.phase === 'charleston' && !game.charlestonAwaitingDecision ? `${stageTitle} · Tap tiles, then pass. Jokers stay with you.` : needsDraw ? 'Take a tile from the wall to begin your turn.' : canDiscard ? 'Tap a tile, then choose Discard tile.' : stageTitle)} active={game.phase === 'charleston' || respondingToDiscard || needsDraw || canDiscard}>
           {game.phase === 'playing' && deadHand.dead ? <span className="table-dead-hand" title={deadHand.message}>Dead hand</span> : null}
@@ -559,7 +564,7 @@ export function GameExperience() {
                 const cannotPassJoker = game.phase === 'charleston' && tile.type.kind === 'joker';
                 return <SortableRackItem id={tile.id} index={index} className="tile-slot" key={tile.id}>
                   {({ isDragging, handleRef }) => <>
-                    <button ref={handleRef} data-drag-handle style={arrival?.tileIds.includes(tile.id) ? { '--arrival-delay': `${arrival.tileIds.indexOf(tile.id) * 100}ms` } as CSSProperties : undefined} className={`tile ${arrival?.tileIds.includes(tile.id) ? `rack-incoming rack-incoming-${arrival.direction}` : ''} ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${cannotPassJoker ? 'cannot-pass' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}${cannotPassJoker ? ', cannot be passed' : ''}. Hold and drag to reorder or use Alt and arrow keys.`} aria-pressed={selected.includes(tile.id)} aria-disabled={cannotPassJoker} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); nudgeTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); nudgeTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; if (cannotPassJoker) setNotice('Jokers may be rearranged, but they cannot be passed during the Charleston.'); else toggleTile(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
+                    <button ref={handleRef} data-drag-handle style={arrival?.tileIds.includes(tile.id) ? { '--arrival-delay': `${arrival.tileIds.indexOf(tile.id) * 100}ms` } as CSSProperties : undefined} className={`tile ${moveFeedback.feedback?.returningId === tile.id ? 'joker-return' : ''} ${arrival?.tileIds.includes(tile.id) ? `rack-incoming rack-incoming-${arrival.direction}` : ''} ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${cannotPassJoker ? 'cannot-pass' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}${cannotPassJoker ? ', cannot be passed' : ''}. Hold and drag to reorder or use Alt and arrow keys.`} aria-pressed={selected.includes(tile.id)} aria-disabled={cannotPassJoker} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); nudgeTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); nudgeTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; if (cannotPassJoker) setNotice('Jokers may be rearranged, but they cannot be passed during the Charleston.'); else toggleTile(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
                   </>}
                 </SortableRackItem>;
               })}
