@@ -1,0 +1,41 @@
+src/table/wall-meter.tsx
+  s_8b11fec7c205a1::t_c69b4221afa416 1-3,19-23,25-28
+tests/turn-cue.test.ts
+  s_8b11fec7c205a1::t_ff654e7733de28 1-30
+app/game-experience.tsx
+  s_8b11fec7c205a1::t_c69b4221afa416 17,21,225,385-386,388-389,510,567
+  s_8b11fec7c205a1::t_1f1cc2b7c74f03 391,394
+src/table/turn-cue.ts
+  s_8b11fec7c205a1::t_c69b4221afa416 1-17
+app/games/[id]/page.tsx
+  s_8b11fec7c205a1::t_c69b4221afa416 30,34,58,114,292,319
+src/table/motion.css
+  s_8b11fec7c205a1::t_c69b4221afa416 131-150
+src/table/table-surface.tsx
+  s_8b11fec7c205a1::t_c69b4221afa416 46
+tests/move-feedback.test.ts
+  s_8b11fec7c205a1::t_ff654e7733de28 4,67-80
+  s_8b11fec7c205a1::t_d2502cf249ea58 81
+src/table/move-feedback.tsx
+  s_8b11fec7c205a1::t_c69b4221afa416 27-28,49-62,91
+app/moment-preview/page.tsx
+  s_8b11fec7c205a1::t_4987a46c07ed3f 1-6
+app/moment-preview/preview.tsx
+  s_8b11fec7c205a1::t_227163801b2c34 1-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b39b1c94aad68a92325eb65057b7f6c7024decd7",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
