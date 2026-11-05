@@ -1,0 +1,35 @@
+app/game-experience.tsx
+  s_8b11fec7c205a1::t_83aa60cb83b21d 17,189,340,359,385,394,472,498,503,564
+  s_8b11fec7c205a1::t_281fdb26ee2a1a 316
+src/game/sortable-rack-item.tsx
+  s_8b11fec7c205a1::t_a9267fc151824f 3,22
+app/layout.tsx
+  s_8b11fec7c205a1::t_a9267fc151824f 11
+src/table/table-surface.tsx
+  s_8b11fec7c205a1::t_a9267fc151824f 52
+src/table/motion.css
+  s_8b11fec7c205a1::t_a9267fc151824f 1-62
+app/games/[id]/page.tsx
+  s_8b11fec7c205a1::t_83aa60cb83b21d 30,49,106-107,110,216,274,282,311
+tests/move-feedback.test.ts
+  s_8b11fec7c205a1::t_0e5a71df6052b9 21-22
+  s_8b11fec7c205a1::t_a9267fc151824f 1-20,23-54
+src/table/move-feedback.tsx
+  s_8b11fec7c205a1::t_83aa60cb83b21d 1-82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2eb6f89be9c263b0a05372f8d3e93467b0b4596f",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
