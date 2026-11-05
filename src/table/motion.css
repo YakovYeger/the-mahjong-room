@@ -60,3 +60,35 @@
 @keyframes win-petal { 0% { opacity: 0; transform: translate(0,0) scale(.3); } 18% { opacity: 1; } 75% { opacity: .8; } 100% { opacity: 0; transform: translate(var(--petal-x),var(--petal-y)) rotate(var(--petal-turn)) scale(.5); } }
 html[data-motion="reduce"] :is(.move-feedback,.move-flight-layer,.win-flourish) { display: none; }
 @media(prefers-reduced-motion:reduce) { .move-feedback,.move-flight-layer,.win-flourish { display: none; } }
+
+/* Rewards sit above the table without intercepting a single tap. */
+.celebration { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; display: grid; place-items: center; font-family: Arial,sans-serif; }
+.celebration-mahjong { background: radial-gradient(ellipse at center,#123b3277,#061e19bb); animation: finale-veil 5.6s ease both; }
+.celebration-card { position: relative; text-align: center; color: #fff4d2; width: min(90vw,600px); padding: 28px 18px; text-shadow: 0 3px 20px #082b24; animation: reward-arrive .7s cubic-bezier(.16,1.35,.3,1) both; }
+.celebration-card h2 { font: 700 clamp(3.4rem,13vw,7rem)/1.05 Georgia,serif; color: #ffe6a0; margin: 8px 0 16px; letter-spacing: -.05em; text-shadow: 0 3px 0 #9e6b32,0 8px 35px #f4c96355; }
+.celebration-card p { font-size: clamp(.9rem,3vw,1.1rem); margin: 0; line-height: 1.5; }
+.celebration-card .celebration-eyebrow { text-transform: uppercase; letter-spacing: .22em; font-size: .68rem; font-weight: 700; }
+.celebration-emblem { display: grid; place-items: center; margin: 0 auto 24px; width: 72px; height: 94px; border: 2px solid #e2c78b; border-bottom: 8px solid #b4a17a; border-radius: 11px; color: #247153; background: #fff8e8; font: 54px Georgia,serif; box-shadow: 0 0 65px #f4ce7a66,0 12px 30px #001e1980; rotate: -8deg; }
+.celebration-stars { display: block; margin-top: 25px; color: #efd18b; letter-spacing: 14px; }
+.celebration-call,.celebration-joker { align-items: start; padding-top: max(88px,14dvh); animation: small-reward-away 2.8s ease both; }
+.celebration-call .celebration-card,.celebration-joker .celebration-card { width: min(88vw,360px); border: 1px solid #e5c67f; border-radius: 24px; padding: 20px; background: linear-gradient(145deg,#245645f7,#102f28f7); box-shadow: 0 15px 50px #001c1966; }
+.celebration-call h2,.celebration-joker h2 { font-size: clamp(2rem,8vw,3rem); text-transform: capitalize; margin: 5px 0 10px; }
+.celebration-call .celebration-emblem { width: auto; height: auto; border: 0; background: none; box-shadow: none; margin-bottom: 10px; color: #ffdc82; font-size: 32px; }
+.celebration-joker .celebration-emblem { width: 54px; height: 76px; padding: 4px; margin-top: -50px; margin-bottom: 18px; rotate: 8deg; }
+.celebration-emblem .tile-face { width: 100%; height: 100%; }
+.celebration-call .celebration-stars,.celebration-joker .celebration-stars { margin-top: 12px; font-size: .75rem; }
+.celebration-effects { position: absolute; inset: 0; }
+.firework { position: absolute; }
+.firework i { position: absolute; width: 5px; height: 5px; background: var(--ray-color); border-radius: 50%; box-shadow: 0 0 8px var(--ray-color); opacity: 0; animation: firework-bloom 1.7s cubic-bezier(.12,.65,.3,1) var(--burst-delay) both; }
+.celebration-confetti { position: absolute; top: -20px; width: 7px; height: 13px; border-radius: 2px; background: var(--confetti-color); opacity: 0; animation: confetti-fall 4s ease-in var(--fall-delay) both; }
+@keyframes firework-bloom { 0% { opacity: 0; transform: scale(.2); } 10% { opacity: 1; } 60% { opacity: .9; } 100% { opacity: 0; transform: translate(var(--ray-x),var(--ray-y)) scale(.15); } }
+@keyframes confetti-fall { 0% { opacity: 0; transform: translateY(-20px) rotate(0); } 10%,75% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--drift),105dvh) rotate(650deg); } }
+@keyframes reward-arrive { from { opacity: 0; transform: translateY(32px) scale(.65) rotate(-4deg); } to { opacity: 1; transform: translateY(0) scale(1) rotate(0); } }
+@keyframes finale-veil { 0% { opacity: 0; } 10%,82% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes small-reward-away { 0%,80% { opacity: 1; } 100% { opacity: 0; } }
+.celebration-still { animation: none; background: none; align-items: start; padding-top: 85px; }
+.celebration-still .celebration-card { animation: none; background: #173e34; border: 1px solid #e2c78b; border-radius: 20px; width: min(90vw,420px); }
+.celebration-still h2 { font-size: 2.5rem; }
+.celebration-still .celebration-emblem,.celebration-still .celebration-stars { display: none; }
+@media(prefers-reduced-motion:reduce) { .celebration-effects { display: none; } }
+html[data-motion="reduce"] .celebration-effects { display: none; }

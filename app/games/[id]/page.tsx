@@ -27,7 +27,8 @@ import { CardCompanion, HandCheck } from '../../../src/table/card-companion';
 import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../../../src/table/table-surface';
 import { getSnapshotCoachContext } from '../../../src/coach/analyze';
 import { useCoach } from '../../../src/coach/use-coach';
-import { captureMove, moveCue, MoveFeedback, useMoveFeedback, WinCelebration } from '../../../src/table/move-feedback';
+import { CelebrationLayer, useCelebration } from '../../../src/table/celebration';
+import { captureMove, moveCue, MoveFeedback, useMoveFeedback } from '../../../src/table/move-feedback';
 import { OrganizeRackButton } from '../../../src/table/organize-rack-button';
 import { TableHelp } from '../../../src/table/table-help';
 import { coachHighlightLabel, coachHighlightMark } from '../../../src/coach/highlights';
@@ -49,6 +50,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
   const moveFeedback = useMoveFeedback();
   const cloud = useCloudTable(gameId);
   const snapshot = cloud.data?.snapshot ?? null;
+  const celebration = useCelebration(snapshot ? { id: gameId, sequence: snapshot.eventSequence, events: snapshot.recentEvents, viewerId: snapshot.privateState.playerId, rack: snapshot.privateState.rack, players: snapshot.publicState.players } : null);
   const room = cloud.data?.room ?? null;
   const busy = cloud.busy;
   const online = cloud.online;
@@ -200,6 +202,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
 
   return (
     <main className={`cloud-game-page shared-table-page unified-game ${cardOpen && !isTerminal ? 'card-is-open' : ''}`}>
+      <CelebrationLayer celebration={celebration} />
       <TableHeader brand={<a className="brand" href="/">The Mahjong Room</a>} context={snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}>
         <Menu label="Table" note={`${online} online`} items={[...(!isTerminal ? [{ label: 'Browse card', onClick: () => setCardOpen(true) }] : []), { label: 'Game preferences', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, ...(isHost && (snapshot.status === 'active' || snapshot.status === 'paused') ? [{ label: 'End game', onClick: () => setEndDialogOpen(true), disabled: busy }] : []), { label: 'Leave table', onClick: requestLeaveTable }]} />
       </TableHeader>
@@ -213,7 +216,6 @@ function CloudGameTable({ gameId }: { gameId: string }) {
       {resolutionNotice?.type === 'TURN_AUTO_RESOLVED' ? <div className="game-resolution" role="status">{snapshot.publicState.players.find((player) => player.id === resolutionNotice.playerId)?.name ?? 'A player'}&apos;s move timed out and was selected automatically.</div> : null}
       {resolutionNotice?.type === 'PLAYER_CONTROL_CHANGED' ? <div className="game-resolution" role="status">{snapshot.publicState.players.find((player) => player.id === resolutionNotice.playerId)?.name ?? 'A player'} did not return during the two-minute grace period. A bot now controls that seat.</div> : null}
       {isTerminal ? <section className={`game-over-banner ${winner ? 'has-winner' : ''}`} aria-labelledby="game-over-title">
-        {winner ? <WinCelebration /> : null}
         <div><p className="kicker">Game over</p><h2 id="game-over-title">{terminalOutcome}</h2><p>{snapshot.status === 'completed' ? winner ? 'The final table state is ready to review.' : 'All tiles were drawn; no winner was declared.' : 'No further moves can be made at this table.'}</p></div>
         <nav aria-label="Game over actions"><a className="game-review-link" href="#game-review">Review game</a><a className="game-list-link" href="/games">My games · Start another</a></nav>
       </section> : null}

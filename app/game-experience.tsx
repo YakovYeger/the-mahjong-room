@@ -14,7 +14,8 @@ import { isSortable } from '@dnd-kit/react/sortable';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getCoachVisibleContext } from '../src/coach/analyze';
 import { useCoach } from '../src/coach/use-coach';
-import { MoveFeedback, useMoveFeedback, WinCelebration } from '../src/table/move-feedback';
+import { CelebrationLayer, useCelebration } from '../src/table/celebration';
+import { MoveFeedback, useMoveFeedback } from '../src/table/move-feedback';
 import { OrganizeRackButton } from '../src/table/organize-rack-button';
 import { TableHelp } from '../src/table/table-help';
 import { coachHighlightLabel, coachHighlightMark } from '../src/coach/highlights';
@@ -206,6 +207,7 @@ export function GameExperience() {
   const [sessionReady, setSessionReady] = useState(false);
   const [hasSavedSession, setHasSavedSession] = useState(false);
   const human = game.players[0];
+  const celebration = useCelebration(sessionReady && started && !dealing ? { id: game.id, sequence: game.eventSequence, events: game.events, viewerId: human.id, rack: human.rack, players: game.players } : null);
   const orderedRack = useMemo(() => {
     const order = normalizeTileOrder(rackOrder, human.rack);
     const byId = new Map(human.rack.map((tile) => [tile.id, tile]));
@@ -356,7 +358,6 @@ export function GameExperience() {
     if (!chosenCall) return;
     const result = applyGameAction(game, 'human', { type: 'CALL_TILE', rackTileIds: selected });
     if (!result.ok) return setNotice(result.violation.message);
-    moveFeedback.celebrate('call');
     const next = advancePlayingBots(result.state);
     setGame(next);
     resetSelection();
@@ -468,8 +469,9 @@ export function GameExperience() {
   if (review) {
     return (
       <main className="review-page">
+        <CelebrationLayer celebration={celebration} />
         <header><span className="brand">The Mahjong Room</span><span>Game review</span></header>
-        <section className="review-hero">{game.winnerId === 'human' ? <WinCelebration /> : null}<p className="kicker">Game {gameNumber} complete</p><h1>{game.winnerId === 'human' ? 'Mahjong—beautifully played.' : game.winnerId ? `${game.players.find((player) => player.id === game.winnerId)?.name} called Mahjong.` : 'The wall is complete.'}</h1><p>{gameReview.summary}</p></section>
+        <section className="review-hero"><p className="kicker">Game {gameNumber} complete</p><h1>{game.winnerId === 'human' ? 'Mahjong—beautifully played.' : game.winnerId ? `${game.players.find((player) => player.id === game.winnerId)?.name} called Mahjong.` : 'The wall is complete.'}</h1><p>{gameReview.summary}</p></section>
         <TableReveal game={game} />
         <section className="review-grid">
           {gameReview.cards.map((card) => <article key={card.id}><span className={`review-icon ${card.tone === 'strong' ? '' : 'coral'}`}>{card.tone === 'strong' ? '✓' : '↗'}</span><p className="kicker">{card.eyebrow}</p><h2>{card.title}</h2><p>{card.body}</p></article>)}
@@ -487,6 +489,7 @@ export function GameExperience() {
 
   return (
     <main className={`shell game-shell shared-table-page unified-game ${cardOpen ? 'card-is-open' : ''}`}>
+      <CelebrationLayer celebration={celebration} />
       <TableHeader brand={<button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={`Practice · Game ${gameNumber}`}>
         <Menu label="Table" note="Saved on this device" items={[{ label: 'Browse card', onClick: () => setCardOpen(true) }, { label: 'Game preferences', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, { label: 'Save progress', href: '/account' }, ...(manualTurns >= 4 && canDiscard ? [{ label: 'Complete with coach', onClick: finishGame }] : []), { label: 'Leave table', onClick: () => setStarted(false) }]} />
       </TableHeader>
