@@ -79,9 +79,9 @@ html[data-motion="reduce"] :is(.move-feedback,.move-flight-layer,.win-flourish) 
 .celebration-call .celebration-stars,.celebration-joker .celebration-stars { margin-top: 12px; font-size: .75rem; }
 .celebration-effects { position: absolute; inset: 0; }
 .firework { position: absolute; }
-.firework i { position: absolute; width: 5px; height: 5px; background: var(--ray-color); border-radius: 50%; box-shadow: 0 0 8px var(--ray-color); opacity: 0; animation: firework-bloom 1.7s cubic-bezier(.12,.65,.3,1) var(--burst-delay) both; }
+.firework i { position: absolute; width: 6px; height: 6px; background: var(--ray-color); border-radius: 50%; box-shadow: 0 0 8px var(--ray-color); opacity: 0; animation: firework-bloom 1.7s cubic-bezier(.12,.65,.3,1) var(--burst-delay) both; }
 .celebration-confetti { position: absolute; top: -20px; width: 7px; height: 13px; border-radius: 2px; background: var(--confetti-color); opacity: 0; animation: confetti-fall 4s ease-in var(--fall-delay) both; }
-@keyframes firework-bloom { 0% { opacity: 0; transform: scale(.2); } 10% { opacity: 1; } 60% { opacity: .9; } 100% { opacity: 0; transform: translate(var(--ray-x),var(--ray-y)) scale(.15); } }
+@keyframes firework-bloom { 0% { opacity: 0; transform: translate(0,0) scale(.2); } 10% { opacity: 1; transform: translate(calc(var(--ray-x) * .15),calc(var(--ray-y) * .15)) scale(1.4); } 60% { opacity: .9; } 100% { opacity: 0; transform: translate(var(--ray-x),var(--ray-y)) scale(.15); } }
 @keyframes confetti-fall { 0% { opacity: 0; transform: translateY(-20px) rotate(0); } 10%,75% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--drift),105dvh) rotate(650deg); } }
 @keyframes reward-arrive { from { opacity: 0; transform: translateY(32px) scale(.65) rotate(-4deg); } to { opacity: 1; transform: translateY(0) scale(1) rotate(0); } }
 @keyframes finale-veil { 0% { opacity: 0; } 10%,82% { opacity: 1; } 100% { opacity: 0; } }
