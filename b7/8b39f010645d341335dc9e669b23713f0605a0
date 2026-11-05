@@ -1,0 +1,19 @@
+src/table/motion.css
+  s_8b11fec7c205a1::t_6d4939872175d9 82,84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b78b39f010645d341335dc9e669b23713f0605a0",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
