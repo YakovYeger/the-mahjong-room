@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { getCardProvider, type CardId } from '../game/cards';
+import { organizeRack } from '../game/rack-order';
 import { arrangeHand, cardTileKey } from '../game/training-card';
 import { createWall, tileLabel } from '../game/tiles';
 import type { Exposure, HandCandidate, HandDefinition, Tile } from '../game/types';
@@ -9,6 +10,7 @@ import { ReferenceHands } from './reference-hands';
 import { TrainingHands } from './training-hands';
 import { Dialog, DialogTitle, DialogDescription, DialogClose } from '../ui/dialog';
 import { Menu } from '../ui/menu';
+import { OrganizeRackButton } from './organize-rack-button';
 import { TileFace } from './tile-face';
 import { useFollowedHand } from '../coach/use-followed-hand';
 
@@ -48,7 +50,8 @@ function HandComparison({ hand, rack, exposures, final = false, highlightedGroup
   </div>;
 }
 
-export function CardCompanion({ cardId = 'training-card', rack, exposures, storageKey, onArrange, open, onOpenChange, candidates: supplied, highlightedGroupIds = [], blockedHandIds = [] }: { blockedHandIds?: string[]; highlightedGroupIds?: string[]; cardId?: CardId; rack: Tile[]; exposures: Exposure[]; storageKey: string; onArrange: (ids: string[]) => void; open: boolean; onOpenChange: (open: boolean) => void; candidates?: HandCandidate[] }) {
+export function CardCompanion({ cardId = 'training-card', rack, exposures, storageKey, onArrange, open, onOpenChange, candidates: supplied, highlightedGroupIds = [], blockedHandIds = [], compact = false }: { compact?: boolean; blockedHandIds?: string[]; highlightedGroupIds?: string[]; cardId?: CardId; rack: Tile[]; exposures: Exposure[]; storageKey: string; onArrange: (ids: string[]) => void; open: boolean; onOpenChange: (open: boolean) => void; candidates?: HandCandidate[] }) {
+  const [overview, setOverview] = useState(false);
   const candidates = useMemo(() => supplied ?? getCardProvider(cardId).analyzeCandidates([...rack, ...exposures.flatMap(exposure => exposure.tiles)], exposures), [supplied, cardId, rack, exposures]);
   const [followedId, follow] = useFollowedHand(storageKey, cardId);
   const hand = followedId ? handMaps[cardId].get(followedId) : undefined;
@@ -56,20 +59,24 @@ export function CardCompanion({ cardId = 'training-card', rack, exposures, stora
   const pick = (handId: string) => { follow(handId); onOpenChange(false); };
   const arrange = () => {
     if (!hand) return;
-    const layout = arrangeHand([...rack, ...exposures.flatMap(exposure => exposure.tiles)], exposures, hand);
-    const rackIds = new Set(rack.map(tile => tile.id));
-    onArrange([...layout.matchingTileIds, ...layout.extras.map(tile => tile.id)].filter(tileId => rackIds.has(tileId)));
+    onArrange(organizeRack(rack, exposures, hand));
+    if (compact) setOverview(false);
   };
   const followedLayout = hand ? arrangeHand([...rack, ...exposures.flatMap(exposure => exposure.tiles)], exposures, hand) : undefined;
   const suggestions = closest.length ? <div className="companion-suggestions" aria-label="Closest hands"><span>{blockedHandIds.length ? 'Closest available hands' : 'Closest hands'}</span>{closest.map(candidate => <button aria-pressed={followedId === candidate.handId} key={candidate.handId} onClick={() => pick(candidate.handId)}><span className="companion-choice-label">{candidate.name}<small className="companion-hand-kind">{handMaps[cardId].get(candidate.handId)?.exposure === 'concealed' ? 'Concealed · C' : 'Exposed allowed · X'}</small></span><b>{candidate.matchingTileIds.length}/14</b></button>)}</div> : <p>No available hand fits the current exposed sets and public natural tiles.</p>;
-  return <section className="card-companion" aria-label="Your card companion">
-    <div className="companion-heading"><div><p className="kicker">{hand ? 'Following this hand' : 'Find your direction'}</p><h3>{hand?.name ?? 'Your rack, meet your card.'}</h3></div>{hand ? <div className="companion-actions"><button onClick={arrange} aria-label="Arrange rack by this hand">Arrange rack</button><Menu label="Options" items={[{ label: 'Update suit / number fit', onClick: () => { const fit = candidates.find(candidate => candidate.name === hand.name); if (fit) follow(fit.handId); } }, { label: 'Unpin', onClick: () => follow(null) }]} note="Singles and pairs stay natural. ★ means Jokers allowed." /></div> : null}<button className="companion-browse" aria-expanded={open} onClick={() => onOpenChange(!open)}>{open ? 'Close card' : hand ? 'Change hand' : 'Browse card'} ↗</button></div>
+  const companion = <>
+    <div className="companion-heading"><div><p className="kicker">{hand ? 'Following this hand' : 'Find your direction'}</p><h3>{hand?.name ?? 'Your rack, meet your card.'}</h3></div>{hand ? <div className="companion-actions"><OrganizeRackButton onClick={arrange} label="Arrange rack by this hand" /><Menu label="Options" items={[{ label: 'Update suit / number fit', onClick: () => { const fit = candidates.find(candidate => candidate.name === hand.name); if (fit) follow(fit.handId); } }, { label: 'Unpin', onClick: () => follow(null) }]} note="Singles and pairs stay natural. ★ means Jokers allowed." /></div> : null}<button className="companion-browse" aria-expanded={open} onClick={() => onOpenChange(!open)}>{open ? 'Close card' : hand ? 'Change hand' : 'Browse card'} ↗</button></div>
     {hand ? <div className="companion-hand-rules" role="group" aria-label="Followed hand exposure requirement"><strong className={`companion-exposure-badge ${hand.exposure === 'concealed' ? 'companion-concealed' : ''}`}>{hand.exposure === 'concealed' ? 'Concealed · C' : 'Exposed allowed · X'}</strong><p>{hand.exposure === 'concealed' ? 'Keep this hand concealed. You may claim only the final tile for Mahjong.' : 'You may expose sets of three or more. Singles and pairs must stay natural.'}</p></div> : null}
     {hand ? <><div className="companion-pattern" aria-label="Followed card pattern">{hand.groups.map(group => <div className={highlightedGroupIds.includes(group.id) ? 'coach-pattern-focus' : undefined} key={group.id} aria-label={`${group.count} ${keyLabel(group.tileKey)}, ${group.kind}`}>{Array.from({ length: group.count }, (_, index) => <span className="comparison-tile pattern-tile" key={index}><TileFace tile={samples.get(group.tileKey)!} compact /></span>)}</div>)}</div><details className="companion-fit"><summary>{followedLayout?.matchingTileIds.length}/14 tiles fit · Check fit</summary><HandComparison highlightedGroupIds={highlightedGroupIds} hand={hand} rack={rack} exposures={exposures} /></details></> : <p className="companion-intro">Pin a pattern to see what fits and what is missing. Your rack stays yours to arrange.</p>}
     {suggestions}
-    <Dialog open={open} onOpenChange={onOpenChange} className="companion-drawer" label="Choose a hand to follow">
+  </>;
+  return <section className={compact ? 'card-companion-compact' : 'card-companion'} aria-label="Your card companion">
+    {compact ? <button className="table-help-button" onClick={() => setOverview(true)} aria-haspopup="dialog"><span aria-hidden="true">▤</span><span><strong>Your hand</strong>{' '}<small>{hand?.name ?? 'Find a pattern to follow'}</small></span><span aria-hidden="true">↗</span></button> : companion}
+    <Dialog open={open || overview} onOpenChange={next => { if (!next) { setOverview(false); onOpenChange(false); } }} className="companion-drawer" label={open ? 'Choose a hand to follow' : 'Your hand plan'}>
+      {open ? <>
       <header><div><p className="kicker">Choose your direction</p><DialogTitle>{cardId === 'photo-2025' ? 'Your 2025 Card' : 'Training Card'}</DialogTitle><DialogDescription>Tap a hand to pin its closest suit and number arrangement.</DialogDescription><div className="companion-card-legend"><span><b>C</b> Concealed</span><span><b>X</b> Exposed</span><span><b>★</b> Jokers allowed</span></div></div><DialogClose aria-label="Close card browser">×</DialogClose></header>
       {cardId === 'photo-2025' ? <ReferenceHands candidates={candidates} onFollow={pick} /> : <TrainingHands candidates={candidates} onFollow={pick} />}
+      </> : <><header><div><p className="kicker">One pattern at a time</p><DialogTitle>Your hand plan</DialogTitle><DialogDescription>Compare your rack, or choose a direction from the card.</DialogDescription></div><DialogClose aria-label="Close hand plan">×</DialogClose></header><div className="card-companion">{companion}</div></>}
     </Dialog>
   </section>;
 }

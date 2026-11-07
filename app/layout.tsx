@@ -7,6 +7,8 @@ import '../src/coach/coach.css';
 import '../src/accessibility/accessibility.css';
 import '../src/table/discards.css';
 import '../src/table/fullscreen.css';
+import '../src/table/cozy-table.css';
+import '../src/table/motion.css';
 import { AccessibilityProvider } from '../src/accessibility/provider';
 import { accessibilityBootstrap } from '../src/accessibility/preferences';
 

@@ -32,7 +32,8 @@ export function DiscardPool({ tiles, latestTileId, dropRef, dropActive = false, 
 
   return <div ref={dropRef} className={`table-discards${!tiles.length ? ' table-discards-empty' : ''}${dropActive ? ' table-discards-drop-active' : ''}`} role="region" aria-label={`Discard pool, ${tiles.length} visible tiles`}>
     <header><strong>Discards</strong><span>{tiles.length ? `${tiles.length} ${tiles.length === 1 ? 'tile' : 'tiles'}` : 'No discards yet'}</span></header>
-    {latest ? <div className={`table-latest-discard${claim ? ' table-claim-discard' : ''}`}><span>{claim ? 'Claim tile' : 'Latest discard'}</span><span className={`table-latest-tile${highlightedTileIds.includes(latest.id) ? ' coach-public-focus' : ''}`} aria-hidden="true"><TileFace tile={latest} /></span><strong>{tileLabel(latest)}</strong>{claim ? <small>Only this copy is current.</small> : null}</div> : null}
+    {!tiles.length ? <div className="table-opening"><span className="table-opening-flower" aria-hidden="true">✳</span><strong>Ready when you are.</strong></div> : null}
+    {latest ? <div className={`table-latest-discard${claim ? ' table-claim-discard' : ''}`}><span>{claim ? 'Claim tile' : 'Latest discard'}</span><span key={latest.id} className={`table-latest-tile${highlightedTileIds.includes(latest.id) ? ' coach-public-focus' : ''}`} aria-hidden="true"><TileFace tile={latest} /></span><strong>{tileLabel(latest)}</strong>{claim ? <small className="table-claim-note">Only this copy is current.</small> : null}</div> : null}
     {tiles.length ? <div className="table-discard-browser">
       {view === 'grouped' ? <ul role="list" className="table-discard-grid table-discard-groups" aria-label="Grouped discards, first seen order" aria-describedby={helpId} tabIndex={groups.length ? 0 : undefined}>
         {groups.map(group => {
@@ -49,7 +50,7 @@ export function DiscardPool({ tiles, latestTileId, dropRef, dropActive = false, 
         </li>)}
       </ol>}
     </div> : null}
-    {tiles.length ? <p id={helpId} className="table-discard-help">{view === 'grouped' ? `×2 = two discards, not a set.${claim ? ' Claim tile counted separately.' : ''} Scroll to inspect all.` : 'Oldest first. Scroll for earlier tiles. Claimed tiles leave this pool.'}</p> : null}
+    {tiles.length ? <p id={helpId} className="table-discard-help">{view === 'grouped' ? `×2 = two discards, not a set.${claim ? ' Claim tile counted separately.' : ''} Scroll to inspect all.` : 'Oldest first · Scroll for earlier tiles.'}</p> : null}
     {children}
   </div>;
 }

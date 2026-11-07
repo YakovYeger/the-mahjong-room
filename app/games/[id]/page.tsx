@@ -4,11 +4,12 @@ import { Menu } from '../../../src/ui/menu';
 
 /* eslint-disable @next/next/no-html-link-for-pages -- Native anchors avoid a confirmed next/link runtime failure in the Sites vinext deployment. */
 
-import { use, useEffect, useMemo, useRef, useState } from 'react';
+import { use, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { DragDropProvider, PointerSensor, useDroppable } from '@dnd-kit/react';
 import { PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable } from '@dnd-kit/react/sortable';
 import { moveTileId, normalizeTileOrder, tileLabel } from '../../../src/game/tiles';
+import { organizeRack } from '../../../src/game/rack-order';
 import { SortableRackItem } from '../../../src/game/sortable-rack-item';
 import { cardTileKey } from '../../../src/game/training-card';
 import type { GameAction, GameEvent } from '../../../src/game/types';
@@ -26,7 +27,13 @@ import { CardCompanion, HandCheck } from '../../../src/table/card-companion';
 import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../../../src/table/table-surface';
 import { getSnapshotCoachContext } from '../../../src/coach/analyze';
 import { useCoach } from '../../../src/coach/use-coach';
-import { CoachPanel } from '../../../src/coach/coach-panel';
+import { useTurnCue } from '../../../src/table/turn-cue';
+import { WinningHandReveal } from '../../../src/table/winning-hand-reveal';
+import { passDirection, useCharlestonArrival } from '../../../src/table/charleston-motion';
+import { CelebrationLayer, useCelebration } from '../../../src/table/celebration';
+import { captureJokerExchange, captureMove, moveCue, MoveFeedback, useMoveFeedback } from '../../../src/table/move-feedback';
+import { OrganizeRackButton } from '../../../src/table/organize-rack-button';
+import { TableHelp } from '../../../src/table/table-help';
 import { coachHighlightLabel, coachHighlightMark } from '../../../src/coach/highlights';
 
 
@@ -43,8 +50,12 @@ export default function CloudGamePage({ params }: { params: Promise<{ id: string
 
 function CloudGameTable({ gameId }: { gameId: string }) {
   const { openSettings } = useAccessibility();
+  const moveFeedback = useMoveFeedback();
   const cloud = useCloudTable(gameId);
   const snapshot = cloud.data?.snapshot ?? null;
+  const arrival = useCharlestonArrival(snapshot ? { id: gameId, sequence: snapshot.eventSequence, events: snapshot.recentEvents, rack: snapshot.privateState.rack } : null);
+  const celebration = useCelebration(snapshot ? { id: gameId, sequence: snapshot.eventSequence, events: snapshot.recentEvents, viewerId: snapshot.privateState.playerId, rack: snapshot.privateState.rack, players: snapshot.publicState.players } : null);
+  const turnCue = useTurnCue(snapshot ? { id: gameId, turn: snapshot.status === 'active' && snapshot.publicState.phase === 'playing' && ['draw', 'discard'].includes(snapshot.privateState.pendingAction) ? snapshot.publicState.turnCount : null } : null);
   const room = cloud.data?.room ?? null;
   const busy = cloud.busy;
   const online = cloud.online;
@@ -99,8 +110,11 @@ function CloudGameTable({ gameId }: { gameId: string }) {
   const act = async (action: GameAction) => {
     if (!snapshot || busy) return;
     setMessage('Saving move…');
+    const cue = moveCue(action, snapshot.privateState.rack);
+    const receipt = action.type === 'EXCHANGE_JOKER' ? captureJokerExchange(action, snapshot.privateState.rack) : cue ? captureMove(cue.kind, cue.tiles, passDirection(snapshot.publicState.charlestonPassIndex, snapshot.publicState.charlestonCourtesy)) : null;
     try {
       await cloud.submit(action);
+      moveFeedback.play(receipt);
       setSelected([]); setResolutionNotice(null); setMessage('Move saved.');
     } catch (error) { setMessage(error instanceof Error ? error.message : 'The move could not be saved.'); }
   };
@@ -165,6 +179,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
     tiles: player.revealedRack ?? (player.id === snapshot.privateState.playerId ? snapshot.privateState.rack : null),
   }));
   const isHost = Boolean(room && room.ownerId === room.players.find((player) => player.playerKey === snapshot.privateState.playerId)?.userId);
+  const followedHand = coach.followedId ? getCardProvider(snapshot.publicState.cardId).getHands().find(hand => hand.id === coach.followedId) : undefined;
   const orderedRack = (() => {
     const order = normalizeTileOrder(rackOrder, snapshot.privateState.rack);
     const byId = new Map(snapshot.privateState.rack.map((tile) => [tile.id, tile]));
@@ -192,9 +207,9 @@ function CloudGameTable({ gameId }: { gameId: string }) {
 
   return (
     <main className={`cloud-game-page shared-table-page unified-game ${cardOpen && !isTerminal ? 'card-is-open' : ''}`}>
+      <CelebrationLayer celebration={celebration} />
       <TableHeader brand={<a className="brand" href="/">The Mahjong Room</a>} context={snapshot.mode === 'live' ? 'Live table' : 'Time-based table'}>
-        {!isTerminal ? <button className="table-tool-button" aria-expanded={cardOpen} onClick={() => setCardOpen(open => !open)}>{snapshot.publicState.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button> : null}
-        <Menu label="Table" note={`${online} online`} items={[{ label: 'Game preferences', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, ...(isHost && (snapshot.status === 'active' || snapshot.status === 'paused') ? [{ label: 'End game', onClick: () => setEndDialogOpen(true), disabled: busy }] : []), { label: 'Leave table', onClick: requestLeaveTable }]} />
+        <Menu label="Table" note={`${online} online`} items={[...(!isTerminal ? [{ label: 'Browse card', onClick: () => setCardOpen(true) }] : []), { label: 'Game preferences', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, ...(isHost && (snapshot.status === 'active' || snapshot.status === 'paused') ? [{ label: 'End game', onClick: () => setEndDialogOpen(true), disabled: busy }] : []), { label: 'Leave table', onClick: requestLeaveTable }]} />
       </TableHeader>
       {endDialogOpen ? <EndGameDialog busy={busy} onCancel={() => setEndDialogOpen(false)} onConfirm={() => void endGameForEveryone()} /> : null}
       {leaveDialogOpen ? <dialog ref={leaveDialogRef} className="leave-dialog" aria-labelledby="leave-dialog-title" aria-describedby="leave-dialog-description" onCancel={(event) => { event.preventDefault(); setLeaveDialogOpen(false); }} onClick={(event) => { if (event.target === event.currentTarget) setLeaveDialogOpen(false); }}>
@@ -206,14 +221,23 @@ function CloudGameTable({ gameId }: { gameId: string }) {
       {resolutionNotice?.type === 'TURN_AUTO_RESOLVED' ? <div className="game-resolution" role="status">{snapshot.publicState.players.find((player) => player.id === resolutionNotice.playerId)?.name ?? 'A player'}&apos;s move timed out and was selected automatically.</div> : null}
       {resolutionNotice?.type === 'PLAYER_CONTROL_CHANGED' ? <div className="game-resolution" role="status">{snapshot.publicState.players.find((player) => player.id === resolutionNotice.playerId)?.name ?? 'A player'} did not return during the two-minute grace period. A bot now controls that seat.</div> : null}
       {isTerminal ? <section className={`game-over-banner ${winner ? 'has-winner' : ''}`} aria-labelledby="game-over-title">
-        {winner ? <div className="mahjong-celebration" aria-hidden="true"><i /><i /><i /></div> : null}
         <div><p className="kicker">Game over</p><h2 id="game-over-title">{terminalOutcome}</h2><p>{snapshot.status === 'completed' ? winner ? 'The final table state is ready to review.' : 'All tiles were drawn; no winner was declared.' : 'No further moves can be made at this table.'}</p></div>
         <nav aria-label="Game over actions"><a className="game-review-link" href="#game-review">Review game</a><a className="game-list-link" href="/games">My games · Start another</a></nav>
       </section> : null}
       {isTerminal ? <section className="cloud-game-review" id="game-review" aria-labelledby="cloud-review-title">
         <div className="cloud-review-heading"><div><p className="kicker">Final table</p><h2 id="cloud-review-title">Game review</h2></div><p>{terminalOutcome}</p></div>
         {winningLine ? <article className="winning-line-card"><p className="kicker">Winning line · Selected game card</p><h3>{winningLine.name}</h3><p>{winningLine.section} · {winningLine.exposure === 'concealed' ? 'Concealed' : 'Exposed'}</p><small>{winningLine.description}</small></article> : winner ? <p className="review-note">The winner was confirmed by the game rules. A matching Training Card line was not included in this saved result.</p> : null}
-        <div className="review-racks">{finalRacks.map(({ player, tiles }) => <article key={player.id} className={player.id === winner?.id ? 'review-winner' : ''}><div><strong>{player.name}{player.id === winner?.id ? ' · Winner' : ''}</strong><small>{tiles ? `${tiles.length + player.exposures.reduce((count, exposure) => count + exposure.tiles.length, 0)} final tiles` : 'Concealed rack'}</small></div>{tiles ? <HandCheck cardId={snapshot.publicState.cardId} rack={tiles} exposures={player.exposures} storageKey={`${gameId}:${player.id}`} /> : <p className="review-note">This rack remains concealed because the table ended before the hand was completed.</p>}</article>)}</div>
+        <div className="review-racks">{finalRacks.map(({ player, tiles }) => {
+          const won = player.id === winner?.id;
+          const check = tiles ? <HandCheck cardId={snapshot.publicState.cardId} rack={tiles} exposures={player.exposures} storageKey={`${gameId}:${player.id}`} /> : null;
+          return <article key={player.id} className={won ? 'review-winner' : ''}>
+            <div><strong>{player.name}{won ? ' · Winner' : ''}</strong><small>{tiles ? `${tiles.length + player.exposures.reduce((count, exposure) => count + exposure.tiles.length, 0)} final tiles` : 'Concealed rack'}</small></div>
+            {tiles ? won ? <>
+              <WinningHandReveal rack={tiles} exposures={player.exposures} cardId={snapshot.publicState.cardId} waiting={celebration?.kind === 'mahjong'} />
+              <details className="winning-reveal-details"><summary>See card comparison</summary>{check}</details>
+            </> : check : <p className="review-note">This rack remains concealed because the table ended before the hand was completed.</p>}
+          </article>;
+        })}</div>
         <article className="review-discard-record"><div><strong>Discarded tiles</strong><small>{snapshot.publicState.discards.length} total</small></div>{snapshot.publicState.discards.length ? <div className="review-tile-row">{snapshot.publicState.discards.map((tile) => <span key={tile.id} title={tileLabel(tile)}>{compactTile(tile)}</span>)}</div> : <p className="review-note">No tiles were discarded.</p>}</article>
         <div className="review-next-actions"><a href="/games">Return to My Games</a><a className="primary" href="/games">Start another game</a></div>
       </section> : null}
@@ -264,12 +288,22 @@ function CloudGameTable({ gameId }: { gameId: string }) {
         <CloudDiscardPool highlightedTileIds={coach.highlights.publicTileIds} tiles={snapshot.publicState.discards} latestTileId={snapshot.publicState.callWindow?.discard.id} dropActive={discardDropActive} canDiscard={pending === 'discard'} />
       </TableSurface>
       <RackPanel className="cloud-rack-section play-workspace">
-      <TablePrompt title={snapshot.status === 'abandoned' ? 'Table ended' : snapshot.status === 'completed' ? 'Game complete' : snapshot.status === 'paused' ? 'Table paused' : pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : 'Your move'} detail={snapshot.status === 'abandoned' ? 'No active decisions' : pending === 'charleston_pass' ? 'Choose three tiles to pass' : pending === 'courtesy_pass' ? 'Choose zero to three tiles for courtesy passing' : pending === 'charleston_decision' ? 'Continue the second Charleston or move to courtesy passing' : pending === 'discard_response' ? 'Call the latest discard, declare Mahjong, or pass' : pending === 'draw' ? 'Draw a tile from the wall' : pending === 'discard' ? 'Choose one tile to discard' : pending === 'wait' ? 'You can arrange your rack while you wait' : 'Review the final table'} active={!isTerminal && snapshot.status === 'active' && pending !== 'wait'}>
+      <MoveFeedback feedback={moveFeedback.feedback} />
+      {turnCue !== null ? <span key={turnCue} className="rack-turn-ripple" aria-hidden="true" /> : null}
+      {arrival ? <span className="charleston-receipt" role="status">✦ {arrival.tileIds.length} new {arrival.tileIds.length === 1 ? 'tile' : 'tiles'}</span> : null}
+      <TablePrompt title={snapshot.status === 'abandoned' ? 'Table ended' : snapshot.status === 'completed' ? 'Game complete' : snapshot.status === 'paused' ? 'Table paused' : pending === 'wait' ? `${current?.name ?? 'The table'} is playing` : pending === 'charleston_pass' ? 'Choose 3 tiles to pass' : pending === 'courtesy_pass' ? 'An optional exchange' : pending === 'charleston_decision' ? 'Keep passing?' : pending === 'draw' ? 'Draw a tile' : pending === 'discard' ? 'Choose a discard' : 'Call or pass?'} detail={snapshot.status === 'abandoned' ? 'No active decisions' : pending === 'charleston_pass' ? `${selected.length}/3 selected · Jokers stay with you` : pending === 'courtesy_pass' ? 'Choose zero to three tiles for courtesy passing' : pending === 'charleston_decision' ? 'Continue the second Charleston or move to courtesy passing' : pending === 'discard_response' ? 'Call the latest discard, declare Mahjong, or pass' : pending === 'draw' ? 'Draw a tile from the wall' : pending === 'discard' ? 'Choose one tile to discard' : pending === 'wait' ? 'You can arrange your rack while you wait' : 'Review the final table'} active={!isTerminal && snapshot.status === 'active' && pending !== 'wait'}>
         {!isTerminal ? <TurnClock deadlineAt={snapshot.deadlineAt} charleston={snapshot.publicState.phase === 'charleston'} /> : null}
         {snapshot.mode === 'live' && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button disabled={busy} onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}
       </TablePrompt>
         <div className="cloud-actions">
         <div className="cloud-rack-heading"><strong>Your rack</strong><span>{isTerminal ? 'Final rack' : selected.length ? `${selected.length} selected` : 'Select tiles to act'}</span></div>
+          {!isTerminal ? <OrganizeRackButton disabled={busy} label={followedHand ? `Organize rack by ${followedHand.name}` : 'Organize rack by suit and number'} onClick={() => {
+            moveFeedback.celebrate('arrange');
+            const ids = organizeRack(orderedRack, snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? [], followedHand);
+            setRackOrder(ids);
+            try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory ordering still works. */ }
+            setMessage(followedHand ? `Rack organized by ${followedHand.name}. Unmatched tiles are at the end.` : 'Rack organized by suit and number.');
+          }} /> : null}
           {pending === 'charleston_pass' ? <button disabled={busy || selected.length !== 3} onClick={() => void act({ type: 'PASS_TILES', tileIds: selected })}>Pass three tiles</button> : null}
           {pending === 'courtesy_pass' ? <button disabled={busy || selected.length > 3} onClick={() => void act({ type: 'COURTESY_PASS', tileIds: selected })}>Pass {selected.length || 'no'} tiles</button> : null}
           {pending === 'charleston_decision' ? <><button disabled={busy} onClick={() => void act({ type: 'CHOOSE_SECOND_CHARLESTON', continue: true })}>Continue Charleston</button><button className="secondary" disabled={busy} onClick={() => void act({ type: 'CHOOSE_SECOND_CHARLESTON', continue: false })}>Move to courtesy pass</button></> : null}
@@ -282,7 +316,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
 <div className="cloud-rack" role="group" aria-label="Your rack">{orderedRack.map((tile, index) => {
           return <SortableRackItem id={tile.id} index={index} disabled={busy || isTerminal} className="cloud-tile-slot" key={tile.id}>
             {({ isDragging, handleRef }) => <>
-              <button ref={handleRef} data-drag-handle className={`cloud-tile ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} disabled={busy || isTerminal} aria-describedby="cloud-rack-help" aria-pressed={selected.includes(tile.id)} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}. Hold and drag to reorder.`} title={tileLabel(tile)} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); moveTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); moveTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; toggle(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
+              <button ref={handleRef} data-drag-handle style={arrival?.tileIds.includes(tile.id) ? { '--arrival-delay': `${arrival.tileIds.indexOf(tile.id) * 100}ms` } as CSSProperties : undefined} className={`cloud-tile ${moveFeedback.feedback?.returningId === tile.id ? 'joker-return' : ''} ${arrival?.tileIds.includes(tile.id) ? `rack-incoming rack-incoming-${arrival.direction}` : ''} ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} disabled={busy || isTerminal} aria-describedby="cloud-rack-help" aria-pressed={selected.includes(tile.id)} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}. Hold and drag to reorder.`} title={tileLabel(tile)} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); moveTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); moveTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; toggle(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
             </>}
           </SortableRackItem>;
         })}</div>
@@ -292,10 +326,9 @@ function CloudGameTable({ gameId }: { gameId: string }) {
 
         {message ? <p className="cloud-message" role="status" aria-live="polite">{cloud.uncertain ? 'Reconnecting to confirm your saved move…' : cloud.error?.message ?? message}</p> : null}
       </RackPanel>
-      {!isTerminal ? <aside className="table-insights" aria-label="Coach and card" tabIndex={0}>
-        {coach.session ? <CoachPanel session={coach.session} show={coach.show} onShowChange={coach.setShow} focusGroupId={coach.focusGroupId} onFocusGroup={coach.focusGroup} onFollow={coach.follow} onBrowse={() => setCardOpen(true)} /> : null}
-        <CardCompanion blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} candidates={coachContext!.candidates} cardId={snapshot.publicState.cardId} rack={snapshot.privateState.rack} exposures={snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? []} storageKey={`${gameId}:${snapshot.privateState.playerId}`} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory order still works. */ } setMessage('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
-      </aside> : null}
+      {!isTerminal ? <TableHelp coach={coach.session ? { session: coach.session, show: coach.show, onShowChange: coach.setShow, focusGroupId: coach.focusGroupId, onFocusGroup: coach.focusGroup, onFollow: coach.follow, onBrowse: () => setCardOpen(true) } : null}>
+        <CardCompanion compact blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} candidates={coachContext!.candidates} cardId={snapshot.publicState.cardId} rack={snapshot.privateState.rack} exposures={snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? []} storageKey={`${gameId}:${snapshot.privateState.playerId}`} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { moveFeedback.celebrate('arrange'); setRackOrder(ids); try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory order still works. */ } setMessage('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
+      </TableHelp> : null}
       </DragDropProvider>
       </section>
     </main>

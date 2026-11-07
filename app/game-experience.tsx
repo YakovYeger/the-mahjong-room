@@ -11,10 +11,16 @@ import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { DragDropProvider, PointerSensor } from '@dnd-kit/react';
 import { PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable } from '@dnd-kit/react/sortable';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { getCoachVisibleContext } from '../src/coach/analyze';
 import { useCoach } from '../src/coach/use-coach';
-import { CoachPanel } from '../src/coach/coach-panel';
+import { useTurnCue } from '../src/table/turn-cue';
+import { WinningHandReveal } from '../src/table/winning-hand-reveal';
+import { passDirection, useCharlestonArrival } from '../src/table/charleston-motion';
+import { CelebrationLayer, useCelebration } from '../src/table/celebration';
+import { captureJokerExchange, MoveFeedback, useMoveFeedback } from '../src/table/move-feedback';
+import { OrganizeRackButton } from '../src/table/organize-rack-button';
+import { TableHelp } from '../src/table/table-help';
 import { coachHighlightLabel, coachHighlightMark } from '../src/coach/highlights';
 import { generateGameReview } from '../src/coach/review';
 import { loadGuestProgress, saveGuestProgress } from '../src/persistence/guest-progress';
@@ -22,6 +28,7 @@ import { loadGuestGameSession, saveGuestGameSession } from '../src/persistence/g
 import { runBotAction } from '../src/game/bots';
 import { applyGameAction, createGame, getLegalJokerExchangeOptions, totalPlayerTiles } from '../src/game/engine';
 import { moveTileId, normalizeTileOrder, tileLabel } from '../src/game/tiles';
+import { organizeRack } from '../src/game/rack-order';
 import { SortableRackItem } from '../src/game/sortable-rack-item';
 import { analyzeDiscardDeadHand, cardTileKey, getLegalCallOptions } from '../src/game/training-card';
 import type { GameState, Player } from '../src/game/types';
@@ -165,7 +172,7 @@ function DealingScreen({ gameNumber, resuming }: { gameNumber: number; resuming:
   );
 }
 
-export function TableReveal({ game }: { game: GameState }) {
+export function TableReveal({ game, waiting = false }: { game: GameState; waiting?: boolean }) {
   return (
     <section className="table-reveal" aria-labelledby="table-reveal-title">
       <header><div><p className="kicker">Everyone turns their rack</p><h2 id="table-reveal-title">{game.winnerId ? 'The table at Mahjong' : 'The final hands'}</h2></div><p>Compare each direction and see how close every player was.</p></header>
@@ -174,7 +181,8 @@ export function TableReveal({ game }: { game: GameState }) {
         const winner = player.id === game.winnerId;
         return <article className={winner ? 'winner' : ''} key={player.id}>
           <div className="reveal-player"><div><strong>{player.name}</strong><small>{player.seat} seat · {tiles.length} tiles</small></div>{winner ? <b>Mahjong</b> : null}</div>
-          <HandCheck cardId={game.cardId} rack={player.rack} exposures={player.exposures} storageKey={`${game.id}:${player.id}`} />
+          {winner ? <WinningHandReveal rack={player.rack} exposures={player.exposures} cardId={game.cardId} waiting={waiting} /> : null}
+          {winner ? <details className="winning-reveal-details"><summary>See card comparison</summary><HandCheck cardId={game.cardId} rack={player.rack} exposures={player.exposures} storageKey={`${game.id}:${player.id}`} /></details> : <HandCheck cardId={game.cardId} rack={player.rack} exposures={player.exposures} storageKey={`${game.id}:${player.id}`} />}
         </article>;
       })}</div>
     </section>
@@ -183,6 +191,7 @@ export function TableReveal({ game }: { game: GameState }) {
 
 export function GameExperience() {
   const { openSettings, reducedMotion } = useAccessibility();
+  const moveFeedback = useMoveFeedback();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [started, setStarted] = useState(false);
   const [dealing, setDealing] = useState(false);
@@ -202,6 +211,8 @@ export function GameExperience() {
   const [sessionReady, setSessionReady] = useState(false);
   const [hasSavedSession, setHasSavedSession] = useState(false);
   const human = game.players[0];
+  const arrival = useCharlestonArrival(sessionReady && started && !dealing ? { id: game.id, sequence: game.eventSequence, events: game.events, rack: human.rack } : null);
+  const celebration = useCelebration(sessionReady && started && !dealing ? { id: game.id, sequence: game.eventSequence, events: game.events, viewerId: human.id, rack: human.rack, players: game.players } : null);
   const orderedRack = useMemo(() => {
     const order = normalizeTileOrder(rackOrder, human.rack);
     const byId = new Map(human.rack.map((tile) => [tile.id, tile]));
@@ -211,6 +222,7 @@ export function GameExperience() {
   const respondingToDiscard = game.phase === 'playing' && game.callWindow !== null
     && game.callWindow.discardedByPlayerId !== 'human' && !game.callWindow.responses.human;
   const needsDraw = game.phase === 'playing' && !game.callWindow && game.players[game.turnIndex].id === 'human' && totalPlayerTiles(human) === 13;
+  const turnCue = useTurnCue(sessionReady && started && !dealing ? { id: game.id, turn: game.phase === 'playing' && !game.callWindow && game.players[game.turnIndex].id === human.id ? game.turnCount : null } : null);
   const canDiscard = game.phase === 'playing' && !game.callWindow && game.players[game.turnIndex].id === 'human' && totalPlayerTiles(human) === 14;
   const legalCalls = respondingToDiscard && game.callWindow ? getLegalCallOptions(human.rack, human.exposures, game.callWindow.discard, getCardProvider(game.cardId).getHands()) : [];
   const chosenCall = legalCalls.find((option) => option.rackTileIds.length === selected.length
@@ -230,6 +242,7 @@ export function GameExperience() {
     ? game.charlestonAwaitingDecision ? 'charleston-decision' : game.charlestonCourtesy ? 'courtesy-pass' : 'charleston-pass'
     : respondingToDiscard ? 'call' : needsDraw ? 'draw' : canDiscard ? 'discard' : 'wait';
   const coach = useCoach(coachContext, `${game.id}:${human.id}`, coachDecision, 3 - blindCount, selected);
+  const followedHand = coach.followedId ? getCardProvider(game.cardId).getHands().find(hand => hand.id === coach.followedId) : undefined;
   const gameReview = useMemo(() => generateGameReview(game, 'human', { hintsRequested, manualTurns }), [game, hintsRequested, manualTurns]);
   const visibleDiscards = game.discards;
 
@@ -308,6 +321,7 @@ export function GameExperience() {
       : { type: 'PASS_TILES' as const, tileIds: selected, blindCount };
     const result = applyGameAction(game, 'human', action);
     if (!result.ok) return setNotice(result.violation.message);
+    if (selected.length || blindCount) moveFeedback.celebrate('pass', human.rack.filter(tile => selected.includes(tile.id)), passDirection(game.charlestonPassIndex, game.charlestonCourtesy));
     const next = advanceCharlestonBots(result.state);
     setGame(next);
     resetSelection();
@@ -331,6 +345,7 @@ export function GameExperience() {
       setReview(true);
       return;
     }
+    moveFeedback.celebrate('draw');
     const drawn = result.state.players[0].rack.at(-1)!;
     setNotice(`You drew ${tileLabel(drawn)}. ${getCardProvider(game.cardId).validateMahjong(allTiles(result.state.players[0]), result.state.players[0].exposures).valid ? 'Your hand is complete—declare Mahjong.' : 'Notice whether it strengthens your leading hand.'}`);
   };
@@ -367,13 +382,16 @@ export function GameExperience() {
 
   const exchangeJoker = () => {
     if (!exchangeOption) return;
-    const result = applyGameAction(game, 'human', {
-      type: 'EXCHANGE_JOKER', exposureOwnerId: exchangeOption.owner.id, exposureId: exchangeOption.exposure.id,
+    const action = {
+      type: 'EXCHANGE_JOKER' as const, exposureOwnerId: exchangeOption.owner.id, exposureId: exchangeOption.exposure.id,
       rackTileId: exchangeOption.rackTile.id, jokerTileId: exchangeOption.joker.id,
-    });
+    };
+    const result = applyGameAction(game, 'human', action);
     if (!result.ok) return setNotice(result.violation.message);
+    const receipt = captureJokerExchange(action, human.rack);
     setGame(result.state);
     resetSelection();
+    moveFeedback.play(receipt);
     setNotice(`You replaced ${tileLabel(exchangeOption.rackTile)} in ${exchangeOption.owner.name}'s exposure and brought the Joker into your rack.`);
   };
 
@@ -382,6 +400,7 @@ export function GameExperience() {
     const discarded = human.rack.find((tile) => tile.id === selected[0]);
     const result = applyGameAction(game, 'human', { type: 'DISCARD_TILE', tileId: selected[0] });
     if (!result.ok) return setNotice(result.violation.message);
+    moveFeedback.celebrate('discard', discarded ? [discarded] : []);
     const next = advancePlayingBots(result.state);
     setGameWithDiscardSequence(next);
     resetSelection();
@@ -458,9 +477,10 @@ export function GameExperience() {
   if (review) {
     return (
       <main className="review-page">
+        <CelebrationLayer celebration={celebration} />
         <header><span className="brand">The Mahjong Room</span><span>Game review</span></header>
         <section className="review-hero"><p className="kicker">Game {gameNumber} complete</p><h1>{game.winnerId === 'human' ? 'Mahjong—beautifully played.' : game.winnerId ? `${game.players.find((player) => player.id === game.winnerId)?.name} called Mahjong.` : 'The wall is complete.'}</h1><p>{gameReview.summary}</p></section>
-        <TableReveal game={game} />
+        <TableReveal game={game} waiting={celebration?.kind === 'mahjong'} />
         <section className="review-grid">
           {gameReview.cards.map((card) => <article key={card.id}><span className={`review-icon ${card.tone === 'strong' ? '' : 'coral'}`}>{card.tone === 'strong' ? '✓' : '↗'}</span><p className="kicker">{card.eyebrow}</p><h2>{card.title}</h2><p>{card.body}</p></article>)}
           <article className="skill-card"><p className="kicker">Skills practiced</p>{gameReview.skills.map(({ name, score }) => <div className="skill" key={name}><span>{name}</span><i><b style={{ width: `${score}%` }} /></i></div>)}</article>
@@ -472,30 +492,34 @@ export function GameExperience() {
 
   const stageTitle = game.phase === 'charleston' ? charlestonLabel(game) : `Turn ${game.turnCount + 1} · ${game.wall.length} in wall`;
   const actionTitle = game.phase === 'charleston'
-    ? game.charlestonAwaitingDecision ? 'Continue passing?' : game.charlestonCourtesy ? 'Choose 0–3 tiles' : `Pass ${3 - blindCount} from your rack`
-    : respondingToDiscard ? 'Call, Mahjong, or pass?' : needsDraw ? 'Draw a tile' : 'Choose a discard';
+    ? game.charlestonAwaitingDecision ? 'Continue passing?' : game.charlestonCourtesy ? 'Choose 0–3 tiles' : `Choose ${3 - blindCount} tiles to pass`
+    : respondingToDiscard ? discardMahjong ? 'Call, Mahjong, or pass?' : 'Call or pass?' : needsDraw ? 'Draw a tile' : 'Choose a discard';
 
   return (
     <main className={`shell game-shell shared-table-page unified-game ${cardOpen ? 'card-is-open' : ''}`}>
+      <CelebrationLayer celebration={celebration} />
       <TableHeader brand={<button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={`Practice · Game ${gameNumber}`}>
-        <button className="table-tool-button" aria-label={`${cardOpen ? 'Hide' : 'Show'} ${game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}`} aria-expanded={cardOpen} onClick={() => setCardOpen((open) => !open)}>{game.cardId === 'photo-2025' ? '2025 Card' : 'Training Card'}</button>
-        <Menu label="Table" note="Saved on this device" items={[{ label: 'Game preferences', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, { label: 'Save progress', href: '/account' }, { label: 'Leave table', onClick: () => setStarted(false) }]} />
+        <Menu label="Table" note="Saved on this device" items={[{ label: 'Browse card', onClick: () => setCardOpen(true) }, { label: 'Game preferences', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, { label: 'Save progress', href: '/account' }, ...(manualTurns >= 4 && canDiscard ? [{ label: 'Complete with coach', onClick: finishGame }] : []), { label: 'Leave table', onClick: () => setStarted(false) }]} />
       </TableHeader>
       <section className="game-table" aria-label="Guided American Mahjong table">
         <TableSurface highlightedTileIds={coach.highlights.publicTileIds} players={game.players.map(({ rack, ...player }) => ({ ...player, rackCount: rack.length }))} viewerId={human.id} activePlayerIds={game.phase === 'charleston' || respondingToDiscard ? [human.id] : [game.players[game.turnIndex].id]} wallCount={game.wall.length} discardCount={visibleDiscards.length}>
           <DiscardPool highlightedTileIds={coach.highlights.publicTileIds} tiles={visibleDiscards} latestTileId={game.callWindow?.discard.id} />
         </TableSurface>
         <RackPanel className="player-area play-workspace">
-        <TablePrompt title={actionTitle} detail={notice || stageTitle} active={game.phase === 'charleston' || respondingToDiscard || needsDraw || canDiscard}>
+        <MoveFeedback feedback={moveFeedback.feedback} />
+        {turnCue !== null ? <span key={turnCue} className="rack-turn-ripple" aria-hidden="true" /> : null}
+        {arrival ? <span className="charleston-receipt" role="status">✦ {arrival.tileIds.length} new {arrival.tileIds.length === 1 ? 'tile' : 'tiles'}</span> : null}
+        <TablePrompt title={actionTitle} detail={respondingToDiscard && game.callWindow ? `${tileLabel(game.callWindow.discard)} is available. Select a legal set to call, or pass.` : notice || (game.phase === 'charleston' && !game.charlestonAwaitingDecision ? `${stageTitle} · Tap tiles, then pass. Jokers stay with you.` : needsDraw ? 'Take a tile from the wall to begin your turn.' : canDiscard ? 'Tap a tile, then choose Discard tile.' : stageTitle)} active={game.phase === 'charleston' || respondingToDiscard || needsDraw || canDiscard}>
           {game.phase === 'playing' && deadHand.dead ? <span className="table-dead-hand" title={deadHand.message}>Dead hand</span> : null}
         </TablePrompt>
           <div className="player-controls"><p><strong>Your rack</strong><span>{game.phase === 'charleston' ? game.charlestonCourtesy ? `${selected.length} selected · optional` : `${selected.length} of ${expectedPassTiles} selected${blindCount ? ` · ${blindCount} blind` : ''}` : respondingToDiscard ? `${selected.length} selected for a call` : needsDraw ? '13 tiles · ready to draw' : `${totalPlayerTiles(human)} tiles · ${selected.length} selected`}</span></p>
+            <OrganizeRackButton label={followedHand ? `Organize rack by ${followedHand.name}` : 'Organize rack by suit and number'} onClick={() => { moveFeedback.celebrate('arrange'); setRackOrder(organizeRack(orderedRack, human.exposures, followedHand)); setNotice(followedHand ? `Rack organized by ${followedHand.name}. Unmatched tiles are at the end.` : 'Rack organized by suit and number.'); }} />
             <div className="action-group">
               {game.phase === 'charleston' && game.charlestonAwaitingDecision ? <><button className="finish-button" onClick={() => chooseSecondCharleston(false)}>Stop and courtesy pass</button><button className="primary" onClick={() => chooseSecondCharleston(true)}>Play second Charleston</button></>
-                : game.phase === 'charleston' ? <>{blindAvailable ? <div className="blind-controls"><button className={blindCount === 0 ? 'active' : ''} onClick={() => { setBlindCount(0); setSelected([]); }}>No blind</button><button className={blindCount === 1 ? 'active' : ''} onClick={() => { setBlindCount(1); setSelected([]); }}>1 blind</button><button className={blindCount === 2 ? 'active' : ''} onClick={() => { setBlindCount(2); setSelected([]); }}>2 blind</button></div> : null}<button className="primary" disabled={!game.charlestonCourtesy && selected.length !== expectedPassTiles} onClick={passTiles}>{game.charlestonCourtesy ? `Courtesy pass ${selected.length || 'none'}` : `Pass ${selected.length + blindCount} tiles`}</button></>
+                : game.phase === 'charleston' ? <>{blindAvailable ? <details className="blind-pass-options"><summary>Blind pass options{blindCount ? ` · ${blindCount} blind` : ''}</summary><div className="blind-controls"><button className={blindCount === 0 ? 'active' : ''} onClick={() => { setBlindCount(0); setSelected([]); }}>No blind</button><button className={blindCount === 1 ? 'active' : ''} onClick={() => { setBlindCount(1); setSelected([]); }}>1 blind</button><button className={blindCount === 2 ? 'active' : ''} onClick={() => { setBlindCount(2); setSelected([]); }}>2 blind</button></div></details> : null}<button className="primary" disabled={!game.charlestonCourtesy && selected.length !== expectedPassTiles} onClick={passTiles}>{game.charlestonCourtesy ? `Courtesy pass ${selected.length || 'none'}` : 'Pass 3 tiles'}</button></>
                   : respondingToDiscard ? <><button className="finish-button" onClick={passOnDiscard}>Pass</button>{discardMahjong ? <button className="mahjong-button" onClick={() => declareMahjong(true)}>Mahjong</button> : null}<button className="primary" disabled={!chosenCall} onClick={callDiscard}>{chosenCall ? `Call ${chosenCall.kind}` : 'Select a legal set'}</button></>
                     : needsDraw ? <button className="primary" onClick={drawTile}>Draw tile</button>
-                      : <>{exchangeOption ? <button className="finish-button" onClick={exchangeJoker}>Exchange for Joker</button> : null}{manualTurns >= 4 ? <button className="finish-button" onClick={finishGame}>Complete with coach</button> : null}{selfMahjong ? <button className="mahjong-button" onClick={() => declareMahjong(false)}>Declare Mahjong</button> : null}<button className="primary" disabled={!canDiscard || selected.length !== 1} onClick={discardTile}>Discard tile</button></>}
+                      : <>{exchangeOption ? <button className="finish-button" onClick={exchangeJoker}>Exchange for Joker</button> : null}{selfMahjong ? <button className="mahjong-button" onClick={() => declareMahjong(false)}>Declare Mahjong</button> : null}<button className="primary" disabled={!canDiscard || selected.length !== 1} onClick={discardTile}>Discard tile</button></>}
             </div>
           </div>
 
@@ -540,7 +564,7 @@ export function GameExperience() {
                 const cannotPassJoker = game.phase === 'charleston' && tile.type.kind === 'joker';
                 return <SortableRackItem id={tile.id} index={index} className="tile-slot" key={tile.id}>
                   {({ isDragging, handleRef }) => <>
-                    <button ref={handleRef} data-drag-handle className={`tile ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${cannotPassJoker ? 'cannot-pass' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}${cannotPassJoker ? ', cannot be passed' : ''}. Hold and drag to reorder or use Alt and arrow keys.`} aria-pressed={selected.includes(tile.id)} aria-disabled={cannotPassJoker} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); nudgeTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); nudgeTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; if (cannotPassJoker) setNotice('Jokers may be rearranged, but they cannot be passed during the Charleston.'); else toggleTile(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
+                    <button ref={handleRef} data-drag-handle style={arrival?.tileIds.includes(tile.id) ? { '--arrival-delay': `${arrival.tileIds.indexOf(tile.id) * 100}ms` } as CSSProperties : undefined} className={`tile ${moveFeedback.feedback?.returningId === tile.id ? 'joker-return' : ''} ${arrival?.tileIds.includes(tile.id) ? `rack-incoming rack-incoming-${arrival.direction}` : ''} ${selected.includes(tile.id) ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${cannotPassJoker ? 'cannot-pass' : ''} ${coach.highlights.rack[tile.id] ? `coach-tile-${coach.highlights.rack[tile.id]}` : ''}`} aria-label={`${tileLabel(tile)}${coach.highlights.rack[tile.id] ? `, ${coachHighlightLabel(coach.highlights.rack[tile.id])}` : ''}${cannotPassJoker ? ', cannot be passed' : ''}. Hold and drag to reorder or use Alt and arrow keys.`} aria-pressed={selected.includes(tile.id)} aria-disabled={cannotPassJoker} onKeyDown={(event) => { if (event.altKey && event.key === 'ArrowLeft') { event.preventDefault(); nudgeTile(tile.id, -1); } if (event.altKey && event.key === 'ArrowRight') { event.preventDefault(); nudgeTile(tile.id, 1); } }} onClick={() => { if (suppressTileClickRef.current) return; if (cannotPassJoker) setNotice('Jokers may be rearranged, but they cannot be passed during the Charleston.'); else toggleTile(tile.id); }}><TileFace tile={tile} />{coach.highlights.rack[tile.id] ? <span className="coach-tile-mark" aria-hidden="true">{coachHighlightMark(coach.highlights.rack[tile.id])}</span> : null}</button>
                   </>}
                 </SortableRackItem>;
               })}
@@ -549,10 +573,9 @@ export function GameExperience() {
           </MotionConfig>
             <small className="reorder-hint" id="rack-reorder-hint"><span aria-hidden="true">↔</span> Drag tiles to arrange · Alt + arrow keys</small>
         </RackPanel>
-        <aside className="table-insights" aria-label="Coach and card" tabIndex={0}>
-          {coach.session ? <CoachPanel session={coach.session} show={coach.show} onShowChange={coach.setShow} focusGroupId={coach.focusGroupId} onFocusGroup={coach.focusGroup} onFollow={coach.follow} onBrowse={() => setCardOpen(true)} onHint={requestHint} /> : null}
-          <CardCompanion blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} key={game.id} cardId={game.cardId} rack={human.rack} exposures={human.exposures} storageKey={`${game.id}:${human.id}`} candidates={coachContext.candidates} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { setRackOrder(ids); setNotice('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
-        </aside>
+        <TableHelp coach={coach.session ? { session: coach.session, show: coach.show, onShowChange: coach.setShow, focusGroupId: coach.focusGroupId, onFocusGroup: coach.focusGroup, onFollow: coach.follow, onBrowse: () => setCardOpen(true), onHint: requestHint } : null}>
+          <CardCompanion compact blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} key={game.id} cardId={game.cardId} rack={human.rack} exposures={human.exposures} storageKey={`${game.id}:${human.id}`} candidates={coachContext.candidates} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { moveFeedback.celebrate('arrange'); setRackOrder(ids); setNotice('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
+        </TableHelp>
       </section>
     </main>
   );
