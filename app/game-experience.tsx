@@ -1,6 +1,7 @@
 'use client';
 import { useAccessibility } from '../src/accessibility/provider';
 import { Menu } from '../src/ui/menu';
+import { buttonVariants } from '../src/ui/button';
 import { Select } from '../src/ui/select';
 import { getCardProvider, type CardId } from '../src/game/cards';
 import { CardCompanion, HandCheck } from '../src/table/card-companion';
@@ -25,7 +26,7 @@ import { coachHighlightLabel, coachHighlightMark } from '../src/coach/highlights
 import { generateGameReview } from '../src/coach/review';
 import { loadGuestProgress, saveGuestProgress } from '../src/persistence/guest-progress';
 import { loadGuestGameSession, saveGuestGameSession } from '../src/persistence/guest-session';
-import { runBotAction } from '../src/game/bots';
+import { advancePlayingBots, runBotAction } from '../src/game/bots';
 import { applyGameAction, createGame, getLegalJokerExchangeOptions, totalPlayerTiles } from '../src/game/engine';
 import { moveTileId, normalizeTileOrder, tileLabel } from '../src/game/tiles';
 import { organizeRack } from '../src/game/rack-order';
@@ -51,32 +52,6 @@ function advanceCharlestonBots(state: GameState): GameState {
     next = runBotAction(next, next.players[next.charlestonRound % 4].id);
     if (next.stateVersion === before) break;
     guard += 1;
-  }
-  return next;
-}
-
-function advancePlayingBots(state: GameState): GameState {
-  let next = state;
-  let guard = 0;
-  while (next.phase === 'playing' && guard < 80) {
-    guard += 1;
-    if (next.callWindow) {
-      const humanPending = next.callWindow.discardedByPlayerId !== 'human' && !next.callWindow.responses.human;
-      if (humanPending) return next;
-      const responder = next.players.find((player) => player.type === 'bot'
-        && player.id !== next.callWindow!.discardedByPlayerId
-        && !next.callWindow!.responses[player.id]);
-      if (!responder) return next;
-      const before = next.stateVersion;
-      next = runBotAction(next, responder.id);
-      if (next.stateVersion === before) return next;
-      continue;
-    }
-    const active = next.players[next.turnIndex];
-    if (active.type === 'human') return next;
-    const before = next.stateVersion;
-    next = runBotAction(next, active.id);
-    if (next.stateVersion === before) return next;
   }
   return next;
 }
@@ -189,18 +164,18 @@ export function TableReveal({ game, waiting = false }: { game: GameState; waitin
   );
 }
 
-export function GameExperience() {
+export function GameExperience({ puzzleGame }: { puzzleGame?: GameState } = {}) {
   const { openSettings, reducedMotion } = useAccessibility();
   const moveFeedback = useMoveFeedback();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(Boolean(puzzleGame));
   const [dealing, setDealing] = useState(false);
-  const [game, setGame] = useState(() => createGame(2026));
+  const [game, setGame] = useState(() => puzzleGame ?? createGame(2026));
   const [selected, setSelected] = useState<string[]>([]);
   const [blindCount, setBlindCount] = useState(0);
   const [hintLevel, setHintLevel] = useState(0);
   const [notice, setNotice] = useState('');
-  const [review, setReview] = useState(false);
+  const [review, setReview] = useState(puzzleGame?.phase === 'completed');
   const [manualTurns, setManualTurns] = useState(0);
   const [hintsRequested, setHintsRequested] = useState(0);
   const [cardOpen, setCardOpen] = useState(false);
@@ -208,7 +183,7 @@ export function GameExperience() {
   const [draggingTileId, setDraggingTileId] = useState<string | null>(null);
   const suppressTileClickRef = useRef(false);
   const [gameNumber, setGameNumber] = useState(1);
-  const [sessionReady, setSessionReady] = useState(false);
+  const [sessionReady, setSessionReady] = useState(Boolean(puzzleGame));
   const [hasSavedSession, setHasSavedSession] = useState(false);
   const human = game.players[0];
   const arrival = useCharlestonArrival(sessionReady && started && !dealing ? { id: game.id, sequence: game.eventSequence, events: game.events, rack: human.rack } : null);
@@ -247,6 +222,7 @@ export function GameExperience() {
   const visibleDiscards = game.discards;
 
   useEffect(() => {
+    if (puzzleGame) return;
     let cancelled = false;
     queueMicrotask(() => {
       if (cancelled) return;
@@ -273,10 +249,10 @@ export function GameExperience() {
       setSessionReady(true);
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [puzzleGame]);
 
   useEffect(() => {
-    if (!sessionReady || (!started && !hasSavedSession)) return;
+    if (puzzleGame || !sessionReady || (!started && !hasSavedSession)) return;
     try {
       saveGuestGameSession(localStorage, {
         gameNumber,
@@ -290,7 +266,7 @@ export function GameExperience() {
     } catch {
       // A device-local checkpoint is helpful but never required for play.
     }
-  }, [game, gameNumber, hasSavedSession, hintLevel, hintsRequested, manualTurns, rackOrder, review, sessionReady, started]);
+  }, [game, gameNumber, hasSavedSession, hintLevel, hintsRequested, manualTurns, rackOrder, review, sessionReady, started, puzzleGame]);
 
   useEffect(() => {
     if (!dealing) return;
@@ -414,6 +390,7 @@ export function GameExperience() {
     setGame(completed);
     if (completed.phase !== 'completed') return setNotice('The coach could not safely complete this game. Continue one turn and try again.');
     setReview(true);
+    if (puzzleGame) return;
     try {
       const previous = loadGuestProgress(localStorage);
       const skillScores = new Map(previous?.skills.map((skill) => [skill.name, skill.score]) ?? []);
@@ -463,6 +440,7 @@ export function GameExperience() {
     return (
       <main className="welcome">
         <nav><span className="brand">The Mahjong Room</span><span className="welcome-nav-actions"><span className="tiny-label">A calmer way to learn</span><a href="/learn">How to play</a><a href="/rules">Rules</a><a href="/games">Private tables</a><a href="/account">Account</a><a href="/settings">Game preferences</a></span><div className="welcome-menu"><button type="button" aria-expanded={mobileMenuOpen} aria-controls="welcome-mobile-navigation" onClick={() => setMobileMenuOpen((open) => !open)}>Menu</button>{mobileMenuOpen ? <div className="welcome-menu-panel" id="welcome-mobile-navigation"><a href="/learn" onClick={() => setMobileMenuOpen(false)}>How to play</a><a href="/rules" onClick={() => setMobileMenuOpen(false)}>Rules</a><a href="/games" onClick={() => setMobileMenuOpen(false)}>Private tables</a><a href="/account" onClick={() => setMobileMenuOpen(false)}>Account</a><a href="/settings" onClick={() => setMobileMenuOpen(false)}>Game preferences</a></div> : null}</div></nav>
+        <a className="daily-home-link" href="/daily"><span aria-hidden="true">✦</span><div><strong>Daily Puzzle</strong><small>One rack. One decision. About two minutes.</small></div><span aria-hidden="true">→</span></a>
         <section className="welcome-grid">
           <div className="welcome-copy"><p className="kicker">{returning ? `Game ${gameNumber} is ready` : 'Your first game starts here'}</p><h1>{returning ? <>Build your Mahjong instincts <em>one hand at a time.</em></> : <>Learn American Mahjong by <em>actually playing.</em></>}</h1><p className="lede">{returning ? 'Pick up exactly where you left off. Your rack order, table state, coaching level, and game number are saved on this device.' : 'A patient coach sits beside you through the tiles, the Charleston, and every decision—then quietly steps away as you get better.'}</p>{hasSavedSession && game.phase !== 'completed' ? <button className="fresh-card-button" onClick={() => { const next = createGame({seed: game.seed + 1, cardId: game.cardId}); setGame(next); setRackOrder(next.players[0].rack.map(tile => tile.id)); setGameNumber(n => n + 1); setHasSavedSession(false); setManualTurns(0); setHintsRequested(0); setHintLevel(0); setReview(false); }}>Choose a card for a fresh hand</button> : null}<Select<CardId> className="welcome-card-select" label="Play with" value={game.cardId ?? 'training-card'} disabled={hasSavedSession && game.phase !== 'completed'} onValueChange={cardId => { setGame(createGame({ seed: game.seed, cardId })); setHasSavedSession(false); }} options={[{ value: 'training-card', label: 'Training Card · 10 guided hands' }, { value: 'photo-2025', label: 'Your 2025 Card · 55 hands' }]} /><a className="browse-card-link" href="/cards">Explore your 2025 card ↗</a><a className="welcome-learn-link" href="/learn"><strong>New to the tiles?</strong> Take the step-by-step tutorial →</a><button className="start-button" onClick={enterGame}>{startLabel} <span>→</span></button><small>{hasSavedSession ? 'Saved automatically on this device.' : 'No account. No timer. We’ll explain as we go.'}</small></div>
           <div className="welcome-rack" aria-hidden="true">{human.rack.slice(0, 8).map((tile) => <span className="hero-tile" key={tile.id}><TileFace tile={tile} /></span>)}<div className="teacher-note"><span>Coach</span><p>You already have a few tiles that work beautifully together.</p></div></div>
@@ -479,13 +457,13 @@ export function GameExperience() {
       <main className="review-page">
         <CelebrationLayer celebration={celebration} />
         <header><span className="brand">The Mahjong Room</span><span>Game review</span></header>
-        <section className="review-hero"><p className="kicker">Game {gameNumber} complete</p><h1>{game.winnerId === 'human' ? 'Mahjong—beautifully played.' : game.winnerId ? `${game.players.find((player) => player.id === game.winnerId)?.name} called Mahjong.` : 'The wall is complete.'}</h1><p>{gameReview.summary}</p></section>
+        <section className="review-hero"><p className="kicker">{puzzleGame ? 'Daily puzzle hand complete' : `Game ${gameNumber} complete`}</p><h1>{game.winnerId === 'human' ? 'Mahjong—beautifully played.' : game.winnerId ? `${game.players.find((player) => player.id === game.winnerId)?.name} called Mahjong.` : 'The wall is complete.'}</h1><p>{gameReview.summary}</p></section>
         <TableReveal game={game} waiting={celebration?.kind === 'mahjong'} />
         <section className="review-grid">
           {gameReview.cards.map((card) => <article key={card.id}><span className={`review-icon ${card.tone === 'strong' ? '' : 'coral'}`}>{card.tone === 'strong' ? '✓' : '↗'}</span><p className="kicker">{card.eyebrow}</p><h2>{card.title}</h2><p>{card.body}</p></article>)}
           <article className="skill-card"><p className="kicker">Skills practiced</p>{gameReview.skills.map(({ name, score }) => <div className="skill" key={name}><span>{name}</span><i><b style={{ width: `${score}%` }} /></i></div>)}</article>
         </section>
-        <div className="review-actions"><button onClick={startNextGame}>Play game {gameNumber + 1}</button><button className="secondary" onClick={() => setStarted(false)}>Back home</button></div>
+        <div className="review-actions">{puzzleGame ? <a className={buttonVariants()} href="/daily">Back to Daily Puzzle</a> : <><button onClick={startNextGame}>Play game {gameNumber + 1}</button><button className="secondary" onClick={() => setStarted(false)}>Back home</button></>}</div>
       </main>
     );
   }
@@ -498,8 +476,8 @@ export function GameExperience() {
   return (
     <main className={`shell game-shell shared-table-page unified-game ${cardOpen ? 'card-is-open' : ''}`}>
       <CelebrationLayer celebration={celebration} />
-      <TableHeader brand={<button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={`Practice · Game ${gameNumber}`}>
-        <Menu label="Table" note="Saved on this device" items={[{ label: 'Browse card', onClick: () => setCardOpen(true) }, { label: 'Game preferences', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, { label: 'Save progress', href: '/account' }, ...(manualTurns >= 4 && canDiscard ? [{ label: 'Complete with coach', onClick: finishGame }] : []), { label: 'Leave table', onClick: () => setStarted(false) }]} />
+      <TableHeader brand={puzzleGame ? <a className="brand" href="/daily">Daily Puzzle</a> : <button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={puzzleGame ? 'Puzzle practice' : `Practice · Game ${gameNumber}`}>
+        <Menu label="Table" note={puzzleGame ? 'Puzzle practice' : 'Saved on this device'} items={[{ label: 'Browse card', onClick: () => setCardOpen(true) }, { label: 'Game preferences', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, ...(!puzzleGame ? [{ label: 'Save progress', href: '/account' }] : []), ...(manualTurns >= 4 && canDiscard ? [{ label: 'Complete with coach', onClick: finishGame }] : []), puzzleGame ? { label: 'Back to Daily Puzzle', href: '/daily' } : { label: 'Leave table', onClick: () => setStarted(false) }]} />
       </TableHeader>
       <section className="game-table" aria-label="Guided American Mahjong table">
         <TableSurface highlightedTileIds={coach.highlights.publicTileIds} players={game.players.map(({ rack, ...player }) => ({ ...player, rackCount: rack.length }))} viewerId={human.id} activePlayerIds={game.phase === 'charleston' || respondingToDiscard ? [human.id] : [game.players[game.turnIndex].id]} wallCount={game.wall.length} discardCount={visibleDiscards.length}>

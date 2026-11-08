@@ -757,3 +757,11 @@ button:focus-visible, a:focus-visible { outline: 3px solid #f6b39f; outline-offs
 .account-form-error { margin-top: 16px; }
 .account-load-error { display: grid; gap: 12px; margin-top: 16px; }
 .account-delete-trigger { margin-top: 16px; }
+
+.welcome .daily-home-link { display: flex; align-items: center; gap: 12px; max-width: 620px; margin: 16px auto 0; padding: 10px 16px; border: 1px solid #c6a76b; border-radius: 14px; background: #fff7df; color: var(--ink); min-height: 52px; text-decoration: none; }
+.daily-home-link > span { color: #82632b; font-size: 1.2rem; }
+.daily-home-link > span:last-child { margin-left: auto; }
+.daily-home-link strong,.daily-home-link small { display: block; }
+.daily-home-link strong { font: 700 1.15rem Georgia,serif; }
+.daily-home-link small { font-size: .78rem; color: #4b6055; }
+@media(max-width: 660px) { .welcome .daily-home-link { margin-inline: 16px; } }
