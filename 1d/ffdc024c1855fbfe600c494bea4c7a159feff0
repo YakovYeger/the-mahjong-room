@@ -1,0 +1,35 @@
+src/game/daily-puzzle.ts
+  s_8b11fec7c205a1::t_4e944911370f1d 1-48
+app/daily/daily.css
+  s_8b11fec7c205a1::t_4e944911370f1d 1-4,6-15,17-32,35
+  s_8b11fec7c205a1::t_e25f6a87c80580 5,16,33-34
+app/game-experience.tsx
+  s_8b11fec7c205a1::t_4e944911370f1d 29,167,171,173,178,186,225,252,255,269,393,443,460,479-480
+  s_8b11fec7c205a1::t_4fdbfc1933d29c 4,466
+src/game/bots.ts
+  s_8b11fec7c205a1::t_4e944911370f1d 95-120
+app/daily/page.tsx
+  s_8b11fec7c205a1::t_4e944911370f1d 1-10
+app/globals.css
+  s_8b11fec7c205a1::t_4e944911370f1d 760-767
+app/daily/daily-puzzle.tsx
+  s_8b11fec7c205a1::t_4e944911370f1d 1-72
+tests/daily-puzzle.test.ts
+  s_8b11fec7c205a1::t_591d84cb1db9bf 1-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1dffdc024c1855fbfe600c494bea4c7a159feff0",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
