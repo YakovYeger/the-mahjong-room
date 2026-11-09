@@ -1,0 +1,39 @@
+src/table/reference-hands.tsx
+  s_8b11fec7c205a1::t_747b38254e2fe8 5-6,18-22
+src/table/training-card-line.tsx
+  s_8b11fec7c205a1::t_747b38254e2fe8 4-6,16,24,30-31
+src/game/puzzle-results.ts
+  s_8b11fec7c205a1::t_747b38254e2fe8 1,3,5,7-8,15-16
+src/game/puzzle-catalog.ts
+  s_8b11fec7c205a1::t_747b38254e2fe8 1-3,7-14,35-43,47
+app/daily/daily-puzzle.tsx
+  s_8b11fec7c205a1::t_747b38254e2fe8 8,27,39,53-55,66
+src/table/reference-card-line.tsx
+  s_8b11fec7c205a1::t_747b38254e2fe8 1-18
+src/game/daily-puzzle.ts
+  s_8b11fec7c205a1::t_747b38254e2fe8 11-12,23-26,28,33,39-43
+app/daily/daily.css
+  s_8b11fec7c205a1::t_747b38254e2fe8 53-55
+docs/DAILY_PUZZLES.md
+  s_8b11fec7c205a1::t_b2a86e72de74c6 5
+tests/daily-puzzle.test.ts
+  s_8b11fec7c205a1::t_3bea694b5809d5 3-5,18-19,33-47
+tests/puzzle-catalog.test.ts
+  s_8b11fec7c205a1::t_b6a3dfd8cb7c24 40-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6bb72d23480a5d5023d873a7cb968c7100a6aa12",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
