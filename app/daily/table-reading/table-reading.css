@@ -9,7 +9,7 @@
 .table-reading-heading h2 { margin: 0; font: 600 clamp(1.25rem,5vw,1.65rem) Georgia,serif; }
 .table-reading-heading a { flex: none; display: inline-flex; align-items: center; min-height: 44px; color: #ffe8a9; font-size: .8rem; }
 .table-reading-felt h3 { margin: 12px 0 5px; color: #f0d79b; font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; }
-.table-reading-players { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,142px),1fr)); gap: 6px; }
+.table-reading-players { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,204px),1fr)); gap: 6px; }
 .table-reading-player { padding: 8px; border: 1px solid #f7edcd44; border-radius: 10px; }
 .table-reading-player > strong { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; font-size: .8rem; }
 .table-reading-portrait { display: inline-flex; width: 20px; height: 20px; border: 1px solid #e0c58d; border-radius: 50%; overflow: hidden; background: #f2e8d4; }

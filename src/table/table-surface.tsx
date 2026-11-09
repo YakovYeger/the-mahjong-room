@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { ExposedTileGroup } from './exposed-tile-group';
 import { TableFullscreenButton } from './fullscreen-button';
 import { PlayerPortrait } from './table-art';
 import { WallMeter } from './wall-meter';
@@ -43,7 +44,7 @@ export function TableSurface({ players, viewerId, activePlayerIds, wallCount, di
   </section>{exposedPlayers.length ? <section className={`table-melds${exposedPlayers.length === 1 ? ' table-melds-single' : ''}`} aria-label="Exposed sets">
     {exposedPlayers.map((player) => <article key={player.id} aria-label={`${player.id === viewerId ? 'Your' : player.name + '’s'} exposed sets`}>
       <strong>{player.id === viewerId ? 'You' : player.name} <small>· {player.seat}</small></strong>
-      <div className="table-meld-groups">{player.exposures.map((set) => <div className="table-meld" key={set.id} aria-label={`${set.kind}: ${set.tiles.map(tileLabel).join(', ')}`}><div className="table-exposed-set">{set.tiles.map((tile) => <span className={highlightedTileIds.includes(tile.id) ? 'coach-public-focus' : undefined} key={tile.id} data-public-tile-id={tile.id} title={`${tileLabel(tile)}${highlightedTileIds.includes(tile.id) ? ' · Coach focus: public copy' : ''}`}><TileFace tile={tile} compact /></span>)}</div></div>)}</div>
+      <div className="table-meld-groups">{player.exposures.map(set => <ExposedTileGroup key={set.id} tiles={set.tiles} label={`${set.kind}: ${set.tiles.map(tileLabel).join(', ')}`} highlightedTileIds={highlightedTileIds} />)}</div>
     </article>)}
   </section> : null}</>;
 }

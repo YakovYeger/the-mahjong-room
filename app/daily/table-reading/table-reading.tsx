@@ -7,6 +7,7 @@ import { cardTileKey } from '../../../src/game/training-card';
 import { referenceHands } from '../../../src/game/reference-card';
 import { tileLabel } from '../../../src/game/tiles';
 import type { Tile } from '../../../src/game/types';
+import { ExposedTileGroup } from '../../../src/table/exposed-tile-group';
 import { ReferenceCardLine } from '../../../src/table/reference-card-line';
 import { PlayerPortrait } from '../../../src/table/table-art';
 import { TileFace } from '../../../src/table/tile-face';
@@ -90,7 +91,7 @@ export function TableReading({ level }: { level: TableLevel }) {
         <h3>Exposed sets</h3>
         <div className="table-reading-players">{puzzle.players.map(player => <article className={`table-reading-player${result ? ' table-reading-clue' : ''}`} key={player.id}>
           <strong><span className="table-reading-portrait" aria-hidden="true"><PlayerPortrait seat={player.seat} /></span>{player.name}</strong>
-          <div className="table-reading-sets">{player.exposures.map(set => <div className="table-reading-tiles" key={set.id} aria-label={`${set.tiles.length} ${tileLabel(set.tiles[0])} exposed`}>{set.tiles.map(tile => <PublicTile key={tile.id} tile={tile} />)}</div>)}</div>
+          <div className="table-reading-sets">{player.exposures.map(set => <ExposedTileGroup key={set.id} tiles={set.tiles} label={`Exposed tiles: ${set.tiles.map(tileLabel).join(', ')}`} compact={false} />)}</div>
         </article>)}</div>
         <h3>Discards</h3>
         <div className="table-reading-tiles" aria-label="Visible discards">{puzzle.discards.map(tile => <PublicTile key={tile.id} tile={tile} highlighted={Boolean(result && level === 'medium' && cardTileKey(tile) === 'dragon-green')} />)}</div>
