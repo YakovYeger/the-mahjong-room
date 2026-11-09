@@ -92,3 +92,29 @@ export function runBotAction(state: GameState, playerId: string): GameState {
   const discard = applyGameAction(current, playerId, { type: 'DISCARD_TILE', tileId: discardId });
   return discard.ok ? discard.state : current;
 }
+
+export function advancePlayingBots(state: GameState): GameState {
+  let next = state;
+  let guard = 0;
+  while (next.phase === 'playing' && guard < 80) {
+    guard += 1;
+    if (next.callWindow) {
+      const humanPending = next.callWindow.discardedByPlayerId !== 'human' && !next.callWindow.responses.human;
+      if (humanPending) return next;
+      const responder = next.players.find((player) => player.type === 'bot'
+        && player.id !== next.callWindow!.discardedByPlayerId
+        && !next.callWindow!.responses[player.id]);
+      if (!responder) return next;
+      const before = next.stateVersion;
+      next = runBotAction(next, responder.id);
+      if (next.stateVersion === before) return next;
+      continue;
+    }
+    const active = next.players[next.turnIndex];
+    if (active.type === 'human') return next;
+    const before = next.stateVersion;
+    next = runBotAction(next, active.id);
+    if (next.stateVersion === before) return next;
+  }
+  return next;
+}
