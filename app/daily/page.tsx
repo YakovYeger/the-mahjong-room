@@ -1,4 +1,4 @@
-import { puzzleDate } from '../../src/game/daily-puzzle';
+import { puzzleDate } from '../../src/game/puzzle-catalog';
 import { DailyPuzzle } from './daily-puzzle';
 import './daily.css';
 

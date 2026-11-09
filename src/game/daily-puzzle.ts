@@ -1,18 +1,14 @@
 import { advancePlayingBots } from './bots';
 import { applyGameAction, createGame } from './engine';
-import { arrangeHand, cardTileKey, TrainingCardProvider } from './training-card';
+import { arrangeHand, cardTileKey } from './training-card';
 import { createWall, deterministicShuffle } from './tiles';
 import type { Tile } from './types';
 
-export function puzzleDate(now = new Date()) {
-  return now.toISOString().slice(0, 10);
-}
+import { dailyPuzzleRecipe } from './puzzle-catalog';
+export { puzzleDate } from './puzzle-catalog';
 
 export function createDailyPuzzle(date: string) {
-  const day = Math.floor(Date.parse(date) / 86_400_000);
-  const seed = day + 37_429_991;
-  const hands = TrainingCardProvider.getHands();
-  const hand = hands[((day % hands.length) + hands.length) % hands.length];
+  const { seed, hand } = dailyPuzzleRecipe(date);
   const pool = deterministicShuffle(createWall(), seed);
   const take = (index: number) => pool.splice(index, 1)[0];
   const complete = [...hand.groups].sort((a, b) => Number(a.jokerAllowed) - Number(b.jokerAllowed))

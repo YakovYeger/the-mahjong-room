@@ -164,7 +164,7 @@ export function TableReveal({ game, waiting = false }: { game: GameState; waitin
   );
 }
 
-export function GameExperience({ puzzleGame }: { puzzleGame?: GameState } = {}) {
+export function GameExperience({ puzzleGame, puzzleReturnHref = '/daily' }: { puzzleGame?: GameState; puzzleReturnHref?: string } = {}) {
   const { openSettings, reducedMotion } = useAccessibility();
   const moveFeedback = useMoveFeedback();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -463,7 +463,7 @@ export function GameExperience({ puzzleGame }: { puzzleGame?: GameState } = {}) 
           {gameReview.cards.map((card) => <article key={card.id}><span className={`review-icon ${card.tone === 'strong' ? '' : 'coral'}`}>{card.tone === 'strong' ? '✓' : '↗'}</span><p className="kicker">{card.eyebrow}</p><h2>{card.title}</h2><p>{card.body}</p></article>)}
           <article className="skill-card"><p className="kicker">Skills practiced</p>{gameReview.skills.map(({ name, score }) => <div className="skill" key={name}><span>{name}</span><i><b style={{ width: `${score}%` }} /></i></div>)}</article>
         </section>
-        <div className="review-actions">{puzzleGame ? <a className={buttonVariants()} href="/daily">Back to Daily Puzzle</a> : <><button onClick={startNextGame}>Play game {gameNumber + 1}</button><button className="secondary" onClick={() => setStarted(false)}>Back home</button></>}</div>
+        <div className="review-actions">{puzzleGame ? <a className={buttonVariants()} href={puzzleReturnHref}>Back to Daily Puzzle</a> : <><button onClick={startNextGame}>Play game {gameNumber + 1}</button><button className="secondary" onClick={() => setStarted(false)}>Back home</button></>}</div>
       </main>
     );
   }
@@ -476,8 +476,8 @@ export function GameExperience({ puzzleGame }: { puzzleGame?: GameState } = {}) 
   return (
     <main className={`shell game-shell shared-table-page unified-game ${cardOpen ? 'card-is-open' : ''}`}>
       <CelebrationLayer celebration={celebration} />
-      <TableHeader brand={puzzleGame ? <a className="brand" href="/daily">Daily Puzzle</a> : <button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={puzzleGame ? 'Puzzle practice' : `Practice · Game ${gameNumber}`}>
-        <Menu label="Table" note={puzzleGame ? 'Puzzle practice' : 'Saved on this device'} items={[{ label: 'Browse card', onClick: () => setCardOpen(true) }, { label: 'Game preferences', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, ...(!puzzleGame ? [{ label: 'Save progress', href: '/account' }] : []), ...(manualTurns >= 4 && canDiscard ? [{ label: 'Complete with coach', onClick: finishGame }] : []), puzzleGame ? { label: 'Back to Daily Puzzle', href: '/daily' } : { label: 'Leave table', onClick: () => setStarted(false) }]} />
+      <TableHeader brand={puzzleGame ? <a className="brand" href={puzzleReturnHref}>Daily Puzzle</a> : <button className="brand brand-button" onClick={() => setStarted(false)}>The Mahjong Room</button>} context={puzzleGame ? 'Puzzle practice' : `Practice · Game ${gameNumber}`}>
+        <Menu label="Table" note={puzzleGame ? 'Puzzle practice' : 'Saved on this device'} items={[{ label: 'Browse card', onClick: () => setCardOpen(true) }, { label: 'Game preferences', onClick: openSettings }, { label: 'Tutorial ↗', href: '/learn', newTab: true }, { label: 'Rules ↗', href: '/rules', newTab: true }, ...(!puzzleGame ? [{ label: 'Save progress', href: '/account' }] : []), ...(manualTurns >= 4 && canDiscard ? [{ label: 'Complete with coach', onClick: finishGame }] : []), puzzleGame ? { label: 'Back to Daily Puzzle', href: puzzleReturnHref } : { label: 'Leave table', onClick: () => setStarted(false) }]} />
       </TableHeader>
       <section className="game-table" aria-label="Guided American Mahjong table">
         <TableSurface highlightedTileIds={coach.highlights.publicTileIds} players={game.players.map(({ rack, ...player }) => ({ ...player, rackCount: rack.length }))} viewerId={human.id} activePlayerIds={game.phase === 'charleston' || respondingToDiscard ? [human.id] : [game.players[game.turnIndex].id]} wallCount={game.wall.length} discardCount={visibleDiscards.length}>
