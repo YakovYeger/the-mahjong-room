@@ -1,0 +1,27 @@
+src/table/table-surface.tsx
+  s_8b11fec7c205a1::t_9f29e589b41dc7 4,47
+app/daily/table-reading/table-reading.tsx
+  s_8b11fec7c205a1::t_9f29e589b41dc7 10,94
+src/table/table.css
+  s_8b11fec7c205a1::t_9f29e589b41dc7 551-555
+app/daily/table-reading/table-reading.css
+  s_8b11fec7c205a1::t_9f29e589b41dc7 12
+src/table/exposed-tile-group.tsx
+  s_8b11fec7c205a1::t_9f29e589b41dc7 1-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ef1758a334584f12dbda59a4d51f05e0fd38d520",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
