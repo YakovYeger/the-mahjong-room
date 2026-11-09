@@ -24,7 +24,7 @@
 .daily-commit { margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .daily-commit p { margin: 0; font-size: .85rem; }
 .daily-commit .ui-button { background: #f4dfab; color: #183c32; }
-.daily-result { margin-top: 16px; padding: clamp(16px,4vw,26px); border: 1px solid #d8bc7c; border-radius: 18px; background: var(--paper); animation: daily-settle .35s ease-out both; }
+.daily-result { position: relative; overflow: hidden; margin-top: 16px; padding: clamp(16px,4vw,26px); border: 1px solid #d8bc7c; border-radius: 18px; background: var(--paper); }
 .daily-result h2 { font: 600 clamp(1.5rem,5vw,2.1rem) Georgia,serif; margin: 6px 0; }
 .daily-result p { line-height: 1.5; }
 .daily-result small { display: block; margin-top: 8px; color: #52685f; }
@@ -58,3 +58,27 @@
 .daily-tile:not(:disabled) { touch-action: none; cursor: grab; }
 .daily-tile-slot.is-dragging .daily-tile { cursor: grabbing; }
 .daily-rack-help { margin: 8px 0 0; color: #e5ecdd; font-size: .75rem; }
+
+.daily-result-fresh { animation: daily-settle .35s ease-out both; }
+.daily-result-solved { border-color: #be9a50; box-shadow: 0 5px 20px #a47b301a; }
+.daily-result-header { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+.daily-result-header .kicker { margin: 0; }
+.daily-fit-badge { flex: none; text-align: center; padding: 6px 10px; border: 1px solid #c6a45b; border-radius: 10px; color: #5e451b; background: #f8e9be; }
+.daily-fit-badge strong { font: 700 1.1rem Georgia,serif; white-space: nowrap; }
+.daily-fit-badge small { margin: 1px 0 0; color: inherit; font-size: .65rem; }
+.daily-wait { display: flex; align-items: center; gap: 14px; padding: 9px 12px; margin: 0 0 14px; border: 1px solid #d9c69e; border-radius: 12px; }
+.daily-wait-tile { display: block; flex: none; width: 44px; height: 64px; padding: 3px; border: 1px solid #cebf9d; border-bottom: 5px solid #baa778; border-radius: 7px; color: #173630; background: #fffaf0; box-shadow: 0 2px 4px #193d312b; }
+.daily-wait-tile .tile-face { width: 100%; height: 100%; }
+.daily-wait > div:last-child > span { display: block; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; }
+.daily-wait strong { display: block; margin-top: 4px; font: 700 1.2rem Georgia,serif; }
+.daily-wait small { margin-top: 2px; }
+.daily-result-solved.daily-result-fresh .daily-wait-tile { animation: daily-wait-reveal .65s cubic-bezier(.2,1.25,.4,1) both; }
+.daily-table-solved .daily-tile-answer { animation: daily-discard-pop .55s ease-out both; }
+.daily-solve-burst { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+@keyframes daily-wait-reveal { from { opacity: .55; transform: perspective(160px) rotateX(-55deg) translateY(8px) scale(.88); } to { opacity: 1; transform: none; } }
+@keyframes daily-discard-pop { 0%,100% { scale: 1; } 35% { scale: 1.08; box-shadow: 0 0 20px #f0d07acc; } }
+html[data-motion="reduce"] .daily-solve-burst { display: none; }
+@media(prefers-reduced-motion:reduce) {
+  .daily-result-fresh,.daily-result-solved.daily-result-fresh .daily-wait-tile,.daily-table-solved .daily-tile-answer { animation: none; }
+  .daily-solve-burst { display: none; }
+}
