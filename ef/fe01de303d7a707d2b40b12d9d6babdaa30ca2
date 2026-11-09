@@ -1,0 +1,25 @@
+app/daily/daily-puzzle.tsx
+  s_8b11fec7c205a1::t_cd0b6d57855c41 4-7,10,13-14,22-24,34-36,43-47,51,56,70-105
+app/daily/daily.css
+  s_8b11fec7c205a1::t_0ada8da6010ca0 56-60
+app/game-experience.tsx
+  s_8b11fec7c205a1::t_3208584ec9cb10 167,182
+src/game/puzzle-results.ts
+  s_8b11fec7c205a1::t_cc2d5e3f409604 18-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "effe01de303d7a707d2b40b12d9d6babdaa30ca2",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
