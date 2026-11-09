@@ -1,0 +1,39 @@
+app/daily/solve-burst.tsx
+  s_8b11fec7c205a1::t_ed3552099f392a 1-20
+app/daily/archive/page.tsx
+  s_8b11fec7c205a1::t_ed3552099f392a 15-17
+app/daily/daily.css
+  s_8b11fec7c205a1::t_ed3552099f392a 85-91
+src/game/table-reading-puzzles.ts
+  s_8b11fec7c205a1::t_ff89e8542fefc2 1-77
+app/daily/table-reading/page.tsx
+  s_8b11fec7c205a1::t_ed3552099f392a 2-11,13
+  s_8b11fec7c205a1::t_e6e08f51f29df4 1,12
+app/daily/table-reading/table-reading.css
+  s_8b11fec7c205a1::t_ed3552099f392a 1-35
+app/daily/daily-puzzle.tsx
+  s_8b11fec7c205a1::t_ed3552099f392a 7,19,118,131
+app/daily/table-reading/table-reading.tsx
+  s_8b11fec7c205a1::t_ed3552099f392a 1-40,42-68,70-130
+  s_8b11fec7c205a1::t_32d254a1cf5ce5 41,69
+docs/DAILY_PUZZLES.md
+  s_8b11fec7c205a1::t_bc239f31a3ed7f 11,13-15,17
+tests/table-reading-puzzles.test.ts
+  s_8b11fec7c205a1::t_4ff26b17bb03fa 1-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "25070248708653040c4f80dafa5b68e42fb2d63c",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
