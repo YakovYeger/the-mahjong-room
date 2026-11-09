@@ -50,3 +50,6 @@
 .daily-archive-list small { display: block; margin-top: 3px; font-size: .8rem; }
 .daily-archive-pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: .85rem; }
 .daily-archive-pagination a { display: inline-flex; align-items: center; min-height: 44px; }
+.daily-reference { margin-top: 10px; background: var(--paper); color: var(--ink); border: 1px solid #d9d0bd; border-radius: 12px; overflow: hidden; }
+.daily-reference .reference-hand { border-top: 0; }
+.daily-target .daily-reference .reference-patterns p { margin: 5px 0 0; color: var(--muted); font: .6875rem/1.5 Arial,sans-serif; }

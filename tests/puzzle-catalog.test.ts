@@ -37,5 +37,9 @@ describe('Daily puzzle catalog', () => {
     expect(readPuzzleResult(storage, '2026-11-09', ['red'])).toBe('red');
     expect(readPuzzleResult(storage, '2026-11-10', ['east'])).toBe('east');
     expect(readPuzzleResult(storage, '2026-11-10', ['west'])).toBeNull();
+    expect(readPuzzleResult(storage, '2026-11-09', ['red'], 2)).toBeNull();
+    savePuzzleResult(storage, '2026-11-09', 'green', 2);
+    expect(readPuzzleResult(storage, '2026-11-09', ['red', 'green'], 2)).toBe('green');
+    expect(readPuzzleResult(storage, '2026-11-09', ['red', 'green'], 1)).toBe('red');
   });
 });

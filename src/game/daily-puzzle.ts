@@ -8,7 +8,8 @@ import { dailyPuzzleRecipe } from './puzzle-catalog';
 export { puzzleDate } from './puzzle-catalog';
 
 export function createDailyPuzzle(date: string) {
-  const { seed, hand } = dailyPuzzleRecipe(date);
+  const recipe = dailyPuzzleRecipe(date);
+  const { seed, hand, variants, cardId } = recipe;
   const pool = deterministicShuffle(createWall(), seed);
   const take = (index: number) => pool.splice(index, 1)[0];
   const complete = [...hand.groups].sort((a, b) => Number(a.jokerAllowed) - Number(b.jokerAllowed))
@@ -19,23 +20,27 @@ export function createDailyPuzzle(date: string) {
       return take(index);
     }));
   const needed = deterministicShuffle(complete.filter(tile => tile.type.kind !== 'joker'), seed + 1)[0];
-  const required = new Set(hand.groups.map(group => group.tileKey));
-  const answer = take(pool.findIndex(tile => tile.type.kind !== 'joker' && !required.has(cardTileKey(tile))));
+  const required = new Set(variants.flatMap(variant => variant.groups.map(group => group.tileKey)));
+  const discardIndex = pool.findIndex(tile => tile.type.kind !== 'joker' && !required.has(cardTileKey(tile)));
+  if (discardIndex < 0) throw new Error('The daily line needs a discard outside all its variants.');
+  const answer = take(discardIndex);
   const rack = deterministicShuffle([...complete.filter(tile => tile.id !== needed.id), answer], seed + 2);
-  const game = createGame({ seed, id: `daily-${date}`, cardId: 'training-card' });
+  const game = createGame({ seed, id: recipe.version === 1 ? `daily-${date}` : `daily-v2-${date}`, cardId });
   game.phase = 'playing';
   game.players[0].rack = rack;
   for (const player of game.players.slice(1)) player.rack = pool.splice(0, 13);
   game.wall = deterministicShuffle([...pool, needed], seed + 3);
-  return { date, hand, rack, needed, answer, game };
+  return { ...recipe, rack, needed, answer, game };
 }
 
 type DailyPuzzle = ReturnType<typeof createDailyPuzzle>;
 export function scoreDailyDiscard(puzzle: DailyPuzzle, tileId: string) {
   if (!puzzle.rack.some(tile => tile.id === tileId)) return null;
-  const layout = arrangeHand(puzzle.rack.filter(tile => tile.id !== tileId), [], puzzle.hand);
-  const neededGroup = puzzle.hand.groups.find(group => group.tileKey === cardTileKey(puzzle.needed));
-  return { correct: tileId === puzzle.answer.id, matching: layout.matchingTileIds.length, jokerCanHelp: Boolean(neededGroup?.jokerAllowed) };
+  const kept = puzzle.rack.filter(tile => tile.id !== tileId);
+  const matching = Math.max(...puzzle.variants.map(hand => arrangeHand(kept, [], hand).matchingTileIds.length));
+  const solution = arrangeHand(puzzle.rack.filter(tile => tile.id !== puzzle.answer.id), [], puzzle.hand);
+  const neededGroup = solution.groups.find(group => group.slots.includes(null));
+  return { correct: tileId === puzzle.answer.id, matching, jokerCanHelp: Boolean(neededGroup?.required.jokerAllowed) };
 }
 
 export function playDailyDiscard(puzzle: DailyPuzzle, tile: Tile) {

@@ -2,9 +2,8 @@
 import { Select } from '../ui/select';
 import type { HandCandidate } from '../game/types';
 import { useState } from 'react';
-import { patternTokens, referenceHands, referenceSections } from '../game/reference-card';
-
-const inkCues = { jade: { mark: '○', name: 'green' }, red: { mark: '△', name: 'red' }, ink: { mark: '□', name: 'black' } } as const;
+import { referenceHands, referenceSections } from '../game/reference-card';
+import { ReferenceCardLine } from './reference-card-line';
 
 export function ReferenceHands({ printable = false, candidates = [], onFollow }: { printable?: boolean; candidates?: HandCandidate[]; onFollow?: (handId: string) => void }) {
   const [section, setSection] = useState('All hands');
@@ -16,11 +15,11 @@ export function ReferenceHands({ printable = false, candidates = [], onFollow }:
     <p className="card-results" role="status">{visible.length} of {referenceHands.length} hands</p>
     <div className="reference-sections">{referenceSections.map(name => {
       const rows = visible.filter(hand => hand.section === name);
-      return rows.length ? <section key={name}><h3>{name === '369' ? '3 · 6 · 9' : name}<span>{rows.length} {rows.length === 1 ? 'hand' : 'hands'}</span></h3>{rows.map(hand => <article className={`reference-hand ${candidates[0]?.handId.startsWith(`${hand.id}:`) ? 'leading' : ''}`} aria-label={`${name}, hand ${referenceHands.filter(h => h.section === name).indexOf(hand) + 1}`} key={hand.id}>
-        <div className="reference-patterns"><span className="reference-line-number">Hand {referenceHands.filter(h => h.section === name).indexOf(hand) + 1}{candidates.find(c => c.handId.startsWith(`${hand.id}:`)) ? ` · ${candidates.find(c => c.handId.startsWith(`${hand.id}:`))!.matchingTileIds.length}/14 tiles` : ''}</span>{hand.patterns.map((pattern,i) => <div key={pattern}>{i ? <small>or</small> : null}{patternTokens(pattern).map((token,j) => <strong key={j} className={`card-ink-${token.ink}`} aria-label={`${token.text}, ${inkCues[token.ink].name} card ink`}><span className="card-suit-cue" aria-hidden="true">{inkCues[token.ink].mark}</span>{token.text}</strong>)}</div>)}<p>{hand.note || 'Follow the printed groups.'}</p></div>
-        <div className={`reference-value ${hand.exposure === 'C' ? 'concealed' : ''}`}><b>{hand.value}</b><span>{hand.exposure === 'C' ? 'Concealed' : 'Exposed'}</span></div>
-        {onFollow ? <button className="follow-hand-button" onClick={() => { const candidate = candidates.find(c => c.handId.startsWith(`${hand.id}:`)); if (candidate) onFollow(candidate.handId); }}>Follow this hand →</button> : null}
-      </article>)}</section> : null;
+      return rows.length ? <section key={name}><h3>{name === '369' ? '3 · 6 · 9' : name}<span>{rows.length} {rows.length === 1 ? 'hand' : 'hands'}</span></h3>{rows.map(hand => {
+        const candidate = candidates.find(c => c.handId.startsWith(`${hand.id}:`));
+        const number = referenceHands.filter(h => h.section === name).indexOf(hand) + 1;
+        return <ReferenceCardLine key={hand.id} hand={hand} number={number} leading={candidate === candidates[0] && Boolean(candidate)} fit={candidate?.matchingTileIds.length} actions={onFollow ? <button className="follow-hand-button" onClick={() => { if (candidate) onFollow(candidate.handId); }}>Follow this hand →</button> : null} />;
+      })}</section> : null;
     })}</div>
     {!visible.length ? <p className="card-empty">No hands match. Try another search or section.</p> : null}
     <p className="card-source-note">Transcribed from your 2025 card · White Dragon represents zero. Printed colors indicate relative suits; they can be assigned to Bams, Craks or Dots.</p>

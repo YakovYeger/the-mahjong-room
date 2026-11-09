@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createDailyPuzzle, playDailyDiscard, scoreDailyDiscard } from '../../src/game/daily-puzzle';
 import { formatPuzzleDate } from '../../src/game/puzzle-catalog';
 import { readPuzzleResult, savePuzzleResult } from '../../src/game/puzzle-results';
+import { ReferenceCardLine } from '../../src/table/reference-card-line';
 import { TrainingCardLine } from '../../src/table/training-card-line';
 import { tileLabel } from '../../src/game/tiles';
 import type { GameState } from '../../src/game/types';
@@ -23,7 +24,7 @@ export function DailyPuzzle({ date, archived = false }: { date: string; archived
     queueMicrotask(() => {
       if (cancelled) return;
       try {
-        setSubmitted(readPuzzleResult(localStorage, date, puzzle.rack.map(tile => tile.id)));
+        setSubmitted(readPuzzleResult(localStorage, date, puzzle.rack.map(tile => tile.id), puzzle.version));
       } catch { /* The puzzle is playable without browser storage. */ }
       setReady(true);
     });
@@ -35,7 +36,7 @@ export function DailyPuzzle({ date, archived = false }: { date: string; archived
   const submit = () => {
     if (!ready || !selected || submitted) return;
     setSubmitted(selected);
-    try { savePuzzleResult(localStorage, date, selected); } catch { /* Optional. */ }
+    try { savePuzzleResult(localStorage, date, selected, puzzle.version); } catch { /* Optional. */ }
   };
 
   if (game) return <GameExperience puzzleGame={game} puzzleReturnHref={archived ? `/daily/${date}` : '/daily'} />;
@@ -44,13 +45,14 @@ export function DailyPuzzle({ date, archived = false }: { date: string; archived
     <header className="daily-top"><a className="brand" href="/">The Mahjong Room</a><nav aria-label="Puzzle navigation"><a href="/daily/archive">Puzzle archive</a><a href="/">Back home</a></nav></header>
     <div className="daily-layout">
       <header className="daily-intro">
-        <span className="daily-seal" aria-hidden="true">✦</span>
         <p className="kicker">{archived ? 'Puzzle archive' : 'Daily Puzzle'} · <time dateTime={date}>{formatPuzzleDate(date)}</time></p>
         <h1>What would you discard?</h1>
         <p>One good discard puts you a tile away from Mahjong.</p>
       </header>
       <section className="daily-table" aria-label="Daily discard challenge">
-        <div className="daily-target"><span>Training Card · Target hand</span><h2>{puzzle.hand.section}</h2><TrainingCardLine hand={puzzle.hand} /></div>
+        <div className="daily-target"><span>{puzzle.row ? '2025 Card' : 'Training Card'} · Target hand</span><h2>{puzzle.hand.section === '369' ? '3 · 6 · 9' : puzzle.hand.section}</h2>
+          {puzzle.row ? <div className="daily-reference"><ReferenceCardLine hand={puzzle.row} number={puzzle.number} showSuitCues={false} /></div> : <TrainingCardLine hand={puzzle.hand} />}
+        </div>
         <div className="daily-rack" role="group" aria-label="Choose a tile to discard">
           {puzzle.rack.map(tile => {
             const picked = (submitted ?? selected) === tile.id;
@@ -61,7 +63,7 @@ export function DailyPuzzle({ date, archived = false }: { date: string; archived
       </section>
       {result && chosen ? <section className="daily-result">
         <div role="status">
-          <p className="kicker">{result.correct ? '✦ Puzzle solved' : '✦ Puzzle reviewed'}</p>
+          <p className="kicker">{result.correct ? 'Puzzle solved' : 'Puzzle reviewed'}</p>
           <h2>{result.correct ? 'One tile away.' : 'The stronger discard'}</h2>
           <p>{result.correct ? `Exactly. ${tileLabel(puzzle.answer)} doesn’t fit ${puzzle.hand.name}.` : `You chose ${tileLabel(chosen)}, leaving ${result.matching} tiles that fit. Discarding ${tileLabel(puzzle.answer)} keeps all 13 useful tiles.`} You’d be looking for {tileLabel(puzzle.needed)}{result.jokerCanHelp ? ' or a Joker for that set' : ''}.</p>
         </div>

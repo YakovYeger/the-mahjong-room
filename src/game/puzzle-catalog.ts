@@ -1,6 +1,17 @@
+import { PhotoCardProvider } from './photo-card';
+import { referenceHands } from './reference-card';
+import type { HandDefinition } from './types';
 import { TrainingCardProvider } from './training-card';
 
 export const FIRST_PUZZLE_DATE = '2026-11-08';
+export const FIRST_2025_PUZZLE_DATE = '2026-11-09';
+const photoVariants = new Map<string, HandDefinition[]>();
+for (const hand of PhotoCardProvider.getHands()) {
+  const id = hand.id.split(':')[0];
+  const list = photoVariants.get(id);
+  if (list) list.push(hand);
+  else photoVariants.set(id, [hand]);
+}
 const DAY_MS = 86_400_000;
 const PAGE_SIZE = 24;
 // This order is part of the v1 recipe. Adding a card line must not reshuffle past days.
@@ -21,10 +32,19 @@ export function isPublishedPuzzleDate(date: string, today = puzzleDate()) {
 
 export function dailyPuzzleRecipe(date: string) {
   const day = Math.floor(Date.parse(date) / DAY_MS);
+  const seed = day + 37_429_991;
+  if (date >= FIRST_2025_PUZZLE_DATE) {
+    const first = Date.parse(FIRST_2025_PUZZLE_DATE) / DAY_MS;
+    const row = referenceHands[(day - first) % referenceHands.length];
+    const variants = photoVariants.get(row.id);
+    if (!variants?.length) throw new Error('The 2025 daily puzzle line is missing.');
+    const number = referenceHands.filter(item => item.section === row.section).indexOf(row) + 1;
+    return { version: 2 as const, kind: 'discard' as const, cardId: 'photo-2025' as const, date, seed, hand: variants[0], variants, row, number };
+  }
   const handId = V1_HAND_IDS[((day % V1_HAND_IDS.length) + V1_HAND_IDS.length) % V1_HAND_IDS.length];
   const hand = TrainingCardProvider.getHands().find(item => item.id === handId);
   if (!hand) throw new Error('The v1 daily puzzle pattern is missing.');
-  return { version: 1 as const, kind: 'discard' as const, date, seed: day + 37_429_991, hand };
+  return { version: 1 as const, kind: 'discard' as const, cardId: 'training-card' as const, date, seed, hand, variants: [hand], row: null, number: 0 };
 }
 
 export function puzzleArchive(today: string, requestedPage: number) {

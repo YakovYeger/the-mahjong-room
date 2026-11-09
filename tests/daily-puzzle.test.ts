@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createDailyPuzzle, playDailyDiscard, puzzleDate, scoreDailyDiscard } from '../src/game/daily-puzzle';
+import { PhotoCardProvider } from '../src/game/photo-card';
+import { referenceHands } from '../src/game/reference-card';
+import { FIRST_2025_PUZZLE_DATE } from '../src/game/puzzle-catalog';
 import { TrainingCardProvider } from '../src/game/training-card';
 
 describe('Daily discard puzzle', () => {
@@ -12,8 +15,8 @@ describe('Daily discard puzzle', () => {
 
   it('builds a physical deck and one best discard for each training pattern', () => {
     const hands = new Set<string>();
-    for (let day = 1; day <= 20; day += 1) {
-      const puzzle = createDailyPuzzle(`2026-11-${String(day).padStart(2, '0')}`);
+    for (let day = 1; day <= 10; day += 1) {
+      const puzzle = createDailyPuzzle(`2026-10-${String(day).padStart(2, '0')}`);
       hands.add(puzzle.hand.id);
       const tiles = [...puzzle.game.players.flatMap(player => player.rack), ...puzzle.game.wall];
       expect(tiles).toHaveLength(152);
@@ -26,6 +29,21 @@ describe('Daily discard puzzle', () => {
     }
     expect(hands.size).toBe(TrainingCardProvider.getHands().length);
   });
+
+  it('uses the printed 2025 line, keeps a single best discard across all its variants, and plays on the same card', () => {
+    const start = Date.parse(FIRST_2025_PUZZLE_DATE);
+    for (const [offset, row] of referenceHands.entries()) {
+      const puzzle = createDailyPuzzle(puzzleDate(new Date(start + offset * 86_400_000)));
+      expect(puzzle.row).toEqual(row);
+      expect(puzzle.game.cardId).toBe('photo-2025');
+      expect(new Set([...puzzle.game.players.flatMap(player => player.rack), ...puzzle.game.wall].map(tile => tile.id)).size).toBe(152);
+      expect(puzzle.rack.filter(tile => scoreDailyDiscard(puzzle, tile.id)?.matching === 13).map(tile => tile.id)).toEqual([puzzle.answer.id]);
+      const winning = [...puzzle.rack.filter(tile => tile.id !== puzzle.answer.id), puzzle.needed];
+      expect(PhotoCardProvider.validateMahjong(winning).valid, row.id).toBe(true);
+    }
+    const puzzle = createDailyPuzzle(FIRST_2025_PUZZLE_DATE);
+    expect(playDailyDiscard(puzzle, puzzle.answer)?.cardId).toBe('photo-2025');
+  }, 20_000);
 
   it('continues with the selected discard, even when it was not the solution', () => {
     const puzzle = createDailyPuzzle('2026-11-08');
