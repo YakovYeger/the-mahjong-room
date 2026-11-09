@@ -53,3 +53,8 @@
 .daily-reference { margin-top: 10px; background: var(--paper); color: var(--ink); border: 1px solid #d9d0bd; border-radius: 12px; overflow: hidden; }
 .daily-reference .reference-hand { border-top: 0; }
 .daily-target .daily-reference .reference-patterns p { margin: 5px 0 0; color: var(--muted); font: .6875rem/1.5 Arial,sans-serif; }
+.daily-tile-slot { position: relative; min-width: 0; }
+.daily-tile-slot.is-dragging { z-index: 6; }
+.daily-tile:not(:disabled) { touch-action: none; cursor: grab; }
+.daily-tile-slot.is-dragging .daily-tile { cursor: grabbing; }
+.daily-rack-help { margin: 8px 0 0; color: #e5ecdd; font-size: .75rem; }

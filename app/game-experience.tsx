@@ -164,7 +164,7 @@ export function TableReveal({ game, waiting = false }: { game: GameState; waitin
   );
 }
 
-export function GameExperience({ puzzleGame, puzzleReturnHref = '/daily' }: { puzzleGame?: GameState; puzzleReturnHref?: string } = {}) {
+export function GameExperience({ puzzleGame, puzzleRackOrder = [], puzzleReturnHref = '/daily' }: { puzzleGame?: GameState; puzzleRackOrder?: string[]; puzzleReturnHref?: string } = {}) {
   const { openSettings, reducedMotion } = useAccessibility();
   const moveFeedback = useMoveFeedback();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -179,7 +179,7 @@ export function GameExperience({ puzzleGame, puzzleReturnHref = '/daily' }: { pu
   const [manualTurns, setManualTurns] = useState(0);
   const [hintsRequested, setHintsRequested] = useState(0);
   const [cardOpen, setCardOpen] = useState(false);
-  const [rackOrder, setRackOrder] = useState(() => game.players[0].rack.map((tile) => tile.id));
+  const [rackOrder, setRackOrder] = useState(() => normalizeTileOrder(puzzleRackOrder, game.players[0].rack));
   const [draggingTileId, setDraggingTileId] = useState<string | null>(null);
   const suppressTileClickRef = useRef(false);
   const [gameNumber, setGameNumber] = useState(1);
