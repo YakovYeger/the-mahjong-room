@@ -5,12 +5,16 @@ import { useState } from 'react';
 import { referenceHands, referenceSections } from '../game/reference-card';
 import { ReferenceCardLine } from './reference-card-line';
 
-export function ReferenceHands({ printable = false, candidates = [], onFollow }: { printable?: boolean; candidates?: HandCandidate[]; onFollow?: (handId: string) => void }) {
-  const [section, setSection] = useState('All hands');
-  const [search, setSearch] = useState('');
+export const initialCardFilters = { section: 'All hands', search: '' };
+type CardFilters = typeof initialCardFilters;
+
+export function ReferenceHands({ printable = false, candidates = [], onFollow, filters, onFiltersChange }: { printable?: boolean; candidates?: HandCandidate[]; onFollow?: (handId: string) => void; filters?: CardFilters; onFiltersChange?: (filters: CardFilters) => void }) {
+  const [localFilters, setLocalFilters] = useState(initialCardFilters);
+  const { section, search } = filters ?? localFilters;
+  const changeFilters = onFiltersChange ?? setLocalFilters;
   const visible = referenceHands.filter(hand => (section === 'All hands' || section === hand.section) && `${hand.section} ${hand.note} ${hand.patterns.join(' ')}`.toLowerCase().includes(search.toLowerCase()));
   return <div className="reference-card">
-    <div className="card-browser-controls"><label><span>Find a hand</span><input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Try dragons, pairs, 2025…" /></label><Select label="Section" value={section} onValueChange={setSection} options={['All hands', ...referenceSections].map(value => ({ value, label: value }))} />{printable ? <button type="button" onClick={() => window.print()}>Print card ↗</button> : <a className="card-print-link" href="/cards" target="_blank" rel="noreferrer">Full card / Print ↗</a>}</div>
+    <div className="card-browser-controls"><label><span>Find a hand</span><input type="search" value={search} onChange={e => changeFilters({ section, search: e.target.value })} placeholder="Try dragons, pairs, 2025…" /></label><Select label="Section" value={section} onValueChange={value => changeFilters({ section: value, search })} options={['All hands', ...referenceSections].map(value => ({ value, label: value }))} />{printable ? <button type="button" onClick={() => window.print()}>Print card ↗</button> : <a className="card-print-link" href="/cards" target="_blank" rel="noreferrer">Full card / Print ↗</a>}</div>
     {onFollow ? <details className="card-legend"><summary>Symbols & suit colors</summary><div className="card-key"><span><b className="card-ink-jade">○ Green</b>, <b className="card-ink-red">△ red</b> & <b>□ black</b> = different suits</span><span><b>0</b> White Dragon · any suit</span><span><b>X</b> Exposed · <b>C</b> Concealed</span><span>F Flowers · D Dragons · N/E/W/S Winds</span></div></details> : <div className="card-key"><span><b className="card-ink-jade">○ Green</b>, <b className="card-ink-red">△ red</b> & <b>□ black</b> = different suits</span><span><b>0</b> White Dragon · any suit</span><span><b>X</b> Exposed · <b>C</b> Concealed</span><span>F Flowers · D Dragons · N/E/W/S Winds</span></div>}
     <p className="card-results" role="status">{visible.length} of {referenceHands.length} hands</p>
     <div className="reference-sections">{referenceSections.map(name => {

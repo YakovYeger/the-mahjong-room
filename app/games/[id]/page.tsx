@@ -23,6 +23,7 @@ import { EndGameDialog } from '../../../src/table/end-game-dialog';
 import { compactTile } from '../../../src/table/tile-presentation';
 import { TileFace } from '../../../src/table/tile-face';
 import { getCardProvider } from '../../../src/game/cards';
+import { JokerSwapPrompt, ViewCardButton } from '../../../src/table/rack-turn-tools';
 import { CardCompanion, HandCheck } from '../../../src/table/card-companion';
 import { TableSurface, DiscardPool, TablePrompt, RackPanel, TableHeader } from '../../../src/table/table-surface';
 import { getSnapshotCoachContext } from '../../../src/coach/analyze';
@@ -61,6 +62,7 @@ function CloudGameTable({ gameId }: { gameId: string }) {
   const online = cloud.online;
   const previousSnapshot = useRef<GameSnapshot | null>(null);
   const [cardOpen, setCardOpen] = useState(false);
+  const cardButtonRef = useRef<HTMLButtonElement>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [rackOrder, setRackOrder] = useState<string[]>([]);
   const [discardDropActive, setDiscardDropActive] = useState(false);
@@ -295,15 +297,16 @@ function CloudGameTable({ gameId }: { gameId: string }) {
         {!isTerminal ? <TurnClock deadlineAt={snapshot.deadlineAt} charleston={snapshot.publicState.phase === 'charleston'} /> : null}
         {snapshot.mode === 'live' && (snapshot.status === 'active' || snapshot.status === 'paused') ? <button disabled={busy} onClick={() => void vote()}>{snapshot.status === 'paused' ? 'Vote to resume' : 'Vote to pause'}</button> : null}
       </TablePrompt>
+        <JokerSwapPrompt options={jokerExchanges} viewerId={snapshot.privateState.playerId} disabled={busy} onSwap={option => void act({ type: 'EXCHANGE_JOKER', exposureOwnerId: option.owner.id, exposureId: option.exposure.id, rackTileId: option.rackTile.id, jokerTileId: option.joker.id })} />
         <div className="cloud-actions">
         <div className="cloud-rack-heading"><strong>Your rack</strong><span>{isTerminal ? 'Final rack' : selected.length ? `${selected.length} selected` : 'Select tiles to act'}</span></div>
-          {!isTerminal ? <OrganizeRackButton disabled={busy} label={followedHand ? `Organize rack by ${followedHand.name}` : 'Organize rack by suit and number'} onClick={() => {
+          {!isTerminal ? <div className="rack-icon-actions"><ViewCardButton buttonRef={cardButtonRef} open={cardOpen} onClick={() => setCardOpen(true)} /><OrganizeRackButton disabled={busy} label={followedHand ? `Organize rack by ${followedHand.name}` : 'Organize rack by suit and number'} onClick={() => {
             moveFeedback.celebrate('arrange');
             const ids = organizeRack(orderedRack, snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? [], followedHand);
             setRackOrder(ids);
             try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory ordering still works. */ }
             setMessage(followedHand ? `Rack organized by ${followedHand.name}. Unmatched tiles are at the end.` : 'Rack organized by suit and number.');
-          }} /> : null}
+          }} /></div> : null}
           {pending === 'charleston_pass' ? <button disabled={busy || selected.length !== 3} onClick={() => void act({ type: 'PASS_TILES', tileIds: selected })}>Pass three tiles</button> : null}
           {pending === 'courtesy_pass' ? <button disabled={busy || selected.length > 3} onClick={() => void act({ type: 'COURTESY_PASS', tileIds: selected })}>Pass {selected.length || 'no'} tiles</button> : null}
           {pending === 'charleston_decision' ? <><button disabled={busy} onClick={() => void act({ type: 'CHOOSE_SECOND_CHARLESTON', continue: true })}>Continue Charleston</button><button className="secondary" disabled={busy} onClick={() => void act({ type: 'CHOOSE_SECOND_CHARLESTON', continue: false })}>Move to courtesy pass</button></> : null}
@@ -321,13 +324,13 @@ function CloudGameTable({ gameId }: { gameId: string }) {
           </SortableRackItem>;
         })}</div>
         <small className="cloud-rack-help" id="cloud-rack-help">Drag to arrange · Alt + arrow keys. Hold a tile to drag on touch.</small>
-        {jokerExchanges.length ? <div className="cloud-exchange-row"><span>Joker available:</span>{jokerExchanges.map((option) => <button disabled={busy} onClick={() => void act({ type: 'EXCHANGE_JOKER', exposureOwnerId: option.owner.id, exposureId: option.exposure.id, rackTileId: option.rackTile.id, jokerTileId: option.joker.id })} key={`${option.exposure.id}-${option.rackTile.id}`}>Swap {compactTile(option.rackTile)} for {option.owner.name}&apos;s Joker</button>)}</div> : null}
+
         {selected.length === 1 ? <div className="cloud-rack-order-actions" role="group" aria-label="Reorder selected tile"><button className="secondary" aria-label="Move selected tile left" disabled={busy || orderedRack.findIndex((tile) => tile.id === selected[0]) <= 0} onClick={() => moveTile(selected[0], -1)}><span aria-hidden="true">←</span> Move left</button><button className="secondary" aria-label="Move selected tile right" disabled={busy || orderedRack.findIndex((tile) => tile.id === selected[0]) === orderedRack.length - 1} onClick={() => moveTile(selected[0], 1)}>Move right <span aria-hidden="true">→</span></button></div> : null}
 
         {message ? <p className="cloud-message" role="status" aria-live="polite">{cloud.uncertain ? 'Reconnecting to confirm your saved move…' : cloud.error?.message ?? message}</p> : null}
       </RackPanel>
       {!isTerminal ? <TableHelp coach={coach.session ? { session: coach.session, show: coach.show, onShowChange: coach.setShow, focusGroupId: coach.focusGroupId, onFocusGroup: coach.focusGroup, onFollow: coach.follow, onBrowse: () => setCardOpen(true) } : null}>
-        <CardCompanion compact blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} candidates={coachContext!.candidates} cardId={snapshot.publicState.cardId} rack={snapshot.privateState.rack} exposures={snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? []} storageKey={`${gameId}:${snapshot.privateState.playerId}`} open={cardOpen} onOpenChange={setCardOpen} onArrange={(ids) => { moveFeedback.celebrate('arrange'); setRackOrder(ids); try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory order still works. */ } setMessage('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
+        <CardCompanion compact blockedHandIds={coach.session?.plan.blockedHandIds} highlightedGroupIds={coach.highlights.groupIds} candidates={coachContext!.candidates} cardId={snapshot.publicState.cardId} rack={snapshot.privateState.rack} exposures={snapshot.publicState.players.find(player => player.id === snapshot.privateState.playerId)?.exposures ?? []} storageKey={`${gameId}:${snapshot.privateState.playerId}`} open={cardOpen} cardButtonRef={cardButtonRef} onOpenChange={setCardOpen} onArrange={(ids) => { moveFeedback.celebrate('arrange'); setRackOrder(ids); try { localStorage.setItem(`mahjong:cloud-rack:${gameId}:${snapshot.privateState.playerId}`, JSON.stringify(ids)); } catch { /* In-memory order still works. */ } setMessage('Rack arranged by your followed hand. Unmatched tiles are at the end.'); }} />
       </TableHelp> : null}
       </DragDropProvider>
       </section>

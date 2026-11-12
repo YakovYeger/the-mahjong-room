@@ -532,7 +532,6 @@ input:focus-visible, select:focus-visible { outline: 3px solid #c8915d; outline-
 .unified-game .companion-suggestions button[aria-pressed="true"] { background: #dce4d3; border-color: #91a38b; }
 .unified-game .companion-suggestions b { white-space: nowrap; }
 .unified-game .cloud-message { color: #e8d5bc; }
-.unified-game .cloud-exchange-row { color: #c2d0ba; }
 .unified-game .table-dead-hand { color: #ffc7af; }
 .unified-game .play-workspace > .cloud-rack-order-actions button { color: #e0e6d6; border-color: #75917b; }
 .unified-game .blind-controls { background: #375b48; border-color: #75917b; }
