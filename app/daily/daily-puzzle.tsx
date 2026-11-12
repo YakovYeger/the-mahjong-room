@@ -4,7 +4,7 @@
 import { DragDropProvider, PointerSensor } from '@dnd-kit/react';
 import { PointerActivationConstraints } from '@dnd-kit/dom';
 import { isSortable } from '@dnd-kit/react/sortable';
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createDailyPuzzle, playDailyDiscard, scoreDailyDiscard } from '../../src/game/daily-puzzle';
 import { formatPuzzleDate } from '../../src/game/puzzle-catalog';
 import { readPuzzleRackOrder, readPuzzleResult, savePuzzleRackOrder, savePuzzleResult } from '../../src/game/puzzle-results';
@@ -16,24 +16,7 @@ import type { GameState } from '../../src/game/types';
 import { TileFace } from '../../src/table/tile-face';
 import { Button } from '../../src/ui/button';
 import { GameExperience } from '../game-experience';
-
-function DailySolveBurst() {
-  return <div className="daily-solve-burst" aria-hidden="true">
-    {[0, 1].map(burst => <div className="firework" key={burst} style={{
-      left: burst === 0 ? '22%' : '78%',
-      top: burst === 0 ? '24%' : '38%',
-      '--burst-delay': `${burst * 180}ms`,
-    } as CSSProperties}>{Array.from({ length: 10 }, (_, ray) => {
-      const angle = ray * Math.PI / 5;
-      const distance = ray % 2 ? 56 : 88;
-      return <i key={ray} style={{
-        '--ray-x': `${Math.cos(angle) * distance}px`,
-        '--ray-y': `${Math.sin(angle) * distance}px`,
-        '--ray-color': ['#d3a54e', '#8baf97', '#ebc974'][ray % 3],
-      } as CSSProperties} />;
-    })}</div>)}
-  </div>;
-}
+import { PuzzleSolveBurst } from './solve-burst';
 
 export function DailyPuzzle({ date, archived = false }: { date: string; archived?: boolean }) {
   const puzzle = useMemo(() => createDailyPuzzle(date), [date]);
@@ -132,7 +115,7 @@ export function DailyPuzzle({ date, archived = false }: { date: string; archived
         {!result ? <div className="daily-commit"><p>{selected ? `${tileLabel(puzzle.rack.find(tile => tile.id === selected)!)} selected` : 'Tap a tile, then lock in your discard.'}</p><Button disabled={!selected || !ready || dragging} onClick={submit}>Lock in discard</Button></div> : null}
       </section>
       {result && chosen ? <section ref={resultRef} tabIndex={-1} aria-labelledby="daily-result-title" aria-describedby="daily-result-explanation" className={`daily-result${result.correct ? ' daily-result-solved' : ''}${freshReveal ? ' daily-result-fresh' : ''}`}>
-        {freshReveal && result.correct ? <DailySolveBurst /> : null}
+        {freshReveal && result.correct ? <PuzzleSolveBurst /> : null}
         <div className="daily-result-header">
           <div><p className="kicker">{result.correct ? 'Puzzle solved' : 'Puzzle reviewed'}</p><h2 id="daily-result-title">{result.correct ? 'One tile away.' : 'The stronger discard'}</h2></div>
           {result.correct ? <span className="daily-fit-badge"><strong>13 / 14</strong><small>tiles fit</small></span> : null}
@@ -145,6 +128,7 @@ export function DailyPuzzle({ date, archived = false }: { date: string; archived
         <Button onClick={() => setGame(playDailyDiscard(puzzle, chosen))}>Play this hand from here <span aria-hidden="true">→</span></Button>
         <small>Continue with your discard against bots. Your saved practice game stays separate.</small>
       </section> : <p className="daily-footnote">A new puzzle every day. No timer, no account needed.</p>}
+      <a className="daily-table-reading-link" href="/daily/table-reading"><span><strong>Would you throw it?</strong><small>Read the table. Earn three stars.</small></span><span aria-hidden="true">→</span></a>
     </div>
   </main>;
 }

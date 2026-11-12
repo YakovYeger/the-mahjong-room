@@ -8,10 +8,10 @@ Keep the v1 rotation, training pattern definitions, deck order and shuffle stabl
 
 ## Table-reading puzzles
 
-Treat these as a separate puzzle type. Show the player's rack, public exposures, discard history, and the relevant card. Never use opponents' concealed tiles to score the answer.
+“Would you throw it?” is a separate three-level collection in the archive. Each authored snapshot uses physical tiles from one deck. The player sees their own rack, opposing exposures and public discards. The puzzle counts printed 2025 Card lines once per opponent, after testing variants against the exposed sets and unavailable tiles. A lower count is the puzzle objective, not a prediction that a discard is safe.
 
-- Easy: ask which tile could complete a specific card group, or which candidate is unavailable because the other copies are visible.
-- Medium: show one or two exposed sets and ask which discard most directly helps the compatible card lines. Explain the clues.
-- Hard: show multiple plausible lines and players with competing threats. Ask for a safer discard and accept equivalent choices. The explanation should distinguish deductions from risk judgments.
+- Easy compares two choices against one exposed set.
+- Medium adds a second exposure and visible discards that eliminate a line.
+- Hard weighs different lines across two opponents.
 
-Use authored snapshots to start so that each explanation has a clear reason. Avoid promising a tile is safe merely because it appeared in the discard pool earlier. For questions asking for a single correct answer, prove it from the visible constraints; otherwise score choices by clearly stated assumptions.
+Players can retry and earn one star per level. Stars are saved by level on the device. The feedback highlights the clues and shows the actual card rows used in the comparison. Concealed opponent tiles are never used to grade an answer.
