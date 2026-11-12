@@ -7,6 +7,16 @@ import type { Exposure, Seat, Tile } from './types';
 export const TABLE_LEVELS = ['easy', 'medium', 'hard'] as const;
 export type TableLevel = typeof TABLE_LEVELS[number];
 
+export interface TableReadingScenario {
+  name: string;
+  clue: string;
+  players: { name: string; seat: Seat; sets: [string, 3 | 4][] }[];
+  rack: string[];
+  choices: string[];
+  discards: string[];
+  clueTileKey?: string;
+}
+
 const scenarios = {
   easy: {
     name: 'Read the first set',
@@ -18,6 +28,7 @@ const scenarios = {
   },
   medium: {
     name: 'Narrow the card',
+    clueTileKey: 'dragon-green',
     clue: 'June has exposed both 2 Dots and 4 Dots. All four Green Dragons are already discarded, ruling out the compatible line that needs a natural Green Dragon pair.',
     players: [{ name: 'June', seat: 'south', sets: [['dots-2', 3], ['dots-4', 4]] }],
     rack: ['dots-6', 'dots-8', 'bamboo-8', 'bamboo-1', 'bamboo-1', 'characters-5', 'characters-5', 'characters-7', 'characters-7', 'wind-north', 'wind-north', 'wind-east', 'flower-any', 'wind-south'],
@@ -32,10 +43,9 @@ const scenarios = {
     choices: ['bamboo-3', 'wind-west', 'characters-2'],
     discards: ['wind-south', 'dots-1', 'characters-9', 'characters-7', 'dots-9', 'dragon-red'],
   },
-} satisfies Record<TableLevel, { name: string; clue: string; players: { name: string; seat: Seat; sets: [string, 3 | 4][] }[]; rack: string[]; choices: string[]; discards: string[] }>;
+} satisfies Record<TableLevel, TableReadingScenario>;
 
-export function tableReadingPuzzle(level: TableLevel) {
-  const scenario = scenarios[level];
+export function tableReadingPuzzle(level: TableLevel, scenario: TableReadingScenario = scenarios[level]) {
   const pool = createWall();
   const take = (key: string) => {
     const index = pool.findIndex(tile => cardTileKey(tile) === key);
@@ -51,7 +61,7 @@ export function tableReadingPuzzle(level: TableLevel) {
   }));
   const rack = scenario.rack.map(take);
   return {
-    level, name: scenario.name, clue: scenario.clue, players, rack,
+    level, name: scenario.name, clue: scenario.clue, clueTileKey: scenario.clueTileKey, players, rack,
     choices: scenario.choices.map(key => rack.find(tile => cardTileKey(tile) === key)!),
     discards: scenario.discards.map(take),
   };

@@ -12,7 +12,8 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "simulate-games": "tsx scripts/simulate-games.ts"
+    "simulate-games": "tsx scripts/simulate-games.ts",
+    "generate:table-reading": "node --import tsx scripts/generate-table-reading.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
