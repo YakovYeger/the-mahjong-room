@@ -2,7 +2,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { TABLE_LEVELS, tableReadingChoices, tableReadingPuzzle, type TableLevel } from '../../../src/game/table-reading-puzzles';
+import { TABLE_LEVELS, tableReadingChoices, tableReadingPuzzle, type TableLevel, type TableReadingScenario } from '../../../src/game/table-reading-puzzles';
+import { formatPuzzleDate } from '../../../src/game/puzzle-catalog';
 import { cardTileKey } from '../../../src/game/training-card';
 import { referenceHands } from '../../../src/game/reference-card';
 import { tileLabel } from '../../../src/game/tiles';
@@ -22,8 +23,9 @@ function PublicTile({ tile, highlighted = false }: { tile: Tile; highlighted?: b
   return <span className={`table-reading-public-tile${highlighted ? ' table-reading-clue-tile' : ''}`} title={tileLabel(tile)}><TileFace tile={tile} compact /></span>;
 }
 
-export function TableReading({ level }: { level: TableLevel }) {
-  const puzzle = useMemo(() => tableReadingPuzzle(level), [level]);
+export function TableReading({ level, date, scenario }: { level: TableLevel; date?: string; scenario?: TableReadingScenario }) {
+  const puzzle = useMemo(() => tableReadingPuzzle(level, scenario), [level, scenario]);
+  const dailyKey = date ? `mahjong-room-table-reading-attempt-v1:${date}` : null;
   const choices = useMemo(() => tableReadingChoices(puzzle), [puzzle]);
   const minimum = Math.min(...choices.map(choice => choice.score));
   const best = choices.find(choice => choice.score === minimum)!;
@@ -33,12 +35,24 @@ export function TableReading({ level }: { level: TableLevel }) {
   const [submitted, setSubmitted] = useState<string | null>(null);
   const [fresh, setFresh] = useState(false);
   const [newStar, setNewStar] = useState(false);
+  const [attempted, setAttempted] = useState(false);
   const resultRef = useRef<HTMLElement>(null);
   useEffect(() => {
     let cancelled = false;
     queueMicrotask(() => {
       if (cancelled) return;
       try {
+        if (dailyKey) {
+          const stored = localStorage.getItem(dailyKey);
+          const first = choices.find(choice => choice.tile.id === stored);
+          if (first) {
+            setSubmitted(first.tile.id);
+            setAttempted(true);
+            if (first.score === minimum) setStars([level]);
+          }
+          setReady(true);
+          return;
+        }
         const earned = TABLE_LEVELS.filter(item => localStorage.getItem(`${storageKey}:${item}`) === '1');
         setStars(earned);
         if (earned.includes(level)) setSubmitted(best.tile.id);
@@ -46,7 +60,7 @@ export function TableReading({ level }: { level: TableLevel }) {
       setReady(true);
     });
     return () => { cancelled = true; };
-  }, [level, best.tile.id]);
+  }, [level, best.tile.id, dailyKey, choices, minimum]);
   useEffect(() => {
     if (fresh && resultRef.current) {
       resultRef.current.focus({ preventScroll: true });
@@ -56,13 +70,25 @@ export function TableReading({ level }: { level: TableLevel }) {
 
   const result = choices.find(choice => choice.tile.id === submitted);
   const won = result?.score === minimum;
-  const next = [...TABLE_LEVELS.slice(TABLE_LEVELS.indexOf(level) + 1), ...TABLE_LEVELS].find(item => item !== level && !stars.includes(item));
+  const next = date ? undefined : [...TABLE_LEVELS.slice(TABLE_LEVELS.indexOf(level) + 1), ...TABLE_LEVELS].find(item => item !== level && !stars.includes(item));
   const submit = () => {
     if (!ready || submitted || !selected) return;
     const choice = choices.find(item => item.tile.id === selected);
     if (!choice) return;
     setSubmitted(choice.tile.id);
     setFresh(true);
+    if (dailyKey) {
+      if (attempted) return;
+      setAttempted(true);
+      try {
+        if (localStorage.getItem(dailyKey) !== null) return;
+        localStorage.setItem(dailyKey, choice.tile.id);
+      } catch { /* Play remains available without browser storage. */ }
+      if (choice.score !== minimum) return;
+      setNewStar(true);
+      setStars([level]);
+      return;
+    }
     if (choice.score !== minimum || stars.includes(level)) return;
     const earned = [...stars, level];
     setNewStar(true);
@@ -81,10 +107,12 @@ export function TableReading({ level }: { level: TableLevel }) {
         <h1>Would you throw it?</h1>
         <p>Read the exposed sets. Pick the discard that helps the fewest possible hands.</p>
       </header>
+      {date ? <p className="table-reading-progress"><time dateTime={date}>{formatPuzzleDate(date)}</time> · {levelName[level]} · {stars.length ? '★ Star earned' : attempted ? 'Practice' : '☆ First try earns a star'}</p> : <>
       <nav className="table-reading-levels" aria-label={`Challenge levels, ${stars.length} of 3 stars earned`}>
         {TABLE_LEVELS.map((item, index) => <a key={item} href={levelHref(item)} aria-current={level === item ? 'page' : undefined}><span>Level {index + 1}</span><strong>{levelName[item]}</strong><span aria-label={stars.includes(item) ? 'Star earned' : 'Star available'}>{stars.includes(item) ? '★' : '☆'}</span></a>)}
       </nav>
       <p className="table-reading-progress" role="status">{stars.length} / 3 stars earned</p>
+      </>}
 
       <section className="daily-table table-reading-felt" aria-label="Table reading challenge">
         <div className="table-reading-heading"><h2>{puzzle.name}</h2><a href="/cards" target="_blank" rel="noreferrer">2025 Card ↗</a></div>
@@ -94,7 +122,7 @@ export function TableReading({ level }: { level: TableLevel }) {
           <div className="table-reading-sets">{player.exposures.map(set => <ExposedTileGroup key={set.id} tiles={set.tiles} label={`Exposed tiles: ${set.tiles.map(tileLabel).join(', ')}`} compact={false} />)}</div>
         </article>)}</div>
         <h3>Discards</h3>
-        <div className="table-reading-tiles" aria-label="Visible discards">{puzzle.discards.map(tile => <PublicTile key={tile.id} tile={tile} highlighted={Boolean(result && level === 'medium' && cardTileKey(tile) === 'dragon-green')} />)}</div>
+        <div className="table-reading-tiles" aria-label="Visible discards">{puzzle.discards.map(tile => <PublicTile key={tile.id} tile={tile} highlighted={Boolean(result && cardTileKey(tile) === puzzle.clueTileKey)} />)}</div>
         <h3>Your rack</h3>
         <p className="table-reading-instruction">Choose one of the outlined tiles.</p>
         <div className="daily-rack" role="group" aria-label="Your rack">
@@ -109,7 +137,7 @@ export function TableReading({ level }: { level: TableLevel }) {
 
       {result ? <section ref={resultRef} tabIndex={-1} aria-labelledby="table-reading-result-title" className={`daily-result table-reading-result${won ? ' daily-result-solved' : ''}${fresh ? ' daily-result-fresh' : ''}`}>
         {newStar ? <PuzzleSolveBurst /> : null}
-        <div className="daily-result-header"><div><p className="kicker">{newStar ? 'Star earned' : won ? 'Puzzle solved' : 'Read the clues'}</p><h2 id="table-reading-result-title">{won ? 'Sharp read.' : 'There’s a better discard.'}</h2></div>{won ? <span className="daily-fit-badge" aria-label="Star earned">★</span> : null}</div>
+        <div className="daily-result-header"><div><p className="kicker">{newStar ? 'Star earned' : won ? 'Puzzle solved' : 'Read the clues'}</p><h2 id="table-reading-result-title">{won ? 'Sharp read.' : 'There’s a better discard.'}</h2></div>{won && (!date || stars.length > 0) ? <span className="daily-fit-badge" aria-label="Star earned">★</span> : null}</div>
         <p>{won ? `${tileLabel(result.tile)} helps the fewest possible lines here.` : `${tileLabel(result.tile)} helps more possible lines than ${tileLabel(best.tile)}.`} {puzzle.clue}</p>
         <div className="table-reading-comparison" aria-label="Compare discard risks">
           {choices.map(choice => <details key={choice.tile.id}>
@@ -123,6 +151,7 @@ export function TableReading({ level }: { level: TableLevel }) {
         {stars.length === 3 && won ? <p className="table-reading-complete"><strong>Three stars. Challenge complete.</strong></p> : null}
         <div className="table-reading-result-actions">
           {won && next ? <a className={buttonVariants()} href={levelHref(next)}>Next: {levelName[next]} →</a> : null}
+          {date ? <a className={buttonVariants({ variant: 'outline' })} href="/daily/archive">Puzzle archive</a> : null}
           <Button variant={won && next ? 'outline' : 'default'} onClick={retry}>{won ? 'Play again' : 'Try again'}</Button>
         </div>
       </section> : null}
