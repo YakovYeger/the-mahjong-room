@@ -1,12 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type RefObject } from 'react';
 import { getCardProvider, type CardId } from '../game/cards';
 import { organizeRack } from '../game/rack-order';
 import { arrangeHand, cardTileKey } from '../game/training-card';
 import { createWall, tileLabel } from '../game/tiles';
 import type { Exposure, HandCandidate, HandDefinition, Tile } from '../game/types';
-import { ReferenceHands } from './reference-hands';
+import { ReferenceHands, initialCardFilters } from './reference-hands';
 import { TrainingHands } from './training-hands';
 import { Dialog, DialogTitle, DialogDescription, DialogClose } from '../ui/dialog';
 import { Menu } from '../ui/menu';
@@ -50,8 +50,9 @@ function HandComparison({ hand, rack, exposures, final = false, highlightedGroup
   </div>;
 }
 
-export function CardCompanion({ cardId = 'training-card', rack, exposures, storageKey, onArrange, open, onOpenChange, candidates: supplied, highlightedGroupIds = [], blockedHandIds = [], compact = false }: { compact?: boolean; blockedHandIds?: string[]; highlightedGroupIds?: string[]; cardId?: CardId; rack: Tile[]; exposures: Exposure[]; storageKey: string; onArrange: (ids: string[]) => void; open: boolean; onOpenChange: (open: boolean) => void; candidates?: HandCandidate[] }) {
+export function CardCompanion({ cardId = 'training-card', rack, exposures, storageKey, onArrange, open, onOpenChange, candidates: supplied, highlightedGroupIds = [], blockedHandIds = [], compact = false, cardButtonRef }: { cardButtonRef?: RefObject<HTMLButtonElement | null>; compact?: boolean; blockedHandIds?: string[]; highlightedGroupIds?: string[]; cardId?: CardId; rack: Tile[]; exposures: Exposure[]; storageKey: string; onArrange: (ids: string[]) => void; open: boolean; onOpenChange: (open: boolean) => void; candidates?: HandCandidate[] }) {
   const [overview, setOverview] = useState(false);
+  const [cardFilters, setCardFilters] = useState(initialCardFilters);
   const candidates = useMemo(() => supplied ?? getCardProvider(cardId).analyzeCandidates([...rack, ...exposures.flatMap(exposure => exposure.tiles)], exposures), [supplied, cardId, rack, exposures]);
   const [followedId, follow] = useFollowedHand(storageKey, cardId);
   const hand = followedId ? handMaps[cardId].get(followedId) : undefined;
@@ -72,10 +73,10 @@ export function CardCompanion({ cardId = 'training-card', rack, exposures, stora
   </>;
   return <section className={compact ? 'card-companion-compact' : 'card-companion'} aria-label="Your card companion">
     {compact ? <button className="table-help-button" onClick={() => setOverview(true)} aria-haspopup="dialog"><span aria-hidden="true">▤</span><span><strong>Your hand</strong>{' '}<small>{hand?.name ?? 'Find a pattern to follow'}</small></span><span aria-hidden="true">↗</span></button> : companion}
-    <Dialog open={open || overview} onOpenChange={next => { if (!next) { setOverview(false); onOpenChange(false); } }} className="companion-drawer" label={open ? 'Choose a hand to follow' : 'Your hand plan'}>
+    <Dialog open={open || overview} onOpenChange={next => { if (!next) { setOverview(false); onOpenChange(false); } }} className="companion-drawer" finalFocus={open && !overview ? cardButtonRef : undefined} label={open ? 'Choose a hand to follow' : 'Your hand plan'}>
       {open ? <>
       <header><div><p className="kicker">Choose your direction</p><DialogTitle>{cardId === 'photo-2025' ? 'Your 2025 Card' : 'Training Card'}</DialogTitle><DialogDescription>Tap a hand to pin its closest suit and number arrangement.</DialogDescription><div className="companion-card-legend"><span><b>C</b> Concealed</span><span><b>X</b> Exposed</span><span><b>★</b> Jokers allowed</span></div></div><DialogClose aria-label="Close card browser">×</DialogClose></header>
-      {cardId === 'photo-2025' ? <ReferenceHands candidates={candidates} onFollow={pick} /> : <TrainingHands candidates={candidates} onFollow={pick} />}
+      {cardId === 'photo-2025' ? <ReferenceHands candidates={candidates} onFollow={pick} filters={cardFilters} onFiltersChange={setCardFilters} /> : <TrainingHands candidates={candidates} onFollow={pick} />}
       </> : <><header><div><p className="kicker">One pattern at a time</p><DialogTitle>Your hand plan</DialogTitle><DialogDescription>Compare your rack, or choose a direction from the card.</DialogDescription></div><DialogClose aria-label="Close hand plan">×</DialogClose></header><div className="card-companion">{companion}</div></>}
     </Dialog>
   </section>;

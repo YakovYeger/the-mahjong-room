@@ -206,16 +206,22 @@ html[data-suit-labels="full"] .shared-table-page.unified-game .play-workspace .t
 .companion-drawer .companion-pattern .tile-face.illustrated > small { font-size: .3125rem; }
 .companion-drawer .companion-fit > summary { min-height: 44px; padding-block: 12px; font-size: .8125rem; cursor: pointer; }
 .companion-drawer .companion-suggestions { margin-top: 12px; }
-.shared-table-page.unified-game .play-workspace .organize-rack-button,
-.shared-table-page.unified-game .play-workspace .cloud-actions > .organize-rack-button,
+.shared-table-page.unified-game .play-workspace :is(.organize-rack-button, .view-card-button),
 .companion-drawer .companion-actions > .organize-rack-button {
   display: inline-flex; align-items: center; justify-content: center; flex: 0 0 44px;
   width: 44px; height: 44px; min-height: 44px; padding: 0; border: 1px solid #829a85;
   border-radius: 9px; background: transparent; color: #eee5ca; box-shadow: none;
 }
 .companion-drawer .companion-actions > .organize-rack-button { color: var(--ink); border-color: var(--edge); background: var(--paper); }
-.organize-rack-button svg { flex: 0 0 auto; }
+:is(.organize-rack-button, .view-card-button) svg { flex: 0 0 auto; }
 @media(max-width:400px) {
  .companion-drawer .companion-pattern { padding-inline: 8px; column-gap: 10px; }
  .companion-drawer .companion-heading > div:first-child { flex-basis: 100%; }
 }
+
+
+.rack-icon-actions { display: flex; gap: 6px; align-items: center; }
+.joker-swap-prompt { order: 2; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.joker-swap-prompt:has(button) { width: 100%; max-width: 890px; margin: 8px auto 0; padding: 6px 10px; border: 1px solid var(--edge); border-radius: 12px; background: var(--paper); color: var(--ink); }
+.joker-swap-prompt > strong { font-size: .875rem; }
+.joker-swap-prompt > button { max-width: 100%; white-space: normal; }
