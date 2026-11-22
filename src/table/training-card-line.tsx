@@ -9,19 +9,19 @@ const inks = {
 
 function groupNotation(key: string, count: number) {
   const [family, value] = key.split('-');
-  if (family === 'bamboo' || family === 'characters' || family === 'dots') return { text: value.repeat(count), ...inks[family] };
+  if (family === 'bamboo' || family === 'characters' || family === 'dots') return { text: value.repeat(count), suit: inks[family].name, ...inks[family] };
   if (family === 'dragon') {
     const cue = value === 'green' ? inks.bamboo : value === 'red' ? inks.characters : inks.dots;
-    return { ...cue, text: 'D'.repeat(count), name: `${value} Dragon` };
+    return { ...cue, text: 'D'.repeat(count), name: `${value[0].toUpperCase()}${value.slice(1)} Dragon`, suit: value[0].toUpperCase() + value.slice(1) };
   }
   return { text: (family === 'wind' ? value[0].toUpperCase() : 'F').repeat(count), ink: 'ink', name: family === 'wind' ? `${value} Wind` : 'Flowers' };
 }
 
-export function TrainingCardPattern({ hand }: { hand: HandDefinition }) {
+export function CardTargetPattern({ hand, showSuits = false }: { hand: HandDefinition; showSuits?: boolean }) {
   return <div className="training-card-pattern" role="group" aria-label="Card pattern">
     {hand.groups.map(group => {
       const token = groupNotation(group.tileKey, group.count);
-      return <strong className={`card-ink-${token.ink}`} key={group.id} aria-label={`${token.text}, ${token.name}`}>{token.text}</strong>;
+      return <strong className={`card-ink-${token.ink}`} key={group.id} aria-label={`${token.text}, ${token.name}`}>{token.text}{showSuits && 'suit' in token && <> {token.suit}</>}</strong>;
     })}
     <span className="training-card-exposure" aria-label={hand.exposure === 'concealed' ? 'Concealed' : 'Exposures allowed'}>{hand.exposure === 'concealed' ? 'C' : 'X'}</span>
   </div>;
@@ -29,7 +29,7 @@ export function TrainingCardPattern({ hand }: { hand: HandDefinition }) {
 
 export function TrainingCardLine({ hand }: { hand: HandDefinition }) {
   return <div className="daily-card-line">
-    <TrainingCardPattern hand={hand} />
+    <CardTargetPattern hand={hand} />
     <details className="daily-card-key">
       <summary>Symbols &amp; suit colors</summary>
       <p><b className="card-ink-jade">Green: Bams</b> · <b className="card-ink-red">Red: Craks</b> · <b>Black: Dots</b> on this Training Card line.</p>

@@ -180,7 +180,7 @@ button.shuffle-tile[aria-disabled="true"]:not(:disabled) { cursor: default; }
 
 .shuffle-rack-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px auto; max-width: 450px; }
 .shuffle-rack-heading h3 { margin: 0; font: 700 1.15rem/1.2 Georgia, serif; }
-.shuffle-rack-heading span { color: var(--mini-gold); font-size: .875rem; font-weight: 700; }
+.shuffle-rack-heading > div > [role="status"] { color: var(--mini-gold); font-size: .875rem; font-weight: 700; }
 .shuffle-rack {
   display: grid;
   grid-template-columns: repeat(7, minmax(44px, 1fr));
@@ -244,10 +244,17 @@ button.shuffle-tile[aria-disabled="true"]:not(:disabled) { cursor: default; }
   background: var(--paper);
   color: var(--ink);
 }
-.shuffle-target .select-field { gap: 4px; }
-.shuffle-target .select-label, .shuffle-target-name > span { color: var(--ink); font-size: .875rem; font-weight: 700; text-transform: none; letter-spacing: 0; }
-.shuffle-target .select-trigger { min-height: 44px; padding-block: 6px; font-size: 1rem; }
+.shuffle-target-name > span { color: var(--ink); font-size: .875rem; font-weight: 700; text-transform: none; letter-spacing: 0; }
+.shuffle-target-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; }
 .shuffle-target .training-card-pattern { gap: 4px 9px; margin-top: 5px; font-size: 1rem; }
 .shuffle-target-name h3 { margin: 2px 0 0; font: 700 1.15rem/1.2 Georgia, serif; }
-.shuffle-target-description { margin: 2px 0 0; font-size: .875rem; line-height: 1.35; }
 .shuffle-target-fit { margin: 5px 0 0; font-size: .875rem; line-height: 1.3; font-weight: 750; }
+
+.shuffle-rack-heading { flex-wrap: wrap; }
+.shuffle-rack-tools > .ui-button { min-width: 44px; padding-inline: 9px; color: var(--mini-on-felt); border-color: #d3bc8a9a; }
+.shuffle-rack-tools > .ui-button:hover:not(:disabled) { color: var(--mini-deep-felt); }
+.shuffle-rack-tools .table-help-button { min-height: 44px; padding-inline: 7px; }
+.shuffle-tile-slot { min-width: 0; }
+.shuffle-tile-slot button { touch-action: pan-y; }
+.shuffle-tile-slot.is-dragging { z-index: 1; }
+.shuffle-reorder-hint { max-width: 450px; margin: 6px auto 0; color: var(--mini-muted-on-felt); font-size: .875rem; }

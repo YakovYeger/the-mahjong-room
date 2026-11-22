@@ -4,7 +4,7 @@ import '../mini-games.css';
 
 export const metadata = {
   title: 'Charleston Shuffle · The Mahjong Room',
-  description: 'Choose three tiles to pass each round and find your strongest Training Card lines.',
+  description: 'Choose three tiles to pass each round and find your strongest 2025 Card lines.',
 };
 
 export default function CharlestonPage() {
