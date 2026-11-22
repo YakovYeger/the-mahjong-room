@@ -13,6 +13,8 @@ import { ReferenceCardLine } from '../../../src/table/reference-card-line';
 import { PlayerPortrait } from '../../../src/table/table-art';
 import { TileFace } from '../../../src/table/tile-face';
 import { Button, buttonVariants } from '../../../src/ui/button';
+import { WeeklyStars } from './weekly-stars';
+import { tableAttemptKey } from '../../../src/game/weekly-table-stars';
 import { PuzzleSolveBurst } from '../solve-burst';
 
 const storageKey = 'mahjong-room-table-reading-stars-v1';
@@ -23,9 +25,9 @@ function PublicTile({ tile, highlighted = false }: { tile: Tile; highlighted?: b
   return <span className={`table-reading-public-tile${highlighted ? ' table-reading-clue-tile' : ''}`} title={tileLabel(tile)}><TileFace tile={tile} compact /></span>;
 }
 
-export function TableReading({ level, date, scenario }: { level: TableLevel; date?: string; scenario?: TableReadingScenario }) {
+export function TableReading({ level, date, scenario, today }: { level: TableLevel; date?: string; scenario?: TableReadingScenario; today?: string }) {
   const puzzle = useMemo(() => tableReadingPuzzle(level, scenario), [level, scenario]);
-  const dailyKey = date ? `mahjong-room-table-reading-attempt-v1:${date}` : null;
+  const dailyKey = date ? tableAttemptKey(date) : null;
   const choices = useMemo(() => tableReadingChoices(puzzle), [puzzle]);
   const minimum = Math.min(...choices.map(choice => choice.score));
   const best = choices.find(choice => choice.score === minimum)!;
@@ -113,6 +115,8 @@ export function TableReading({ level, date, scenario }: { level: TableLevel; dat
       </nav>
       <p className="table-reading-progress" role="status">{stars.length} / 3 stars earned</p>
       </>}
+
+      {date && today ? <WeeklyStars date={date} today={today} newStar={newStar} /> : null}
 
       <section className="daily-table table-reading-felt" aria-label="Table reading challenge">
         <div className="table-reading-heading"><h2>{puzzle.name}</h2><a href="/cards" target="_blank" rel="noreferrer">2025 Card ↗</a></div>

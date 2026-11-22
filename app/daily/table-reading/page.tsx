@@ -15,7 +15,7 @@ export default async function TableReadingPage({ searchParams }: { searchParams:
   if (date !== undefined || level === undefined) {
     const puzzleDay = date ?? today;
     const entry = dailyTableReading(puzzleDay, today);
-    if (entry) return <TableReading key={puzzleDay} date={puzzleDay} level={entry.level} scenario={entry.scenario} />;
+    if (entry) return <TableReading key={puzzleDay} date={puzzleDay} today={today} level={entry.level} scenario={entry.scenario} />;
     if (date !== undefined) notFound();
   }
   const chosen = TABLE_LEVELS.find(item => item === level) ?? 'easy';
