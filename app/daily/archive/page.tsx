@@ -10,7 +10,7 @@ export default async function PuzzleArchivePage({ searchParams }: { searchParams
   const today = puzzleDate();
   const { entries, page, pages } = puzzleArchive(today, Number((await searchParams).page ?? 1));
   return <main className="daily-page">
-    <header className="daily-top"><a className="brand" href="/">The Mahjong Room</a><a href="/daily">Today’s puzzle</a></header>
+    <header className="daily-top"><a className="brand" href="/">The Mahjong Room</a><nav aria-label="Puzzle navigation"><a href="/mini-games">Mini-games</a><a href="/daily">Today’s puzzle</a></nav></header>
     <div className="daily-layout">
       <header className="daily-intro"><span className="daily-seal" aria-hidden="true">✦</span><p className="kicker">The puzzle collection</p><h1>Puzzle archive</h1><p>Revisit a rack or read a past table.</p></header>
       <section className="daily-archive-challenges" aria-label="Table reading collection">
