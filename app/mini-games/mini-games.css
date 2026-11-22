@@ -123,7 +123,8 @@
   justify-content: center;
   gap: 7px;
   width: fit-content;
-  margin: 12px auto;
+  position: relative;
+  margin: 0 auto;
   padding: 7px;
   border: 1px solid #cbb27d80;
   border-radius: 12px;
@@ -173,11 +174,6 @@ button.shuffle-tile[aria-disabled="true"]:not(:disabled) { cursor: default; }
   font-weight: 800;
 }
 .shuffle-tile:focus-visible, .shuffle-actions button:focus-visible { outline: 3px solid #ffedb1; outline-offset: 3px; }
-.shuffle-received { animation: shuffle-reveal .24s ease-out both; }
-.shuffle-received:nth-child(2) { animation-delay: .055s; }
-.shuffle-received:nth-child(3) { animation-delay: .11s; }
-@keyframes shuffle-reveal { from { opacity: 0; transform: translateY(7px) scale(.9); } to { opacity: 1; transform: none; } }
-
 .shuffle-rack-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px auto; max-width: 450px; }
 .shuffle-rack-heading h3 { margin: 0; font: 700 1.15rem/1.2 Georgia, serif; }
 .shuffle-rack-heading > div > [role="status"] { color: var(--mini-gold); font-size: .875rem; font-weight: 700; }
@@ -231,10 +227,6 @@ button.shuffle-tile[aria-disabled="true"]:not(:disabled) { cursor: default; }
   .shuffle-rack { grid-template-columns: repeat(5, minmax(44px, 1fr)); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .shuffle-received { animation: none; }
-}
-
 .shuffle-target {
   width: min(100%, 450px);
   margin: 12px auto 0;
@@ -258,3 +250,81 @@ button.shuffle-tile[aria-disabled="true"]:not(:disabled) { cursor: default; }
 .shuffle-tile-slot button { touch-action: pan-y; }
 .shuffle-tile-slot.is-dragging { z-index: 1; }
 .shuffle-reorder-hint { max-width: 450px; margin: 6px auto 0; color: var(--mini-muted-on-felt); font-size: .875rem; }
+
+.shuffle-exchange { margin: 12px auto; text-align: center; }
+.shuffle-tray-label { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 0 0 4px; color: var(--mini-muted-on-felt); font-size: .875rem; font-weight: 700; }
+.shuffle-tray-label span { color: var(--mini-gold); font-size: 1.15rem; line-height: 1; }
+.shuffle-tray[data-full], .shuffle-board[data-revealing] .shuffle-tray { border-color: var(--mini-gold); box-shadow: 0 0 0 3px #efcb8128; }
+.shuffle-board[data-direction="right"] { --send-x: 54px; --receive-x: -36px; }
+.shuffle-board[data-direction="left"] { --send-x: -54px; --receive-x: 36px; }
+.shuffle-board[data-direction="across"] { --send-y: -33px; --receive-y: -28px; }
+.shuffle-outgoing {
+  position: absolute;
+  inset: 7px;
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  opacity: 0;
+  pointer-events: none;
+}
+.shuffle-score {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  max-width: 450px;
+  margin: 14px auto 0;
+  padding: 10px 13px;
+  border: 1px solid #bda16d;
+  border-radius: 12px;
+  background: var(--mini-deep-felt);
+}
+.shuffle-score-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.shuffle-score-heading strong { font: 700 1.15rem/1.2 Georgia, serif; }
+.shuffle-score-heading span { color: var(--mini-gold); font-weight: 800; }
+.shuffle-score[data-improved] { border-color: var(--mini-gold); background: linear-gradient(105deg, #1c4d3d, var(--mini-deep-felt) 82%); }
+.shuffle-score-track { height: 8px; margin-top: 7px; overflow: hidden; border-radius: 999px; background: #061d176b; }
+.shuffle-score-track i { display: block; height: 100%; transform: scaleX(var(--fit)); transform-origin: left; border-radius: inherit; background: linear-gradient(90deg, #a4c7a4, var(--mini-gold)); }
+.shuffle-score-sparks { position: absolute; z-index: -1; inset: 0; pointer-events: none; }
+.shuffle-score-sparks span { position: absolute; left: 54%; top: 9px; color: var(--mini-gold); opacity: 0; }
+.shuffle-score-sparks span:nth-child(2) { --spark-x: -45px; --spark-y: 12px; top: 16px; }
+.shuffle-score-sparks span:nth-child(3) { --spark-x: 62px; --spark-y: 19px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .shuffle-tile-slot button { transition: transform .14s cubic-bezier(.2,.8,.25,1.35), background-color .14s, box-shadow .14s; }
+  .shuffle-tile-slot button[aria-pressed="true"] { box-shadow: 0 6px 7px #071f2a88; }
+  .shuffle-loaded { animation: shuffle-load .19s cubic-bezier(.2,.7,.32,1.25) both; }
+  .shuffle-tray[data-full] { animation: shuffle-ready .36s ease-out both; }
+  .shuffle-outgoing { animation: shuffle-send .23s ease-in both; }
+  .shuffle-received { animation: shuffle-receive .33s cubic-bezier(.18,.72,.3,1.15) both; animation-delay: .14s; }
+  .shuffle-received:nth-child(2) { animation-delay: .19s; }
+  .shuffle-received:nth-child(3) { animation-delay: .24s; }
+  .shuffle-rack > [data-new] { animation: shuffle-settle .33s cubic-bezier(.21,.8,.25,1.2) both; animation-delay: calc(.27s + var(--tile-delay, 0ms)); }
+  .shuffle-steps li[data-complete] > span:first-child { animation: shuffle-check .34s .18s ease-out both; }
+  .shuffle-score { animation: shuffle-score-in .3s ease-out both; }
+  .shuffle-score-track i { animation: shuffle-score-fill .5s .09s cubic-bezier(.2,.7,.35,1) both; }
+  .shuffle-score-sparks span { animation: shuffle-spark .67s .06s ease-out both; }
+  .shuffle-score-sparks span:nth-child(2) { animation-delay: .13s; }
+  .shuffle-score-sparks span:nth-child(3) { animation-delay: .19s; }
+}
+@keyframes shuffle-load { from { transform: translateY(7px) scale(.91); } to { transform: none; } }
+@keyframes shuffle-ready { from { box-shadow: 0 0 0 0 #efcb8166; } to { box-shadow: 0 0 0 3px #efcb8128; } }
+@keyframes shuffle-send {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translate(var(--send-x, 0px), var(--send-y, 0px)) scale(.8); }
+}
+@keyframes shuffle-receive {
+  from { opacity: 0; transform: translate(var(--receive-x, 0px), var(--receive-y, 0px)) scale(.85); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes shuffle-settle {
+  from { transform: translateY(-8px); box-shadow: 0 0 10px #efcb81a6; }
+  to { transform: none; }
+}
+@keyframes shuffle-check { 45% { transform: scale(1.2); } }
+@keyframes shuffle-score-in { from { transform: translateY(5px); } to { transform: none; } }
+@keyframes shuffle-score-fill { from { transform: scaleX(0); } to { transform: scaleX(var(--fit)); } }
+@keyframes shuffle-spark {
+  from { opacity: 0; transform: translate(0, 8px) scale(.45); }
+  25% { opacity: .85; }
+  to { opacity: 0; transform: translate(var(--spark-x, 25px), var(--spark-y, -10px)) scale(1.2); }
+}

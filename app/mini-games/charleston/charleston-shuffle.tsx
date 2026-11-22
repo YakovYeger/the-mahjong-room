@@ -3,7 +3,7 @@
 import { PointerActivationConstraints } from '@dnd-kit/dom';
 import { DragDropProvider, PointerSensor } from '@dnd-kit/react';
 import { isSortable } from '@dnd-kit/react/sortable';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useAccessibility } from '../../../src/accessibility/provider';
 import { useFollowedHand } from '../../../src/coach/use-followed-hand';
 import { getCardProvider } from '../../../src/game/cards';
@@ -13,6 +13,7 @@ import { SortableRackItem } from '../../../src/game/sortable-rack-item';
 import { moveTileId, normalizeTileOrder, reorderTileIds, tileLabel } from '../../../src/game/tiles';
 import { arrangeHand } from '../../../src/game/training-card';
 import type { Exposure, HandDefinition, Tile } from '../../../src/game/types';
+import { passDirection } from '../../../src/table/charleston-motion';
 import { CardCompanion } from '../../../src/table/card-companion';
 import { OrganizeRackButton } from '../../../src/table/organize-rack-button';
 import { ViewCardButton } from '../../../src/table/rack-turn-tools';
@@ -25,6 +26,8 @@ const totalPasses = charlestonShuffleDirections.length;
 const card = getCardProvider(charlestonShuffleCardId);
 const hands = new Map(card.getHands().map(hand => [hand.id, hand]));
 const noExposures: Exposure[] = [];
+const noTiles: Tile[] = [];
+const passArrows = { right: '→', across: '↑', left: '←' } as const;
 
 function targetFit(rack: Tile[], hand: HandDefinition) {
   return arrangeHand(rack, noExposures, hand).matchingTileIds.length;
@@ -36,7 +39,7 @@ export function CharlestonShuffle() {
   const [openingRack, setOpeningRack] = useState(() => game.players[0].rack);
   const [rackOrder, setRackOrder] = useState(() => organizeRack(openingRack, noExposures));
   const [selected, setSelected] = useState<string[]>([]);
-  const [received, setReceived] = useState<Tile[]>([]);
+  const [receipt, setReceipt] = useState<{ sent: Tile[]; received: Tile[] } | null>(null);
   const [review, setReview] = useState(false);
   const [error, setError] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
@@ -48,9 +51,11 @@ export function CharlestonShuffle() {
   const suppressTileClick = useRef(false);
   const storageKey = `charleston-shuffle:${game.seed}`;
   const [followedId, follow] = useFollowedHand(storageKey, charlestonShuffleCardId);
-  const revealing = received.length > 0;
+  const received = receipt?.received ?? noTiles;
+  const revealing = receipt !== null;
   const pass = game.charlestonPassIndex;
   const activeStep = revealing ? pass - 1 : pass;
+  const direction = passDirection(activeStep);
   const rack = game.players[0].rack;
   const openingCandidates = useMemo(() => card.analyzeCandidates(openingRack), [openingRack]);
   const openingBest = openingCandidates[0];
@@ -61,7 +66,10 @@ export function CharlestonShuffle() {
   const keptFit = selected.length ? targetFit(rack.filter(tile => !selected.includes(tile.id)), target) : null;
   const tilesById = new Map(rack.map(tile => [tile.id, tile]));
   const orderedRack = normalizeTileOrder(rackOrder, rack).map(id => tilesById.get(id)!);
-  const receivedIds = new Set(received.map(tile => tile.id));
+  const receivedOrder = new Map(received.map((tile, index) => [tile.id, index]));
+  const openingFit = openingBest.matchingTileIds.length;
+  const finalFit = ranked[0].matchingTileIds.length;
+  const improvement = finalFit - openingFit;
   const heading = review ? 'Your strongest hands' : revealing ? 'Three tiles received' : `Pass ${charlestonShuffleDirections[pass].toLowerCase()}`;
 
   useEffect(() => {
@@ -100,7 +108,7 @@ export function CharlestonShuffle() {
     moveFocus.current = true;
     setGame(exchange.game);
     setRackOrder(current => normalizeTileOrder(current, exchange.game.players[0].rack));
-    setReceived(exchange.received);
+    setReceipt({ sent: selected.map(id => tilesById.get(id)!), received: exchange.received });
     setSelected([]);
     setNotice('');
     setError(false);
@@ -109,7 +117,7 @@ export function CharlestonShuffle() {
   function continueAfterPass() {
     moveFocus.current = true;
     if (pass === totalPasses) setReview(true);
-    setReceived([]);
+    setReceipt(null);
   }
 
   function reset(seed: number) {
@@ -120,7 +128,7 @@ export function CharlestonShuffle() {
     setOpeningRack(next.players[0].rack);
     setRackOrder(organizeRack(next.players[0].rack, noExposures));
     setSelected([]);
-    setReceived([]);
+    setReceipt(null);
     setReview(false);
     setNotice('');
     setError(false);
@@ -134,14 +142,22 @@ export function CharlestonShuffle() {
         {index < pass && <span className="shuffle-sr-only"> completed</span>}
       </li>)}
     </ol>
-    <section className="shuffle-board" aria-labelledby="shuffle-stage">
+    <section className="shuffle-board" aria-labelledby="shuffle-stage"
+      data-direction={direction} data-revealing={revealing || undefined}>
       <div className="shuffle-board-heading">
-        <p className="mini-games-eyebrow">{review ? '2025 Card' : `Pass ${activeStep + 1} of ${totalPasses}`}</p>
+        <p className="mini-games-eyebrow">{review ? 'Charleston complete' : `Pass ${activeStep + 1} of ${totalPasses}`}</p>
         <h2 id="shuffle-stage" ref={headingRef} tabIndex={-1} aria-describedby="shuffle-instruction">{heading}</h2>
-        <p id="shuffle-instruction">{review ? `Best fit · Start ${openingBest.matchingTileIds.length}/14 · Finish ${ranked[0].matchingTileIds.length}/14` : revealing
+        <p id="shuffle-instruction">{review ? `Best 2025 Card fit went from ${openingFit} to ${finalFit} of 14 tiles.` : revealing
           ? `You received ${received.map(tileLabel).join(', ')}.`
           : 'Pick three to pass. Jokers stay in your rack.'}</p>
       </div>
+      {review && <div className="shuffle-score" data-improved={improvement > 0 || undefined}>
+        <div className="shuffle-score-heading"><strong>{improvement > 0 ? 'Stronger rack' : 'Best fit'}</strong>
+          <span>{improvement > 0 ? `+${improvement} ${improvement === 1 ? 'tile' : 'tiles'}` : `${finalFit}/14`}</span>
+        </div>
+        <div className="shuffle-score-track" aria-hidden="true" style={{ '--fit': finalFit / 14 } as CSSProperties}><i /></div>
+        {improvement > 0 && <div className="shuffle-score-sparks" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span></div>}
+      </div>}
       <div className="shuffle-target">
         <div className="shuffle-target-top">
           <div className="shuffle-target-name"><span>2025 Card · {followed ? 'Following' : 'Suggested hand'}</span><h3>{target.name}</h3></div>
@@ -162,13 +178,21 @@ export function CharlestonShuffle() {
           </li>;
         })}
       </ol> : <>
-        <div className="shuffle-tray" role="group" aria-label={revealing ? 'Received tiles' : 'Tiles selected to pass'}>
-          {Array.from({ length: 3 }, (_, index) => {
-            const tile = revealing ? received[index] : tilesById.get(selected[index]);
-            if (!tile) return <span key={index} className="shuffle-tray-slot" aria-hidden="true" />;
-            if (revealing) return <span key={tile.id} className="shuffle-tile shuffle-received" aria-label={tileLabel(tile)} role="img"><TileFace tile={tile} /></span>;
-            return <button key={tile.id} type="button" className="shuffle-tile" aria-label={`Remove ${tileLabel(tile)} from pass`} onClick={() => selectTile(tile.id)}><TileFace tile={tile} /></button>;
-          })}
+        <div className="shuffle-exchange">
+          <p className="shuffle-tray-label"><span aria-hidden="true">{revealing && direction === 'across' ? '↓' : passArrows[direction]}</span>
+            {revealing ? 'Incoming tiles' : 'Pass tray'}
+          </p>
+          <div className="shuffle-tray" data-full={selected.length === 3 || undefined} role="group" aria-label={revealing ? 'Received tiles' : 'Tiles selected to pass'}>
+            {Array.from({ length: 3 }, (_, index) => {
+              const tile = revealing ? received[index] : tilesById.get(selected[index]);
+              if (!tile) return <span key={index} className="shuffle-tray-slot" aria-hidden="true" />;
+              if (revealing) return <span key={tile.id} className="shuffle-tile shuffle-received" aria-label={tileLabel(tile)} role="img"><TileFace tile={tile} /></span>;
+              return <button key={tile.id} type="button" className="shuffle-tile shuffle-loaded" aria-label={`Remove ${tileLabel(tile)} from pass`} onClick={() => selectTile(tile.id)}><TileFace tile={tile} /></button>;
+            })}
+            {receipt && <div className="shuffle-outgoing" aria-hidden="true">
+              {receipt.sent.map(tile => <span className="shuffle-tile" key={tile.id}><TileFace tile={tile} /></span>)}
+            </div>}
+          </div>
         </div>
         <div className="shuffle-rack-heading">
           <div><h3>Your rack</h3>{!revealing && <span role="status">{ready ? `${selected.length} of 3 selected` : 'Dealing your rack…'}</span>}</div>
@@ -207,7 +231,12 @@ export function CharlestonShuffle() {
         >
           <div className="shuffle-rack" role="group" aria-label={revealing ? 'Updated rack' : 'Choose tiles from your rack'} aria-describedby={revealing ? undefined : 'shuffle-reorder-hint'}>
             {orderedRack.map((tile, index) => {
-              if (revealing) return <span key={tile.id} role="img" className="shuffle-tile" data-new={receivedIds.has(tile.id) || undefined} aria-label={tileLabel(tile)}><TileFace tile={tile} /></span>;
+              if (revealing) {
+                const arrival = receivedOrder.get(tile.id);
+                return <span key={tile.id} role="img" className="shuffle-tile" data-new={arrival !== undefined || undefined}
+                  style={arrival === undefined ? undefined : { '--tile-delay': `${arrival * 50}ms` } as CSSProperties}
+                  aria-label={tileLabel(tile)}><TileFace tile={tile} /></span>;
+              }
               return <SortableRackItem key={tile.id} id={tile.id} index={index} className="shuffle-tile-slot" disabled={!ready}>
                 {({ handleRef }) => <button ref={handleRef} data-drag-handle type="button" className="shuffle-tile" aria-pressed={selected.includes(tile.id)}
                   aria-label={tileLabel(tile)} disabled={!ready} aria-disabled={tile.type.kind === 'joker' || undefined}
