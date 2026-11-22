@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useAccessibility } from '../../../src/accessibility/provider';
 import { charlestonHandOptions, charlestonShuffleDirections, dealCharlestonShuffle, exchangeCharlestonTiles } from '../../../src/game/charleston-shuffle';
 import { organizeTileIds, tileLabel } from '../../../src/game/tiles';
 import type { Tile } from '../../../src/game/types';
@@ -11,6 +12,7 @@ const openingSeed = 2026;
 const totalPasses = charlestonShuffleDirections.length;
 
 export function CharlestonShuffle() {
+  const { ready } = useAccessibility();
   const [game, setGame] = useState(() => dealCharlestonShuffle(openingSeed));
   const [selected, setSelected] = useState<string[]>([]);
   const [received, setReceived] = useState<Tile[]>([]);
@@ -100,14 +102,14 @@ export function CharlestonShuffle() {
           })}
         </div>
         <div className="shuffle-rack-heading"><h3>Your rack</h3>
-          {!revealing && <span role="status">{selected.length} of 3 selected</span>}
+          {!revealing && <span role="status">{ready ? `${selected.length} of 3 selected` : 'Dealing your rack…'}</span>}
         </div>
         <div className="shuffle-rack" role="group" aria-label={revealing ? 'Updated rack' : 'Choose tiles from your rack'}>
           {sortedRack.map(tile => {
             const picked = selected.includes(tile.id);
             if (revealing) return <span key={tile.id} role="img" className="shuffle-tile" data-new={receivedIds.has(tile.id) || undefined} aria-label={tileLabel(tile)}><TileFace tile={tile} /></span>;
             return <button key={tile.id} type="button" className="shuffle-tile" aria-pressed={picked}
-              aria-label={tileLabel(tile)} disabled={tile.type.kind === 'joker'}
+              aria-label={tileLabel(tile)} disabled={!ready || tile.type.kind === 'joker'}
               aria-disabled={!picked && selected.length === 3 ? true : undefined}
               onClick={() => selectTile(tile.id)}><TileFace tile={tile} /></button>;
           })}
