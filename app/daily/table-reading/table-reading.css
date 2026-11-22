@@ -33,3 +33,19 @@
 .table-reading-caveat { font-size: .84rem; }
 .table-reading-complete { color: var(--ink); }
 .table-reading-result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.weekly-stars { position: relative; margin-bottom: 16px; padding: 14px; border: 1px solid var(--edge); border-radius: 14px; background: var(--paper); overflow: hidden; }
+.weekly-stars-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.weekly-stars-heading h2 { margin: 0; font: 600 1.2rem Georgia,serif; }
+.weekly-stars-heading > span { font-weight: 700; color: var(--muted); }
+.weekly-stars-days { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 3px; margin-top: 12px; }
+.weekly-stars-days > :is(a,span) { display: grid; place-items: center; min-height: 64px; border: 1px solid transparent; border-radius: 8px; color: var(--muted); text-decoration: none; }
+.weekly-stars-days > a:hover { background: var(--soft-surface); }
+.weekly-stars-days > a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.weekly-stars-days > [aria-current] { border-color: var(--focus); }
+.weekly-stars-days span { font-size: .7rem; }
+.weekly-stars-days strong { font-size: 1.65rem; line-height: 1.2; }
+.weekly-stars-days > .weekly-star-earned { color: #886215; background: #f7e8b9; }
+.weekly-star-locked { opacity: .5; }
+.weekly-stars > p { margin: 10px 0 0; font-size: .8rem; color: var(--muted); }
+.weekly-stars-complete { border-color: var(--focus); box-shadow: 0 0 0 2px #cba45533; }
