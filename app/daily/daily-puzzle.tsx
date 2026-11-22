@@ -128,7 +128,7 @@ export function DailyPuzzle({ date, archived = false }: { date: string; archived
         <Button onClick={() => setGame(playDailyDiscard(puzzle, chosen))}>Play this hand from here <span aria-hidden="true">→</span></Button>
         <small>Continue with your discard against bots. Your saved practice game stays separate.</small>
       </section> : <p className="daily-footnote">A new puzzle every day. No timer, no account needed.</p>}
-      <a className="daily-table-reading-link" href="/daily/table-reading"><span><strong>Would you throw it?</strong><small>Read the table. Earn three stars.</small></span><span aria-hidden="true">→</span></a>
+      <a className="daily-table-reading-link" href="/daily/table-reading"><span><strong>Would you throw it?</strong><small>A new table to read every day.</small></span><span aria-hidden="true">→</span></a>
     </div>
   </main>;
 }
