@@ -13,6 +13,7 @@ import { ReferenceCardLine } from '../../../src/table/reference-card-line';
 import { PlayerPortrait } from '../../../src/table/table-art';
 import { TileFace } from '../../../src/table/tile-face';
 import { Button, buttonVariants } from '../../../src/ui/button';
+import { useTableAttempts } from './use-table-attempts';
 import { WeeklyStars } from './weekly-stars';
 import { tableAttemptKey } from '../../../src/game/weekly-table-stars';
 import { PuzzleSolveBurst } from '../solve-burst';
@@ -28,6 +29,7 @@ function PublicTile({ tile, highlighted = false }: { tile: Tile; highlighted?: b
 export function TableReading({ level, date, scenario, today }: { level: TableLevel; date?: string; scenario?: TableReadingScenario; today?: string }) {
   const puzzle = useMemo(() => tableReadingPuzzle(level, scenario), [level, scenario]);
   const dailyKey = date ? tableAttemptKey(date) : null;
+  const progress = useTableAttempts(today);
   const choices = useMemo(() => tableReadingChoices(puzzle), [puzzle]);
   const minimum = Math.min(...choices.map(choice => choice.score));
   const best = choices.find(choice => choice.score === minimum)!;
@@ -45,12 +47,18 @@ export function TableReading({ level, date, scenario, today }: { level: TableLev
       if (cancelled) return;
       try {
         if (dailyKey) {
-          const stored = localStorage.getItem(dailyKey);
+          if (!progress.ready || !date) return;
+          const stored = progress.attempts[date];
           const first = choices.find(choice => choice.tile.id === stored);
           if (first) {
             setSubmitted(first.tile.id);
             setAttempted(true);
-            if (first.score === minimum) setStars([level]);
+            setStars(first.score === minimum ? [level] : []);
+            if (first.score !== minimum) setNewStar(false);
+          } else {
+            setSubmitted(null);
+            setAttempted(false);
+            setStars([]);
           }
           setReady(true);
           return;
@@ -62,7 +70,7 @@ export function TableReading({ level, date, scenario, today }: { level: TableLev
       setReady(true);
     });
     return () => { cancelled = true; };
-  }, [level, best.tile.id, dailyKey, choices, minimum]);
+  }, [level, best.tile.id, dailyKey, choices, minimum, date, progress.ready, progress.attempts]);
   useEffect(() => {
     if (fresh && resultRef.current) {
       resultRef.current.focus({ preventScroll: true });
@@ -82,10 +90,7 @@ export function TableReading({ level, date, scenario, today }: { level: TableLev
     if (dailyKey) {
       if (attempted) return;
       setAttempted(true);
-      try {
-        if (localStorage.getItem(dailyKey) !== null) return;
-        localStorage.setItem(dailyKey, choice.tile.id);
-      } catch { /* Play remains available without browser storage. */ }
+      if (date) progress.save(date, choice.tile.id);
       if (choice.score !== minimum) return;
       setNewStar(true);
       setStars([level]);
@@ -116,7 +121,8 @@ export function TableReading({ level, date, scenario, today }: { level: TableLev
       <p className="table-reading-progress" role="status">{stars.length} / 3 stars earned</p>
       </>}
 
-      {date && today ? <WeeklyStars date={date} today={today} newStar={newStar} /> : null}
+      {date ? <p className="table-reading-progress" role="status">{progress.status}{progress.status.startsWith('Couldn’t') ? <Button variant="outline" onClick={progress.retry}>Retry saving</Button> : null}</p> : null}
+      {date && today ? <WeeklyStars date={date} today={today} newStar={newStar} read={progress.read} /> : null}
 
       <section className="daily-table table-reading-felt" aria-label="Table reading challenge">
         <div className="table-reading-heading"><h2>{puzzle.name}</h2><a href="/cards" target="_blank" rel="noreferrer">2025 Card ↗</a></div>

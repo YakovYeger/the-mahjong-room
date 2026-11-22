@@ -5,14 +5,14 @@ import { useEffect, useState } from 'react';
 import { weeklyTableStars } from '../../../src/game/weekly-table-stars';
 import { PuzzleSolveBurst } from '../solve-burst';
 
-export function WeeklyStars({ date, today, newStar }: { date: string; today: string; newStar: boolean }) {
+export function WeeklyStars({ date, today, newStar, read }: { date: string; today: string; newStar: boolean; read: (key: string) => string | null }) {
   const [days, setDays] = useState<ReturnType<typeof weeklyTableStars>>([]);
   const [celebrate, setCelebrate] = useState(false);
   useEffect(() => {
     const refresh = () => {
       let next: ReturnType<typeof weeklyTableStars>;
       try {
-        next = weeklyTableStars(date, today, key => localStorage.getItem(key));
+        next = weeklyTableStars(date, today, read);
       } catch {
         next = weeklyTableStars(date, today, () => null);
       }
@@ -29,7 +29,7 @@ export function WeeklyStars({ date, today, newStar }: { date: string; today: str
     queueMicrotask(refresh);
     window.addEventListener('storage', refresh);
     return () => window.removeEventListener('storage', refresh);
-  }, [date, today, newStar]);
+  }, [date, today, newStar, read]);
 
   const count = days.filter(day => day.earned).length;
   return <section className={`weekly-stars${count === 7 ? ' weekly-stars-complete' : ''}`} aria-label="Weekly star collection">

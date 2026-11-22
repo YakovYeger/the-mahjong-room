@@ -14,6 +14,13 @@ export type Database = {
   }
   public: {
     Tables: {
+      table_reading_attempts: {
+        Row: { user_id: string; puzzle_date: string; tile_id: string; created_at: string }
+        Insert: { user_id: string; puzzle_date: string; tile_id: string; created_at?: string }
+        Update: never
+        Relationships: []
+      }
+
       game_pause_votes: {
         Row: {
           created_at: string
