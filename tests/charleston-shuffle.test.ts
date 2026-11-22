@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { charlestonHandOptions, charlestonShuffleDirections, dealCharlestonShuffle, exchangeCharlestonTiles } from '../src/game/charleston-shuffle';
+import { getCardProvider } from '../src/game/cards';
+import { referenceHands } from '../src/game/reference-card';
+import { charlestonShuffleDirections, dealCharlestonShuffle, exchangeCharlestonTiles } from '../src/game/charleston-shuffle';
 
 function physicalTiles(game: ReturnType<typeof dealCharlestonShuffle>) {
   return [...game.wall, ...game.players.flatMap(player => player.rack)].map(tile => tile.id).sort();
@@ -35,11 +37,13 @@ describe('Charleston Shuffle', () => {
     expect(game.players[0].rack).toEqual(dealCharlestonShuffle(2026).players[0].rack);
   });
 
-  it('reports the strongest three lines in descending tile fit', () => {
-    const rack = dealCharlestonShuffle(2026).players[0].rack;
-    const options = charlestonHandOptions(rack);
-    expect(options).toHaveLength(3);
-    expect(options.map(option => option.fit)).toEqual(options.map(option => option.fit).sort((a, b) => b - a));
-    expect(options.every(option => option.fit >= 0 && option.fit <= 14)).toBe(true);
+  it('deals and ranks every printed 2025 Card line once', () => {
+    const game = dealCharlestonShuffle(2026);
+    expect(game.cardId).toBe('photo-2025');
+    const options = getCardProvider(game.cardId).analyzeCandidates(game.players[0].rack);
+    const rowIds = options.map(option => option.handId.split(':')[0]);
+    expect(rowIds.sort()).toEqual(referenceHands.map(hand => hand.id).sort());
+    const fits = options.map(option => option.matchingTileIds.length);
+    expect(fits).toEqual([...fits].sort((a, b) => b - a));
   });
 });

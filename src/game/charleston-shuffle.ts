@@ -1,12 +1,12 @@
 import { runBotAction } from './bots';
 import { applyGameAction, createGame } from './engine';
-import { TrainingCardProvider } from './training-card';
-import type { GameState, Tile } from './types';
+import type { GameState } from './types';
 
+export const charlestonShuffleCardId = 'photo-2025';
 export const charlestonShuffleDirections = ['Right', 'Across', 'Left'] as const;
 
 export function dealCharlestonShuffle(seed: number) {
-  return createGame({ seed, cardId: 'training-card' });
+  return createGame({ seed, cardId: charlestonShuffleCardId });
 }
 
 export function exchangeCharlestonTiles(game: GameState, tileIds: string[]) {
@@ -19,13 +19,4 @@ export function exchangeCharlestonTiles(game: GameState, tileIds: string[]) {
 
   const previousIds = new Set(player.rack.map(tile => tile.id));
   return { game: next, received: next.players[0].rack.filter(tile => !previousIds.has(tile.id)) };
-}
-
-export function charlestonHandOptions(rack: Tile[]) {
-  const candidates = TrainingCardProvider.analyzeCandidates(rack);
-  const hands = TrainingCardProvider.getHands();
-  return candidates.slice(0, 3).flatMap(candidate => {
-    const hand = hands.find(item => item.id === candidate.handId);
-    return hand ? [{ hand, fit: candidate.matchingTileIds.length }] : [];
-  });
 }
