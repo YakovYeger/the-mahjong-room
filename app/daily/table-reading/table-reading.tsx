@@ -107,7 +107,7 @@ export function TableReading({ level, date, scenario, today }: { level: TableLev
   };
 
   return <main className="daily-page">
-    <header className="daily-top"><a className="brand" href="/">The Mahjong Room</a><nav aria-label="Puzzle navigation"><a href="/daily">Daily Puzzle</a><a href="/daily/archive">Puzzle archive</a></nav></header>
+    <header className="daily-top"><a className="brand" href="/">The Mahjong Room</a><nav aria-label="Puzzle navigation"><a href="/mini-games">Mini-games</a><a href="/daily">Daily Puzzle</a><a href="/daily/archive">Puzzle archive</a></nav></header>
     <div className="daily-layout table-reading-layout">
       <header className="daily-intro">
         <p className="kicker">Table reading · 2025 Card</p>

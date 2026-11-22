@@ -34,7 +34,7 @@
 @media(min-width: 770px) { .daily-rack { grid-template-columns: repeat(14,minmax(0,1fr)); } }
 @media(prefers-reduced-motion:reduce) { .daily-result,.daily-tile { animation: none; transition: none; } }
 
-.daily-top nav { display: flex; align-items: center; justify-content: flex-end; gap: clamp(8px,3vw,20px); }
+.daily-top nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: clamp(8px,3vw,20px); }
 .daily-top nav a { font-size: .8rem; text-align: center; line-height: 1.2; }
 .daily-card-line { background: var(--paper); color: var(--ink); border: 1px solid #c6ab71; border-radius: 12px; margin-top: 10px; padding: 12px; }
 .daily-card-pattern { display: flex; align-items: center; flex-wrap: wrap; column-gap: 12px; row-gap: 7px; font: 750 clamp(.92rem,4.4vw,1.4rem)/1.4 Arial,sans-serif; letter-spacing: .02em; }

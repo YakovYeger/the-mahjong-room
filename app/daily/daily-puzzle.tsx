@@ -66,7 +66,7 @@ export function DailyPuzzle({ date, archived = false }: { date: string; archived
   if (game) return <GameExperience puzzleGame={game} puzzleRackOrder={rackOrder} puzzleReturnHref={archived ? `/daily/${date}` : '/daily'} />;
 
   return <main className="daily-page">
-    <header className="daily-top"><a className="brand" href="/">The Mahjong Room</a><nav aria-label="Puzzle navigation"><a href="/daily/archive">Puzzle archive</a><a href="/">Back home</a></nav></header>
+    <header className="daily-top"><a className="brand" href="/">The Mahjong Room</a><nav aria-label="Puzzle navigation"><a href="/daily/archive">Puzzle archive</a><a href="/mini-games">Mini-games</a></nav></header>
     <div className="daily-layout">
       <header className="daily-intro">
         <p className="kicker">{archived ? 'Puzzle archive' : 'Daily Puzzle'} · <time dateTime={date}>{formatPuzzleDate(date)}</time></p>
