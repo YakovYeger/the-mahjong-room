@@ -6,6 +6,7 @@ import { isSortable } from '@dnd-kit/react/sortable';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useAccessibility } from '../../../src/accessibility/provider';
 import { useFollowedHand } from '../../../src/coach/use-followed-hand';
+import { reviewCharlestonPasses, type CharlestonExchange } from '../../../src/game/charleston-review';
 import { getCardProvider } from '../../../src/game/cards';
 import { charlestonShuffleCardId, charlestonShuffleDirections, dealCharlestonShuffle, exchangeCharlestonTiles } from '../../../src/game/charleston-shuffle';
 import { organizeRack } from '../../../src/game/rack-order';
@@ -20,6 +21,7 @@ import { ViewCardButton } from '../../../src/table/rack-turn-tools';
 import { TileFace } from '../../../src/table/tile-face';
 import { CardTargetPattern } from '../../../src/table/training-card-line';
 import { Button } from '../../../src/ui/button';
+import { CharlestonPassReview } from './charleston-pass-review';
 
 const openingSeed = 2026;
 const totalPasses = charlestonShuffleDirections.length;
@@ -39,8 +41,8 @@ export function CharlestonShuffle() {
   const [openingRack, setOpeningRack] = useState(() => game.players[0].rack);
   const [rackOrder, setRackOrder] = useState(() => organizeRack(openingRack, noExposures));
   const [selected, setSelected] = useState<string[]>([]);
-  const [receipt, setReceipt] = useState<{ sent: Tile[]; received: Tile[] } | null>(null);
-  const [review, setReview] = useState(false);
+  const [exchanges, setExchanges] = useState<CharlestonExchange[]>([]);
+  const [stage, setStage] = useState<'select' | 'reveal' | 'review'>('select');
   const [error, setError] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -51,8 +53,10 @@ export function CharlestonShuffle() {
   const suppressTileClick = useRef(false);
   const storageKey = `charleston-shuffle:${game.seed}`;
   const [followedId, follow] = useFollowedHand(storageKey, charlestonShuffleCardId);
+  const review = stage === 'review';
+  const revealing = stage === 'reveal';
+  const receipt = revealing ? exchanges.at(-1) : undefined;
   const received = receipt?.received ?? noTiles;
-  const revealing = receipt !== null;
   const pass = game.charlestonPassIndex;
   const activeStep = revealing ? pass - 1 : pass;
   const direction = passDirection(activeStep);
@@ -70,6 +74,9 @@ export function CharlestonShuffle() {
   const openingFit = openingBest.matchingTileIds.length;
   const finalFit = ranked[0].matchingTileIds.length;
   const improvement = finalFit - openingFit;
+  const passReview = useMemo(() => review
+    ? reviewCharlestonPasses(openingRack, exchanges, card.getHands(), finalFit)
+    : null, [review, openingRack, exchanges, finalFit]);
   const heading = review ? 'Your strongest hands' : revealing ? 'Three tiles received' : `Pass ${charlestonShuffleDirections[pass].toLowerCase()}`;
 
   useEffect(() => {
@@ -108,7 +115,8 @@ export function CharlestonShuffle() {
     moveFocus.current = true;
     setGame(exchange.game);
     setRackOrder(current => normalizeTileOrder(current, exchange.game.players[0].rack));
-    setReceipt({ sent: selected.map(id => tilesById.get(id)!), received: exchange.received });
+    setExchanges(current => [...current, { sent: selected.map(id => tilesById.get(id)!), received: exchange.received }]);
+    setStage('reveal');
     setSelected([]);
     setNotice('');
     setError(false);
@@ -116,8 +124,7 @@ export function CharlestonShuffle() {
 
   function continueAfterPass() {
     moveFocus.current = true;
-    if (pass === totalPasses) setReview(true);
-    setReceipt(null);
+    setStage(pass === totalPasses ? 'review' : 'select');
   }
 
   function reset(seed: number) {
@@ -128,8 +135,8 @@ export function CharlestonShuffle() {
     setOpeningRack(next.players[0].rack);
     setRackOrder(organizeRack(next.players[0].rack, noExposures));
     setSelected([]);
-    setReceipt(null);
-    setReview(false);
+    setExchanges([]);
+    setStage('select');
     setNotice('');
     setError(false);
   }
@@ -158,6 +165,7 @@ export function CharlestonShuffle() {
         <div className="shuffle-score-track" aria-hidden="true" style={{ '--fit': finalFit / 14 } as CSSProperties}><i /></div>
         {improvement > 0 && <div className="shuffle-score-sparks" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span></div>}
       </div>}
+      {passReview && <CharlestonPassReview result={passReview} actualFit={finalFit} rack={rack} exchanges={exchanges} />}
       <div className="shuffle-target">
         <div className="shuffle-target-top">
           <div className="shuffle-target-name"><span>2025 Card · {followed ? 'Following' : 'Suggested hand'}</span><h3>{target.name}</h3></div>
