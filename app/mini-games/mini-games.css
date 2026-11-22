@@ -328,3 +328,20 @@ button.shuffle-tile[aria-disabled="true"]:not(:disabled) { cursor: default; }
   25% { opacity: .85; }
   to { opacity: 0; transform: translate(var(--spark-x, 25px), var(--spark-y, -10px)) scale(1.2); }
 }
+
+.shuffle-pass-review {
+  max-width: 450px;
+  margin: 12px auto 0;
+  padding: 14px;
+  border: 1px solid #c7aa68;
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.shuffle-pass-review h3 { margin: 4px 0 7px; font: 700 1.32rem/1.14 Georgia, serif; }
+.shuffle-pass-review p { margin: 7px 0; font-size: .9375rem; line-height: 1.45; }
+.shuffle-pass-review p.shuffle-review-label { margin: 0; font-size: .875rem; font-weight: 750; }
+.shuffle-pass-review p.shuffle-review-note { margin-bottom: 0; font-size: .875rem; }
+.shuffle-pass-review summary { min-height: 44px; padding-block: 11px; cursor: pointer; font-weight: 750; }
+.shuffle-pass-review ol { margin: 0 0 8px; padding-left: 20px; font-size: .9375rem; line-height: 1.45; }
+.shuffle-pass-review li + li { margin-top: 5px; }
