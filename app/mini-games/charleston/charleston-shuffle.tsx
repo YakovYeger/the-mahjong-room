@@ -4,16 +4,26 @@ import { useEffect, useRef, useState } from 'react';
 import { useAccessibility } from '../../../src/accessibility/provider';
 import { charlestonHandOptions, charlestonShuffleDirections, dealCharlestonShuffle, exchangeCharlestonTiles } from '../../../src/game/charleston-shuffle';
 import { organizeTileIds, tileLabel } from '../../../src/game/tiles';
-import type { Tile } from '../../../src/game/types';
+import { arrangeHand, TrainingCardProvider } from '../../../src/game/training-card';
+import type { HandDefinition, Tile } from '../../../src/game/types';
 import { TileFace } from '../../../src/table/tile-face';
+import { TrainingCardPattern } from '../../../src/table/training-card-line';
 import { Button } from '../../../src/ui/button';
+import { Select } from '../../../src/ui/select';
 
 const openingSeed = 2026;
 const totalPasses = charlestonShuffleDirections.length;
+const trainingHands = TrainingCardProvider.getHands();
+const targetChoices = trainingHands.map(hand => ({ value: hand.id, label: hand.name }));
+
+function targetFit(rack: Tile[], hand: HandDefinition) {
+  return arrangeHand(rack, [], hand).matchingTileIds.length;
+}
 
 export function CharlestonShuffle() {
   const { ready } = useAccessibility();
   const [game, setGame] = useState(() => dealCharlestonShuffle(openingSeed));
+  const [targetId, setTargetId] = useState(() => charlestonHandOptions(game.players[0].rack)[0].hand.id);
   const [selected, setSelected] = useState<string[]>([]);
   const [received, setReceived] = useState<Tile[]>([]);
   const [review, setReview] = useState(false);
@@ -24,6 +34,9 @@ export function CharlestonShuffle() {
   const pass = game.charlestonPassIndex;
   const activeStep = revealing ? pass - 1 : pass;
   const rack = game.players[0].rack;
+  const target = trainingHands.find(hand => hand.id === targetId) ?? trainingHands[0];
+  const fit = targetFit(rack, target);
+  const keptFit = selected.length ? targetFit(rack.filter(tile => !selected.includes(tile.id)), target) : null;
   const tilesById = new Map(rack.map(tile => [tile.id, tile]));
   const sortedRack = organizeTileIds(rack).map(id => tilesById.get(id)!);
   const receivedIds = new Set(received.map(tile => tile.id));
@@ -61,7 +74,9 @@ export function CharlestonShuffle() {
 
   function reset(seed: number) {
     moveFocus.current = true;
-    setGame(dealCharlestonShuffle(seed));
+    const next = dealCharlestonShuffle(seed);
+    setGame(next);
+    setTargetId(charlestonHandOptions(next.players[0].rack)[0].hand.id);
     setSelected([]);
     setReceived([]);
     setReview(false);
@@ -69,7 +84,8 @@ export function CharlestonShuffle() {
   }
 
   const options = review ? charlestonHandOptions(rack) : [];
-  const openingFit = review ? charlestonHandOptions(dealCharlestonShuffle(game.seed).players[0].rack)[0].fit : 0;
+  const openingRack = review ? dealCharlestonShuffle(game.seed).players[0].rack : [];
+  const openingFit = review ? charlestonHandOptions(openingRack)[0].fit : 0;
 
   return <div className="shuffle-game">
     <ol className="shuffle-steps" aria-label="Charleston pass progress">
@@ -85,7 +101,16 @@ export function CharlestonShuffle() {
         <h2 id="shuffle-stage" ref={headingRef} tabIndex={-1} aria-describedby="shuffle-instruction">{heading}</h2>
         <p id="shuffle-instruction">{review ? `Best fit · Start ${openingFit}/14 · Finish ${options[0].fit}/14` : revealing
           ? `You received ${received.map(tileLabel).join(', ')}.`
-          : 'Tap three tiles to send. Jokers stay in your rack.'}</p>
+          : 'Pick three to pass. Jokers stay in your rack.'}</p>
+      </div>
+      <div className="shuffle-target">
+        {review ? <div className="shuffle-target-name"><span>Training Card target</span><h3>{target.name}</h3></div>
+          : <Select label="Training Card target" value={target.id} options={targetChoices} onValueChange={setTargetId} disabled={!ready} />}
+        <TrainingCardPattern hand={target} />
+        <p className="shuffle-target-description">{target.description}</p>
+        <p className="shuffle-target-fit" role="status">{review
+          ? `Target fit · Start ${targetFit(openingRack, target)}/14 · Finish ${fit}/14`
+          : `${fit}/14 tiles fit${keptFit === null ? '' : ` · ${keptFit}/14 kept if passed`}`}</p>
       </div>
       {review ? <ol className="shuffle-hand-list" aria-label="Best-fitting Training Card hands">
         {options.map(({ hand, fit }) => <li key={hand.id}>

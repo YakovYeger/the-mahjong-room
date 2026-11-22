@@ -234,3 +234,20 @@ button.shuffle-tile[aria-disabled="true"]:not(:disabled) { cursor: default; }
 @media (prefers-reduced-motion: reduce) {
   .shuffle-received { animation: none; }
 }
+
+.shuffle-target {
+  width: min(100%, 450px);
+  margin: 12px auto 0;
+  padding: 10px 12px;
+  border: 1px solid #c7aa68;
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.shuffle-target .select-field { gap: 4px; }
+.shuffle-target .select-label, .shuffle-target-name > span { color: var(--ink); font-size: .875rem; font-weight: 700; text-transform: none; letter-spacing: 0; }
+.shuffle-target .select-trigger { min-height: 44px; padding-block: 6px; font-size: 1rem; }
+.shuffle-target .training-card-pattern { gap: 4px 9px; margin-top: 5px; font-size: 1rem; }
+.shuffle-target-name h3 { margin: 2px 0 0; font: 700 1.15rem/1.2 Georgia, serif; }
+.shuffle-target-description { margin: 2px 0 0; font-size: .875rem; line-height: 1.35; }
+.shuffle-target-fit { margin: 5px 0 0; font-size: .875rem; line-height: 1.3; font-weight: 750; }
