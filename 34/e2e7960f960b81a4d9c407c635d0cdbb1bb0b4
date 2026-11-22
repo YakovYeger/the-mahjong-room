@@ -1,0 +1,46 @@
+supabase/tests/table-reading-attempts.sql
+  s_8b11fec7c205a1::t_94c1a5e3815673 1-27
+app/daily/table-reading/table-reading.tsx
+  s_8b11fec7c205a1::t_de79267f26aabf 58-61
+  s_8b11fec7c205a1::t_bd9524834c5c4f 16,32,50-51,56,73,93,124-125
+  s_8b11fec7c205a1::t_eaf5ed28aec34b 57
+tests/table-attempts-sync.test.ts
+  s_8b11fec7c205a1::t_5d919e11635368 16,20,25,30,34,40,45,49-59
+  s_8b11fec7c205a1::t_5cd5c19f7b119b 1-15,17-19,21-24,26-29,31-33,35-39,41-44,46-48
+app/daily/table-reading/weekly-stars.tsx
+  s_8b11fec7c205a1::t_bd9524834c5c4f 8,15,32
+app/daily/table-reading/use-table-attempts.ts
+  s_8b11fec7c205a1::t_7dd67f3bbcfff2 33,71-82,112-116
+  s_8b11fec7c205a1::t_44d2f94e3175dc 38-49,100-101
+  s_8b11fec7c205a1::t_f1dd25a1c4792b 1-32,34-37,50-70,83-99,102-111,117-122
+tests/table-attempts-api.test.ts
+  s_8b11fec7c205a1::t_5d919e11635368 1-40
+  s_8b11fec7c205a1::t_6e8caeff59c00f 41
+app/api/puzzles/table-reading/route.ts
+  s_8b11fec7c205a1::t_91c5e724e50141 34
+  s_8b11fec7c205a1::t_6246ca2ad8bbf2 1-33,35-50
+src/lib/supabase/database.types.ts
+  s_8b11fec7c205a1::t_1b13d05670bd12 17-23
+src/persistence/table-attempts.ts
+  s_8b11fec7c205a1::t_825e7863eee458 1-15
+supabase/migrations/20261122092802_account_table_reading_attempts.sql
+  s_8b11fec7c205a1::t_b166f363a250c9 1-16
+tests/table-attempts.test.ts
+  s_8b11fec7c205a1::t_8adf30aa3d4a9e 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "34e2e7960f960b81a4d9c407c635d0cdbb1bb0b4",
+  "prompts": {},
+  "sessions": {
+    "s_8b11fec7c205a1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19ce4-fe89-7a53-8fcd-e60333bf3935",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Jacob Yeger <jyeger@bigid.com>"
+    }
+  }
+}
