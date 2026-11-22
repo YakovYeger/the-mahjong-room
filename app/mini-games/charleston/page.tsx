@@ -13,7 +13,7 @@ export default function CharlestonPage() {
     <div className="mini-games-content shuffle-content">
       <header className="mini-games-intro">
         <h1>Charleston Shuffle</h1>
-        <p>Shape your opening hand in three passes.</p>
+        <p>Build toward a card line in three passes.</p>
       </header>
       <CharlestonShuffle />
     </div>

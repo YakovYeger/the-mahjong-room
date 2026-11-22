@@ -37,9 +37,6 @@
 .daily-top nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: clamp(8px,3vw,20px); }
 .daily-top nav a { font-size: .8rem; text-align: center; line-height: 1.2; }
 .daily-card-line { background: var(--paper); color: var(--ink); border: 1px solid #c6ab71; border-radius: 12px; margin-top: 10px; padding: 12px; }
-.daily-card-pattern { display: flex; align-items: center; flex-wrap: wrap; column-gap: 12px; row-gap: 7px; font: 750 clamp(.92rem,4.4vw,1.4rem)/1.4 Arial,sans-serif; letter-spacing: .02em; }
-.daily-card-pattern strong { white-space: nowrap; }
-.daily-card-exposure { margin-left: auto; padding: 2px 6px; border: 1px solid #bda775; border-radius: 4px; font: 700 .75rem/1.4 Arial,sans-serif; }
 .daily-card-key { font-size: .76rem; }
 .daily-card-key summary { cursor: pointer; min-height: 44px; padding: 12px 0 0; }
 .daily-target .daily-card-key p { color: var(--ink); font-size: .76rem; line-height: 1.45; margin: 5px 0; }
